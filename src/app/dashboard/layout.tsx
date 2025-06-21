@@ -21,7 +21,7 @@ import { Input } from '@/components/ui/input';
 import {
   LayoutDashboard,
   Link as LinkIcon,
-  MousePointerSquare,
+  Filter,
   Mail,
   Sparkles,
   Settings,
@@ -33,7 +33,7 @@ import {
 const navItems = [
     { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
     { href: '/dashboard/links', icon: LinkIcon, label: 'Affiliate Links' },
-    { href: '/dashboard/funnels', icon: MousePointerSquare, label: 'Funnels' },
+    { href: '/dashboard/funnels', icon: Filter, label: 'Funnels' },
     { href: '/dashboard/email', icon: Mail, label: 'Email Marketing' },
     { href: '/dashboard/ai-tools', icon: Sparkles, label: 'AI Tools' },
 ];
