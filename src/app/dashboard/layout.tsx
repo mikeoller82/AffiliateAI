@@ -29,6 +29,7 @@ import {
   HelpCircle,
   Search,
   Bell,
+  Users,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -36,6 +37,7 @@ const navItems = [
     { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
     { href: '/dashboard/links', icon: LinkIcon, label: 'Affiliate Links' },
     { href: '/dashboard/funnels', icon: Filter, label: 'Funnels' },
+    { href: '/dashboard/crm', icon: Users, label: 'CRM' },
     { href: '/dashboard/email', icon: Mail, label: 'Email Marketing' },
     { href: '/dashboard/ai-tools', icon: Sparkles, label: 'AI Tools' },
 ];
