@@ -10,12 +10,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PlusCircle, Move, Trash2, PanelTop, PanelBottom, ImageIcon, VideoIcon, Code, Pencil } from 'lucide-react';
+import { PlusCircle, Move, Trash2, PanelTop, PanelBottom, ImageIcon, VideoIcon, Code, Pencil, RectangleHorizontal, Type } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
+import { Slider } from '@/components/ui/slider';
 
-type ComponentType = 'hero' | 'features' | 'testimonials' | 'header' | 'footer' | 'image' | 'video' | 'customHtml';
+type ComponentType = 'hero' | 'features' | 'testimonials' | 'header' | 'footer' | 'image' | 'video' | 'customHtml' | 'text' | 'button';
 
 interface FunnelComponent {
   id: number;
@@ -37,15 +38,23 @@ const HeaderPreview = ({ content, styles }: { content: any, styles: any }) => (
     </header>
 );
 
-const HeroPreview = ({ content, styles }: { content: any, styles: any }) => (
+const HeroPreview = ({ content, styles, buttonStyles }: { content: any, styles: any, buttonStyles: any }) => (
   <div className="p-8 text-center rounded-lg" style={{ color: styles.textColor }}>
     <h2 className="text-4xl font-bold">{content.title}</h2>
     <p className="mt-2 text-lg">{content.subtitle}</p>
-    <Button className="mt-4" style={{ backgroundColor: styles.primaryColor, color: styles.primaryColorForeground }}>{content.cta}</Button>
+    <Button
+        className="mt-4"
+        style={{
+            backgroundColor: styles.primaryColor,
+            color: styles.primaryColorForeground,
+            borderRadius: `${buttonStyles.borderRadius}px`,
+            boxShadow: buttonStyles.shadow,
+        }}
+    >{content.cta}</Button>
   </div>
 );
 
-const ImagePreview = ({ content, styles }: { content: any, styles: any }) => (
+const ImagePreview = ({ content }: { content: any }) => (
     <div className="py-8">
         <div className="relative aspect-video max-w-5xl mx-auto">
              <Image src={content.src} alt={content.alt} fill className="object-cover rounded-lg shadow-lg" data-ai-hint={content.hint} />
@@ -114,14 +123,38 @@ const CustomHtmlPreview = ({ content }: { content: any }) => (
     <div className="p-2" dangerouslySetInnerHTML={{ __html: content.html }} />
 );
 
+const TextPreview = ({ content, styles }: { content: any, styles: any }) => (
+    <div className="p-4" style={{ color: styles.textColor }}>
+        <p className="whitespace-pre-wrap">{content.text}</p>
+    </div>
+);
 
-const componentMap = {
+const ButtonPreview = ({ content, styles, buttonStyles }: { content: any, styles: any, buttonStyles: any }) => (
+    <div className="p-4 text-center">
+        <Button
+            asChild
+            variant={content.variant}
+            style={{
+                backgroundColor: styles.primaryColor,
+                color: styles.primaryColorForeground,
+                borderRadius: `${buttonStyles.borderRadius}px`,
+                boxShadow: buttonStyles.shadow,
+            }}
+        >
+            <a href={content.href}>{content.text}</a>
+        </Button>
+    </div>
+);
+
+const componentMap: { [key in ComponentType]: React.FC<any> } = {
   header: HeaderPreview,
   hero: HeroPreview,
   features: FeaturesPreview,
   testimonials: TestimonialsPreview,
   image: ImagePreview,
   video: VideoPreview,
+  text: TextPreview,
+  button: ButtonPreview,
   customHtml: CustomHtmlPreview,
   footer: FooterPreview,
 };
@@ -160,6 +193,14 @@ const defaultContent = {
         title: 'Watch Our Story',
         embedUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ'
     },
+    text: {
+        text: 'This is a block of text. You can edit it to add your own content. You can even use multiple lines.'
+    },
+    button: {
+        text: 'Click Here',
+        href: '#',
+        variant: 'default',
+    },
     customHtml: {
         html: `<div style="padding: 2rem; margin: 1rem; border: 2px dashed #374151; border-radius: 0.5rem; text-align: center; color: #F9FAFB">
     <h3 style="font-size: 1.25rem; font-weight: 600;">Custom HTML Block</h3>
@@ -182,7 +223,9 @@ export default function FunnelEditorPage() {
   const [components, setComponents] = useState<FunnelComponent[]>([
     { id: 1, type: 'header', content: defaultContent.header },
     { id: 2, type: 'hero', content: defaultContent.hero },
-    { id: 3, type: 'footer', content: defaultContent.footer }
+    { id: 3, type: 'text', content: defaultContent.text },
+    { id: 4, type: 'button', content: defaultContent.button },
+    { id: 5, type: 'footer', content: defaultContent.footer }
   ]);
   const [styles, setStyles] = useState({
     primaryColor: '#3B82F6',
@@ -191,12 +234,16 @@ export default function FunnelEditorPage() {
     textColor: '#F9FAFB',
     font: 'Inter'
   });
+  const [buttonStyles, setButtonStyles] = useState({
+    borderRadius: 8,
+    shadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
+  });
   const [domain, setDomain] = useState('');
   const [slug, setSlug] = useState(params.templateId);
 
-  const [isHtmlDialogOpen, setIsHtmlDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingComponent, setEditingComponent] = useState<FunnelComponent | null>(null);
-  const [htmlContent, setHtmlContent] = useState('');
+  const [currentContent, setCurrentContent] = useState<any>({});
 
 
   const addComponent = (type: ComponentType) => {
@@ -220,22 +267,30 @@ export default function FunnelEditorPage() {
       setStyles({ ...styles, font: value });
   }
 
-  const openHtmlEditor = (component: FunnelComponent) => {
+  const handleButtonStylesChange = (key: string, value: any) => {
+    setButtonStyles(prev => ({ ...prev, [key]: value }));
+  }
+
+  const openEditDialog = (component: FunnelComponent) => {
     setEditingComponent(component);
-    setHtmlContent(component.content.html);
-    setIsHtmlDialogOpen(true);
+    setCurrentContent(component.content);
+    setIsEditDialogOpen(true);
   };
 
-  const saveHtmlChanges = () => {
+  const handleContentChange = (field: string, value: any) => {
+    setCurrentContent((prev: any) => ({ ...prev, [field]: value }));
+  }
+
+  const saveChanges = () => {
     if (editingComponent) {
-        const updatedComponent = { ...editingComponent, content: { html: htmlContent } };
-        setComponents(components.map(c => 
+        const updatedComponent = { ...editingComponent, content: currentContent };
+        setComponents(components.map(c =>
             c.id === editingComponent.id ? updatedComponent : c
         ));
     }
-    setIsHtmlDialogOpen(false);
+    setIsEditDialogOpen(false);
     setEditingComponent(null);
-    setHtmlContent('');
+    setCurrentContent({});
   };
 
 
@@ -264,7 +319,9 @@ export default function FunnelEditorPage() {
               <Button variant="outline" className="w-full justify-start" onClick={() => addComponent('hero')}><PlusCircle className="mr-2 h-4 w-4" /> Hero</Button>
               <Button variant="outline" className="w-full justify-start" onClick={() => addComponent('features')}><PlusCircle className="mr-2 h-4 w-4" /> Features</Button>
               <Button variant="outline" className="w-full justify-start" onClick={() => addComponent('testimonials')}><PlusCircle className="mr-2 h-4 w-4" /> Testimonials</Button>
-              
+              <Button variant="outline" className="w-full justify-start" onClick={() => addComponent('text')}><Type className="mr-2 h-4 w-4" /> Text Block</Button>
+              <Button variant="outline" className="w-full justify-start" onClick={() => addComponent('button')}><RectangleHorizontal className="mr-2 h-4 w-4" /> Button</Button>
+
               <h3 className="font-semibold text-sm text-muted-foreground pt-4">Media</h3>
               <Button variant="outline" className="w-full justify-start" onClick={() => addComponent('image')}><ImageIcon className="mr-2 h-4 w-4" /> Image</Button>
               <Button variant="outline" className="w-full justify-start" onClick={() => addComponent('video')}><VideoIcon className="mr-2 h-4 w-4" /> Video</Button>
@@ -310,6 +367,36 @@ export default function FunnelEditorPage() {
                   </SelectContent>
                 </Select>
               </div>
+              <h3 className="font-semibold text-sm text-muted-foreground pt-4">Button Styles</h3>
+                <div className="space-y-2">
+                    <Label htmlFor="buttonBorderRadius">Border Radius ({buttonStyles.borderRadius}px)</Label>
+                    <Slider
+                        id="buttonBorderRadius"
+                        min={0}
+                        max={32}
+                        step={1}
+                        value={[buttonStyles.borderRadius]}
+                        onValueChange={(value) => handleButtonStylesChange('borderRadius', value[0])}
+                    />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="buttonShadow">Shadow</Label>
+                    <Select
+                        onValueChange={(value) => handleButtonStylesChange('shadow', value)}
+                        defaultValue={buttonStyles.shadow}
+                    >
+                        <SelectTrigger id="buttonShadow">
+                            <SelectValue placeholder="Select a shadow" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="none">None</SelectItem>
+                            <SelectItem value="0 1px 2px 0 rgb(0 0 0 / 0.05)">Small</SelectItem>
+                            <SelectItem value="0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)">Medium (Default)</SelectItem>
+                            <SelectItem value="0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)">Large</SelectItem>
+                            <SelectItem value="0 25px 50px -12px rgb(0 0 0 / 0.25)">Extra Large</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
             </TabsContent>
             <TabsContent value="settings" className="space-y-4 pt-4">
               <h3 className="font-semibold text-sm text-muted-foreground">Page Settings</h3>
@@ -350,18 +437,19 @@ export default function FunnelEditorPage() {
               {components.map(component => {
                   const ComponentPreview = componentMap[component.type];
                   const isStructural = component.type === 'header' || component.type === 'footer';
+                  const isEditable = ['text', 'button', 'customHtml', 'hero', 'features', 'testimonials', 'video', 'image'].includes(component.type);
                   return (
                       <div key={component.id} className={cn("relative group border-2 border-transparent hover:border-primary hover:border-dashed", !isStructural && "my-4")}>
                            <div className="absolute -top-3 right-2 z-10 hidden group-hover:flex items-center gap-1 bg-primary p-1 rounded-md shadow text-primary-foreground">
-                               {component.type === 'customHtml' && (
-                                  <Button variant="ghost" size="icon" className="h-7 w-7 hover:bg-primary-foreground/20" onClick={() => openHtmlEditor(component)}>
+                               {isEditable && (
+                                  <Button variant="ghost" size="icon" className="h-7 w-7 hover:bg-primary-foreground/20" onClick={() => openEditDialog(component)}>
                                       <Pencil className="h-4 w-4"/>
                                   </Button>
                                )}
                                <Button variant="ghost" size="icon" className="h-7 w-7 cursor-move hover:bg-primary-foreground/20"><Move className="h-4 w-4"/></Button>
                                <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-primary-foreground/20 hover:text-destructive-foreground" onClick={() => removeComponent(component.id)}><Trash2 className="h-4 w-4"/></Button>
                            </div>
-                          <ComponentPreview content={component.content} styles={styles} />
+                          <ComponentPreview content={component.content} styles={styles} buttonStyles={buttonStyles} />
                       </div>
                   );
               })}
@@ -374,26 +462,72 @@ export default function FunnelEditorPage() {
           </div>
         </div>
       </div>
-      <Dialog open={isHtmlDialogOpen} onOpenChange={setIsHtmlDialogOpen}>
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
           <DialogContent className="sm:max-w-2xl">
               <DialogHeader>
-                  <DialogTitle>Edit Custom HTML</DialogTitle>
+                  <DialogTitle>Edit {editingComponent?.type} Component</DialogTitle>
                   <DialogDescription>
-                      Enter your HTML code below. Scripts may not execute in the live preview but will be on the published page.
+                      Make changes to your component content here. Click save when you're done.
                   </DialogDescription>
               </DialogHeader>
-              <Textarea
-                  value={htmlContent}
-                  onChange={(e) => setHtmlContent(e.target.value)}
-                  className="min-h-[400px] font-mono text-sm bg-muted/50"
-                  placeholder="<div>Your custom HTML code here</div>"
-              />
+              
+              <div className="py-4">
+                {editingComponent?.type === 'text' && (
+                    <div className="space-y-2">
+                        <Label htmlFor="text-content">Text</Label>
+                        <Textarea
+                            id="text-content"
+                            value={currentContent.text || ''}
+                            onChange={(e) => handleContentChange('text', e.target.value)}
+                            className="min-h-[200px]"
+                        />
+                    </div>
+                )}
+
+                {editingComponent?.type === 'button' && (
+                    <div className="grid gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="button-text">Button Text</Label>
+                            <Input
+                                id="button-text"
+                                value={currentContent.text || ''}
+                                onChange={(e) => handleContentChange('text', e.target.value)}
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="button-href">Link URL</Label>
+                            <Input
+                                id="button-href"
+                                value={currentContent.href || ''}
+                                onChange={(e) => handleContentChange('href', e.targt.value)}
+                                placeholder="https://example.com"
+                            />
+                        </div>
+                    </div>
+                )}
+                
+                {editingComponent?.type === 'customHtml' && (
+                    <div className="space-y-2">
+                         <Label htmlFor="html-content">Custom HTML</Label>
+                         <Textarea
+                             id="html-content"
+                             value={currentContent.html || ''}
+                             onChange={(e) => handleContentChange('html', e.target.value)}
+                             className="min-h-[400px] font-mono text-sm bg-muted/50"
+                             placeholder="<div>Your custom HTML code here</div>"
+                         />
+                    </div>
+                )}
+              </div>
+
               <DialogFooter>
-                  <Button variant="outline" onClick={() => setIsHtmlDialogOpen(false)}>Cancel</Button>
-                  <Button onClick={saveHtmlChanges}>Save Changes</Button>
+                  <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>Cancel</Button>
+                  <Button onClick={saveChanges}>Save Changes</Button>
               </DialogFooter>
           </DialogContent>
       </Dialog>
     </>
   );
 }
+
+    
