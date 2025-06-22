@@ -10,14 +10,14 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
-export const GenerateFunnelCopyInputSchema = z.object({
+const GenerateFunnelCopyInputSchema = z.object({
   productDescription: z.string().describe('A brief description of the product or service being offered in the funnel.'),
   copyType: z.string().describe('The type of copy to generate, e.g., "Hero Headline", "Feature Description", "CTA Button Text".'),
   userPrompt: z.string().describe('A specific instruction from the user on how to generate the copy, e.g., "Make it sound more exclusive" or "Focus on the pain point of disorganization".'),
 });
 export type GenerateFunnelCopyInput = z.infer<typeof GenerateFunnelCopyInputSchema>;
 
-export const GenerateFunnelCopyOutputSchema = z.object({
+const GenerateFunnelCopyOutputSchema = z.object({
   generatedCopy: z.string().describe('The generated piece of copy.'),
 });
 export type GenerateFunnelCopyOutput = z.infer<typeof GenerateFunnelCopyOutputSchema>;
