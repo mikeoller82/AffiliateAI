@@ -34,7 +34,7 @@ export default function FunnelsPage() {
                     {templates.map(template => (
                         <Card key={template.title} className="overflow-hidden">
                             <div className="relative h-40 w-full">
-                                <Image src={template.image} alt={template.title} layout="fill" objectFit="cover" data-ai-hint={template.hint} />
+                                <Image src={template.image} alt={template.title} fill className="object-cover" data-ai-hint={template.hint} />
                             </div>
                             <CardHeader>
                                 <CardTitle className="text-lg">{template.title}</CardTitle>
