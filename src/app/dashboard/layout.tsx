@@ -1,3 +1,4 @@
+
 "use client";
 
 import type React from 'react';
@@ -29,6 +30,7 @@ import {
   Search,
   Bell,
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 const navItems = [
     { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -41,10 +43,14 @@ const navItems = [
 function MainContent({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
     const pageTitle = navItems.find(item => pathname.startsWith(item.href))?.label || 'Dashboard';
+    
+    // Check if the current page is a funnel editor page
+    const isFunnelEditor = /^\/dashboard\/funnels\/./.test(pathname);
+
 
     return (
         <div className="flex flex-col h-screen bg-background">
-            <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-4 border-b bg-card px-6">
+            <header className="sticky top-0 z-20 flex h-16 shrink-0 items-center gap-4 border-b bg-card px-6">
                 <SidebarTrigger className="md:hidden"/>
                 <div className="flex-1">
                     <h1 className="text-xl font-semibold">{pageTitle}</h1>
@@ -60,7 +66,7 @@ function MainContent({ children }: { children: React.ReactNode }) {
                     </Button>
                 </div>
             </header>
-            <main className="flex-1 overflow-y-auto p-6">{children}</main>
+            <main className={cn("flex-1 overflow-y-auto", !isFunnelEditor && "p-6")}>{children}</main>
         </div>
     );
 }
@@ -81,7 +87,7 @@ function AppSidebar() {
                 <SidebarMenu>
                     {navItems.map((item) => (
                         <SidebarMenuItem key={item.href}>
-                            <SidebarMenuButton asChild isActive={pathname.startsWith(item.href)} tooltip={{children: item.label}}>
+                            <SidebarMenuButton asChild isActive={pathname.startsWith(item.href) && (item.href === '/dashboard' ? pathname === item.href : true)} tooltip={{children: item.label}}>
                                 <Link href={item.href}>
                                     <item.icon />
                                     <span>{item.label}</span>
