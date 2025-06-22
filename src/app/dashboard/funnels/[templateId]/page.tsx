@@ -9,10 +9,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PlusCircle, Move, Trash2, PanelTop, PanelBottom, ImageIcon, VideoIcon } from 'lucide-react';
+import { PlusCircle, Move, Trash2, PanelTop, PanelBottom, ImageIcon, VideoIcon, Code } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-type ComponentType = 'hero' | 'features' | 'testimonials' | 'header' | 'footer' | 'image' | 'video';
+type ComponentType = 'hero' | 'features' | 'testimonials' | 'header' | 'footer' | 'image' | 'video' | 'customHtml';
 
 interface FunnelComponent {
   id: number;
@@ -107,6 +107,10 @@ const FooterPreview = ({ content, styles }: { content: any, styles: any }) => (
   </footer>
 );
 
+const CustomHtmlPreview = ({ content }: { content: any }) => (
+    <div className="p-2" dangerouslySetInnerHTML={{ __html: content.html }} />
+);
+
 
 const componentMap = {
   header: HeaderPreview,
@@ -115,6 +119,7 @@ const componentMap = {
   testimonials: TestimonialsPreview,
   image: ImagePreview,
   video: VideoPreview,
+  customHtml: CustomHtmlPreview,
   footer: FooterPreview,
 };
 
@@ -152,6 +157,13 @@ const defaultContent = {
         title: 'Watch Our Story',
         embedUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ'
     },
+    customHtml: {
+        html: `<div style="padding: 2rem; margin: 1rem; border: 2px dashed #374151; border-radius: 0.5rem; text-align: center; color: #F9FAFB">
+    <h3 style="font-size: 1.25rem; font-weight: 600;">Custom HTML Block</h3>
+    <p style="margin-top: 0.5rem; opacity: 0.8;">You can add your own HTML and basic inline CSS.</p>
+    <p style="margin-top: 0.25rem; font-size: 0.75rem; opacity: 0.6;">Note: Scripts may not execute in this preview.</p>
+</div>`
+    },
     footer: {
         copyright: `© ${new Date().getFullYear()} Your Brand. All rights reserved.`,
         links: [
@@ -175,6 +187,9 @@ export default function FunnelEditorPage({ params }: { params: { templateId: str
     textColor: '#F9FAFB',
     font: 'Inter'
   });
+  const [domain, setDomain] = useState('');
+  const [slug, setSlug] = useState(params.templateId);
+
 
   const addComponent = (type: ComponentType) => {
     const newComponent: FunnelComponent = {
@@ -207,9 +222,10 @@ export default function FunnelEditorPage({ params }: { params: { templateId: str
           </CardHeader>
         </Card>
         <Tabs defaultValue="components" className="p-4">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="components">Components</TabsTrigger>
             <TabsTrigger value="styling">Styling</TabsTrigger>
+            <TabsTrigger value="settings">Settings</TabsTrigger>
           </TabsList>
           <TabsContent value="components" className="space-y-2 pt-4">
             <h3 className="font-semibold text-sm text-muted-foreground">Layout</h3>
@@ -224,6 +240,9 @@ export default function FunnelEditorPage({ params }: { params: { templateId: str
             <h3 className="font-semibold text-sm text-muted-foreground pt-4">Media</h3>
             <Button variant="outline" className="w-full justify-start" onClick={() => addComponent('image')}><ImageIcon className="mr-2 h-4 w-4" /> Image</Button>
             <Button variant="outline" className="w-full justify-start" onClick={() => addComponent('video')}><VideoIcon className="mr-2 h-4 w-4" /> Video</Button>
+
+            <h3 className="font-semibold text-sm text-muted-foreground pt-4">Advanced</h3>
+            <Button variant="outline" className="w-full justify-start" onClick={() => addComponent('customHtml')}><Code className="mr-2 h-4 w-4" /> Custom HTML</Button>
 
           </TabsContent>
           <TabsContent value="styling" className="space-y-4 pt-4">
@@ -262,6 +281,32 @@ export default function FunnelEditorPage({ params }: { params: { templateId: str
                   <SelectItem value="Montserrat">Montserrat</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+          </TabsContent>
+          <TabsContent value="settings" className="space-y-4 pt-4">
+            <h3 className="font-semibold text-sm text-muted-foreground">Page Settings</h3>
+            <div className="space-y-2">
+                <Label htmlFor="domain">Custom Domain</Label>
+                <Input
+                    id="domain"
+                    name="domain"
+                    placeholder="e.g., yourdomain.com"
+                    value={domain}
+                    onChange={(e) => setDomain(e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">
+                    Leave empty to use the default domain.
+                </p>
+            </div>
+            <div className="space-y-2">
+                <Label htmlFor="slug">Slug</Label>
+                <Input
+                    id="slug"
+                    name="slug"
+                    placeholder="e.g., my-awesome-funnel"
+                    value={slug}
+                    onChange={(e) => setSlug(e.target.value)}
+                />
             </div>
           </TabsContent>
         </Tabs>
