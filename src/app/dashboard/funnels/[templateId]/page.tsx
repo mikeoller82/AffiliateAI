@@ -3,6 +3,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
+import { useParams } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -174,7 +175,8 @@ const defaultContent = {
 }
 
 
-export default function FunnelEditorPage({ params }: { params: { templateId: string } }) {
+export default function FunnelEditorPage() {
+  const params = useParams<{ templateId: string }>();
   const [components, setComponents] = useState<FunnelComponent[]>([
     { id: 1, type: 'header', content: defaultContent.header },
     { id: 2, type: 'hero', content: defaultContent.hero },
