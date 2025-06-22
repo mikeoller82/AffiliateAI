@@ -7,21 +7,21 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BarChart, DollarSign, Users, Activity, Lightbulb, Zap, ArrowRight, BrainCircuit } from 'lucide-react';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, BarChart as RechartsBarChart } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip } from 'recharts';
 import Link from 'next/link';
 
 const chartData = [
-  { month: "Jan", clicks: 186, conversions: 80 },
-  { month: "Feb", clicks: 305, conversions: 200 },
-  { month: "Mar", clicks: 237, conversions: 120 },
-  { month: "Apr", clicks: 273, conversions: 190 },
-  { month: "May", clicks: 209, conversions: 130 },
-  { month: "Jun", clicks: 214, conversions: 140 },
+  { month: "Jan", clicks: 1860, conversions: 800 },
+  { month: "Feb", clicks: 3050, conversions: 2000 },
+  { month: "Mar", clicks: 2370, conversions: 1200 },
+  { month: "Apr", clicks: 2730, conversions: 1900 },
+  { month: "May", clicks: 2090, conversions: 1300 },
+  { month: "Jun", clicks: 2140, conversions: 1400 },
 ];
 
 const chartConfig = {
-  clicks: { label: "Clicks", color: "hsl(var(--primary))" },
-  conversions: { label: "Conversions", color: "hsl(var(--accent))" },
+  clicks: { label: "Clicks", color: "hsl(var(--chart-1))" },
+  conversions: { label: "Conversions", color: "hsl(var(--chart-2))" },
 };
 
 const recentActivities = [
@@ -92,7 +92,7 @@ export default function DashboardPage() {
 
         <TabsContent value="overview" className="space-y-6">
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-                <Card>
+                <Card className="hover:shadow-glow-primary transition-shadow duration-300">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">Total Clicks</CardTitle>
                     <Activity className="h-4 w-4 text-muted-foreground" />
@@ -102,7 +102,7 @@ export default function DashboardPage() {
                     <p className="text-xs text-muted-foreground">+12.1% from last month</p>
                 </CardContent>
                 </Card>
-                <Card>
+                <Card className="hover:shadow-glow-primary transition-shadow duration-300">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">Conversions</CardTitle>
                     <Users className="h-4 w-4 text-muted-foreground" />
@@ -112,7 +112,7 @@ export default function DashboardPage() {
                     <p className="text-xs text-muted-foreground">+180.1% from last month</p>
                 </CardContent>
                 </Card>
-                <Card>
+                <Card className="hover:shadow-glow-primary transition-shadow duration-300">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">Commission</CardTitle>
                     <DollarSign className="h-4 w-4 text-muted-foreground" />
@@ -122,7 +122,7 @@ export default function DashboardPage() {
                     <p className="text-xs text-muted-foreground">+19% from last month</p>
                 </CardContent>
                 </Card>
-                <Card>
+                <Card className="hover:shadow-glow-primary transition-shadow duration-300">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">EPC (Earnings Per Click)</CardTitle>
                     <BarChart className="h-4 w-4 text-muted-foreground" />
@@ -134,25 +134,46 @@ export default function DashboardPage() {
                 </Card>
             </div>
             <div className="grid gap-6 lg:grid-cols-2">
-                <Card>
+                <Card className="hover:shadow-glow-primary transition-shadow duration-300">
                 <CardHeader>
                     <CardTitle>Performance Overview</CardTitle>
                     <CardDescription>Clicks and conversions over the last 6 months.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <ChartContainer config={chartConfig} className="h-[300px] w-full">
-                    <RechartsBarChart data={chartData} accessibilityLayer>
-                        <CartesianGrid vertical={false} />
-                        <XAxis dataKey="month" tickLine={false} tickMargin={10} axisLine={false} />
-                        <YAxis tickLine={false} axisLine={false} />
+                     <AreaChart
+                        data={chartData}
+                        margin={{
+                          top: 10,
+                          right: 30,
+                          left: 0,
+                          bottom: 0,
+                        }}
+                      >
+                        <defs>
+                            <linearGradient id="colorClicks" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="var(--color-clicks)" stopOpacity={0.8}/>
+                                <stop offset="95%" stopColor="var(--color-clicks)" stopOpacity={0}/>
+                            </linearGradient>
+                             <linearGradient id="colorConversions" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="var(--color-conversions)" stopOpacity={0.8}/>
+                                <stop offset="95%" stopColor="var(--color-conversions)" stopOpacity={0}/>
+                            </linearGradient>
+                        </defs>
+                        <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="hsl(var(--border) / 0.2)" />
+                        <XAxis dataKey="month" tickLine={false} tickMargin={10} axisLine={false} stroke="hsl(var(--muted-foreground))" />
+                        <YAxis tickLine={false} axisLine={false} stroke="hsl(var(--muted-foreground))" tickFormatter={(value) => {
+                            if (value >= 1000) return `${value / 1000}k`;
+                            return value.toString();
+                        }} />
                         <RechartsTooltip cursor={false} content={<ChartTooltipContent indicator="dot" />} />
-                        <Bar dataKey="clicks" fill="var(--color-clicks)" radius={4} />
-                        <Bar dataKey="conversions" fill="var(--color-conversions)" radius={4} />
-                    </RechartsBarChart>
+                        <Area type="monotone" dataKey="clicks" strokeWidth={2} stroke="var(--color-clicks)" fillOpacity={1} fill="url(#colorClicks)" />
+                        <Area type="monotone" dataKey="conversions" strokeWidth={2} stroke="var(--color-conversions)" fillOpacity={1} fill="url(#colorConversions)" />
+                    </AreaChart>
                     </ChartContainer>
                 </CardContent>
                 </Card>
-                <Card>
+                <Card className="hover:shadow-glow-primary transition-shadow duration-300">
                 <CardHeader>
                     <CardTitle>Recent Activity</CardTitle>
                     <CardDescription>A log of your recent clicks and conversions.</CardDescription>
@@ -198,7 +219,7 @@ export default function DashboardPage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                     {aiRecommendations.map((rec, index) => (
-                        <div key={index} className="flex items-start gap-4 p-4 border rounded-lg bg-card">
+                        <div key={index} className="flex items-start gap-4 p-4 border rounded-lg bg-card hover:shadow-glow-primary transition-shadow duration-300">
                             <rec.icon className="h-8 w-8 text-primary mt-1 flex-shrink-0" />
                             <div className="flex-1">
                                 <h3 className="font-semibold">{rec.title}</h3>
@@ -220,7 +241,7 @@ export default function DashboardPage() {
                 </CardHeader>
                 <CardContent className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                     {quickFixes.map((fix, index) => (
-                        <Card key={index} className="flex flex-col">
+                        <Card key={index} className="flex flex-col hover:shadow-glow-primary transition-shadow duration-300">
                             <CardHeader>
                                 <CardTitle className="text-lg">{fix.title}</CardTitle>
                                 <CardDescription>{fix.description}</CardDescription>
