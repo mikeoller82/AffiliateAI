@@ -1,8 +1,8 @@
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { PlusCircle, MoreHorizontal, Copy, Edit, Trash2 } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { PlusCircle, MoreHorizontal, Copy, Edit, Trash2, Link as LinkIcon, BarChart, Users, DollarSign, Activity } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 const links = [
@@ -15,64 +15,90 @@ const links = [
 export default function LinksPage() {
     return (
         <div className="space-y-6">
-            <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
-                    <div>
-                        <CardTitle>Affiliate Links</CardTitle>
-                        <CardDescription>Manage your tracking links and campaigns.</CardDescription>
-                    </div>
-                    <Button>
-                        <PlusCircle className="mr-2 h-4 w-4" />
-                        Create New Link
-                    </Button>
-                </CardHeader>
-                <CardContent>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Name</TableHead>
-                                <TableHead>Status</TableHead>
-                                <TableHead className="text-right">Clicks</TableHead>
-                                <TableHead className="text-right">Conversions</TableHead>
-                                <TableHead className="text-right">Commission</TableHead>
-                                <TableHead className="text-right">Actions</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {links.map((link) => (
-                                <TableRow key={link.id}>
-                                    <TableCell className="font-medium">
-                                        <div>{link.name}</div>
-                                        <div className="text-xs text-muted-foreground">{`/track/${link.trackingId}`}</div>
-                                    </TableCell>
-                                    <TableCell>
-                                        <Badge variant={link.status === "Active" ? "secondary" : "outline"} className={link.status === "Active" ? 'bg-green-500/20 text-green-700' : ''}>{link.status}</Badge>
-                                    </TableCell>
-                                    <TableCell className="text-right">{link.clicks.toLocaleString()}</TableCell>
-                                    <TableCell className="text-right">{link.conversions.toLocaleString()}</TableCell>
-                                    <TableCell className="text-right">${link.commission.toFixed(2)}</TableCell>
-                                    <TableCell className="text-right">
-                                        <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                                <Button variant="ghost" className="h-8 w-8 p-0">
-                                                    <span className="sr-only">Open menu</span>
-                                                    <MoreHorizontal className="h-4 w-4" />
-                                                </Button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end">
-                                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                                <DropdownMenuItem><Copy className="mr-2 h-4 w-4" /> Copy Link</DropdownMenuItem>
-                                                <DropdownMenuItem><Edit className="mr-2 h-4 w-4" /> Edit</DropdownMenuItem>
-                                                <DropdownMenuItem className="text-destructive"><Trash2 className="mr-2 h-4 w-4" /> Delete</DropdownMenuItem>
-                                            </DropdownMenuContent>
-                                        </DropdownMenu>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </CardContent>
-            </Card>
+            <div className="flex items-center justify-between">
+                 <div>
+                    <h2 className="text-2xl font-bold tracking-tight">Affiliate Links</h2>
+                    <p className="text-muted-foreground">
+                        Manage and analyze your tracking links and campaigns.
+                    </p>
+                </div>
+                <Button>
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Create New Link
+                </Button>
+            </div>
+            
+            <div className="space-y-4">
+                {links.map((link) => {
+                    const ctr = link.clicks > 0 ? (link.conversions / link.clicks) * 100 : 0;
+                    return (
+                        <Card key={link.id}>
+                            <CardHeader className="flex flex-row items-center justify-between">
+                                <div>
+                                    <CardTitle>{link.name}</CardTitle>
+                                    <CardDescription className="flex items-center gap-2 pt-1 text-xs">
+                                        <LinkIcon className="h-3 w-3" />
+                                        {`https://yourdomain.com/track/${link.trackingId}`}
+                                    </CardDescription>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                     <Badge variant={link.status === "Active" ? "outline" : "secondary"} className={link.status === "Active" ? 'border-green-600 bg-green-50 text-green-700 dark:border-green-500/80 dark:bg-green-950 dark:text-green-400' : ''}>
+                                        {link.status}
+                                    </Badge>
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button variant="ghost" className="h-8 w-8 p-0">
+                                                <span className="sr-only">Open menu</span>
+                                                <MoreHorizontal className="h-4 w-4" />
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end">
+                                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                            <DropdownMenuItem><Copy className="mr-2 h-4 w-4" /> Copy Link</DropdownMenuItem>
+                                            <DropdownMenuItem><Edit className="mr-2 h-4 w-4" /> Edit</DropdownMenuItem>
+                                            <DropdownMenuItem><BarChart className="mr-2 h-4 w-4" /> View Analytics</DropdownMenuItem>
+                                            <DropdownMenuSeparator />
+                                            <DropdownMenuItem className="text-destructive"><Trash2 className="mr-2 h-4 w-4" /> Archive</DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                </div>
+                            </CardHeader>
+                            <CardContent className="pt-4">
+                               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                                    <div className="flex items-center gap-3 rounded-lg border p-3">
+                                        <Activity className="h-5 w-5 text-primary" />
+                                        <div>
+                                            <p className="text-sm text-muted-foreground">Clicks</p>
+                                            <p className="text-lg font-bold">{link.clicks.toLocaleString()}</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-3 rounded-lg border p-3">
+                                        <Users className="h-5 w-5 text-primary" />
+                                        <div>
+                                            <p className="text-sm text-muted-foreground">Conversions</p>
+                                            <p className="text-lg font-bold">{link.conversions.toLocaleString()}</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-3 rounded-lg border p-3">
+                                        <DollarSign className="h-5 w-5 text-primary" />
+                                        <div>
+                                            <p className="text-sm text-muted-foreground">Commission</p>
+                                            <p className="text-lg font-bold">${link.commission.toFixed(2)}</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-3 rounded-lg border p-3">
+                                        <BarChart className="h-5 w-5 text-primary" />
+                                        <div>
+                                            <p className="text-sm text-muted-foreground">CTR</p>
+                                            <p className="text-lg font-bold">{ctr.toFixed(2)}%</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )
+                })}
+            </div>
         </div>
-    )
+    );
 }
