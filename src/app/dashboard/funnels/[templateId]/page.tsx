@@ -15,17 +15,10 @@ import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Slider } from '@/components/ui/slider';
-import { generateFunnelCopy, GenerateFunnelCopyInput } from '@/ai/flows/generate-funnel-copy';
+import { generateFunnelCopy, type GenerateFunnelCopyInput } from '@/ai/flows/generate-funnel-copy';
 import { useToast } from '@/hooks/use-toast';
+import { funnelTemplates, defaultContent, type FunnelComponent, type ComponentType } from '@/lib/funnel-templates';
 
-
-type ComponentType = 'hero' | 'features' | 'testimonials' | 'header' | 'footer' | 'image' | 'video' | 'customHtml' | 'text' | 'button';
-
-interface FunnelComponent {
-  id: number;
-  type: ComponentType;
-  content: any;
-}
 
 // Placeholder components for the canvas
 const HeaderPreview = ({ content, styles }: { content: any, styles: any }) => (
@@ -162,77 +155,14 @@ const componentMap: { [key in ComponentType]: React.FC<any> } = {
   footer: FooterPreview,
 };
 
-const defaultContent = {
-    hero: { title: 'Your Big Idea', subtitle: 'A catchy tagline to grab attention.', cta: 'Get Started Now' },
-    features: {
-        title: 'Amazing Features',
-        features: [
-            { title: 'Feature One', description: 'Description for feature one.' },
-            { title: 'Feature Two', description: 'Description for feature two.' },
-            { title: 'Feature Three', description: 'Description for feature three.' },
-        ]
-    },
-    testimonials: {
-        title: 'What Our Customers Say',
-        testimonials: [
-            { quote: 'This is the best product ever!', author: 'Happy Customer' },
-            { quote: 'I can\'t believe how much it helped me.', author: 'Another Happy Customer' },
-        ]
-    },
-    header: {
-        title: 'Your Brand',
-        links: [
-            { label: 'Home', href: '#' },
-            { label: 'About', href: '#' },
-            { label: 'Contact', href: '#' },
-        ],
-    },
-    image: {
-        src: 'https://placehold.co/1200x600.png',
-        alt: 'Placeholder image',
-        hint: 'abstract scenery'
-    },
-    video: {
-        title: 'Watch Our Story',
-        embedUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ'
-    },
-    text: {
-        text: 'This is a block of text. You can edit it to add your own content. You can even use multiple lines.'
-    },
-    button: {
-        text: 'Click Here',
-        href: '#',
-        variant: 'default',
-    },
-    customHtml: {
-        html: `<div style="padding: 2rem; margin: 1rem; border: 2px dashed #374151; border-radius: 0.5rem; text-align: center; color: #F9FAFB">
-    <h3 style="font-size: 1.25rem; font-weight: 600;">Custom HTML Block</h3>
-    <p style="margin-top: 0.5rem; opacity: 0.8;">Click the edit icon to add your own HTML.</p>
-    <p style="margin-top: 0.25rem; font-size: 0.75rem; opacity: 0.6;">Note: Scripts may not execute in this preview.</p>
-</div>`
-    },
-    footer: {
-        copyright: `© ${new Date().getFullYear()} Your Brand. All rights reserved.`,
-        links: [
-            { label: 'Privacy Policy', href: '#' },
-            { label: 'Terms of Service', href: '#' },
-        ],
-    }
-}
-
 
 export default function FunnelEditorPage() {
   const params = useParams<{ templateId: string }>();
   const { toast } = useToast();
+  
+  const initialComponents = funnelTemplates[params.templateId] || funnelTemplates['default'];
 
-  const [components, setComponents] = useState<FunnelComponent[]>([
-    { id: 1, type: 'header', content: defaultContent.header },
-    { id: 2, type: 'hero', content: defaultContent.hero },
-    { id: 3, type: 'image', content: defaultContent.image },
-    { id: 4, type: 'features', content: defaultContent.features },
-    { id: 5, type: 'testimonials', content: defaultContent.testimonials },
-    { id: 6, type: 'footer', content: defaultContent.footer }
-  ]);
+  const [components, setComponents] = useState<FunnelComponent[]>(initialComponents);
   const [styles, setStyles] = useState({
     primaryColor: '#3B82F6',
     primaryColorForeground: '#FFFFFF',
