@@ -4,7 +4,7 @@
 
 [![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](https://choosealicense.com/licenses/mit/)
 [![Discord](https://img.shields.io/discord/YOUR_DISCORD_ID?label=Community&logo=discord)](https://discord.gg/yourlink)
-[![GitHub Stars](https://img.shields.io/github/stars/yourusername/yourrepo?style=social)](https://github.com/yourusername/yourrepo)
+[![GitHub Stars](https://img.shields.io/github/stars/mikeoller82/HighLaunchPad?style=social)](https://github.com/mikeoller82/HighLaunchPad)
 
 ---
 
@@ -174,7 +174,7 @@ We believe in **transparent development** and **community ownership**:
 ### 👨‍💻 **For Developers**
 🔗 **[Contributing Guide](CONTRIBUTING.md)**
 💬 **[Discord Community](https://discord.gg/yourlink)**
-📚 **[Developer Docs](https://docs.yourplatformname.com)**
+📚 **[Developer Docs](https://docs.highlaunchpad.com)**
 
 ### 🚀 **For Early Users**
 🎯 **[Join Private Alpha](https://highlaunchpad.com/alpha)**
@@ -209,7 +209,7 @@ We believe in **transparent development** and **community ownership**:
 
 <div align="center">
 
-[![Star this repo](https://img.shields.io/github/stars/yourusername/yourrepo?style=for-the-badge&logo=github)](https://github.com/yourusername/yourrepo)
+[![Star this repo](https://img.shields.io/github/stars/mikeoller82/HighLaunchPad?style=for-the-badge&logo=github)](https://github.com/mikeoller82/HighLaunchpad)
 [![Join Discord](https://img.shields.io/badge/Discord-Join%20Community-5865F2?style=for-the-badge&logo=discord)](https://discord.gg/yourlink)
 [![Follow on Twitter](https://img.shields.io/badge/Twitter-Follow%20Updates-1DA1F2?style=for-the-badge&logo=twitter)](https://twitter.com/yourhandle)
 
