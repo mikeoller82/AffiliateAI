@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { PlusCircle, MoreHorizontal, Edit, BarChart, Send, Trash2 } from "lucide-react";
+import { PlusCircle, MoreHorizontal, Edit, BarChart, Send, Trash2, Users, FolderKanban, Settings, ArrowRight } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
@@ -20,6 +20,12 @@ const subscribers = [
     { id: 3, email: "samuel.green@example.com", name: "Samuel Green", date: "2024-05-19", avatar: "https://placehold.co/40x40" },
     { id: 4, email: "lisa.white@example.com", name: "Lisa White", date: "2024-05-18", avatar: "https://placehold.co/40x40" },
 ];
+
+const segments = [
+    { id: 1, name: "Active Subscribers", count: 18450 },
+    { id: 2, name: "New Leads (Last 30 Days)", count: 215 },
+    { id: 3, name: "High-Value Customers", count: 430 },
+]
 
 export default function EmailPage() {
     return (
@@ -82,11 +88,11 @@ export default function EmailPage() {
                     </CardContent>
                 </Card>
             </div>
-            <div className="lg:col-span-1">
+            <div className="lg:col-span-1 space-y-6">
                  <Card>
                     <CardHeader>
-                        <CardTitle>Recent Subscribers</CardTitle>
-                        <CardDescription>Your newest audience members.</CardDescription>
+                        <CardTitle className="flex items-center gap-2"><Users className="h-5 w-5"/> Contacts</CardTitle>
+                        <CardDescription>View your recent subscribers or manage your full contact list.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         {subscribers.map(sub => (
@@ -99,9 +105,39 @@ export default function EmailPage() {
                                     <p className="text-sm font-medium leading-none">{sub.name}</p>
                                     <p className="text-sm text-muted-foreground">{sub.email}</p>
                                 </div>
-                                <div className="text-sm text-muted-foreground">{sub.date}</div>
                             </div>
                         ))}
+                        <Button asChild variant="outline" className="w-full">
+                            <Link href="/dashboard/email/contacts">Manage All Contacts <ArrowRight className="ml-2 h-4 w-4"/></Link>
+                        </Button>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2"><FolderKanban className="h-5 w-5"/> Segments</CardTitle>
+                        <CardDescription>Group your contacts based on behavior and properties.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                        {segments.map(seg => (
+                            <div key={seg.id} className="flex justify-between items-center text-sm">
+                                <span className="font-medium">{seg.name}</span>
+                                <span className="text-muted-foreground">{seg.count.toLocaleString()} contacts</span>
+                            </div>
+                        ))}
+                        <Button asChild variant="outline" className="w-full">
+                            <Link href="/dashboard/email/segments">Manage Segments <ArrowRight className="ml-2 h-4 w-4"/></Link>
+                        </Button>
+                    </CardContent>
+                </Card>
+                 <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2"><Settings className="h-5 w-5"/> Email Settings</CardTitle>
+                        <CardDescription>Configure your sending provider and deliverability options.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <Button asChild variant="outline" className="w-full">
+                             <Link href="/dashboard/email/settings">Go to Settings <ArrowRight className="ml-2 h-4 w-4"/></Link>
+                        </Button>
                     </CardContent>
                 </Card>
             </div>
