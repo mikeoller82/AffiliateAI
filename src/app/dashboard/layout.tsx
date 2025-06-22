@@ -24,15 +24,15 @@ import {
   Link as LinkIcon,
   Filter,
   Mail,
-  Rocket,
+  Users,
   Settings,
   HelpCircle,
   Search,
   Bell,
-  Users,
   BrainCircuit,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Logo } from '@/components/icons/logo';
 
 const navItems = [
     { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -80,8 +80,8 @@ function AppSidebar() {
         <Sidebar>
             <SidebarHeader className="p-4 border-b">
                 <Link href="/dashboard" className="flex items-center gap-3">
-                    <div className="p-2 bg-primary rounded-lg text-primary-foreground">
-                        <Rocket className="h-6 w-6" />
+                    <div className="p-1 bg-primary rounded-lg text-primary-foreground">
+                        <Logo className="h-8 w-8" />
                     </div>
                     <h1 className="text-xl font-semibold text-foreground">HighLaunchPad</h1>
                 </Link>
