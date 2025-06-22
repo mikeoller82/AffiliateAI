@@ -1,46 +1,58 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { AdCopyGenerator, CtaSuggestor, ContentIdeator, EmailGenerator } from '@/components/ai/tools';
+import { AdCopyGenerator, CtaSuggestor, EmailGenerator, ProductReviewWriter, ProductHookGenerator } from '@/components/ai/tools';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function AIToolsPage() {
   return (
     <Tabs defaultValue="ad-copy" className="w-full">
-      <TabsList className="grid w-full grid-cols-1 sm:grid-cols-4">
-        <TabsTrigger value="ad-copy">Ad Copy</TabsTrigger>
-        <TabsTrigger value="cta-suggestions">CTA Suggestions</TabsTrigger>
-        <TabsTrigger value="content-ideas">Content Ideas</TabsTrigger>
+      <TabsList className="grid w-full grid-cols-1 sm:grid-cols-5">
+        <TabsTrigger value="ad-copy">Ad Generator</TabsTrigger>
+        <TabsTrigger value="product-review">Product Review</TabsTrigger>
+        <TabsTrigger value="cta-optimizer">CTA Optimizer</TabsTrigger>
+        <TabsTrigger value="product-hook">Hook Generator</TabsTrigger>
         <TabsTrigger value="email-content">Email Content</TabsTrigger>
       </TabsList>
       <TabsContent value="ad-copy">
         <Card>
           <CardHeader>
-            <CardTitle>AI Ad Copy Generator</CardTitle>
-            <CardDescription>Create compelling ad copy for your campaigns on various platforms.</CardDescription>
+            <CardTitle>Affiliate Ad Generator</CardTitle>
+            <CardDescription>Generates short-form copy for platforms like Facebook Ads, TikTok, and X.</CardDescription>
           </CardHeader>
           <CardContent>
             <AdCopyGenerator />
           </CardContent>
         </Card>
       </TabsContent>
-      <TabsContent value="cta-suggestions">
+       <TabsContent value="product-review">
         <Card>
           <CardHeader>
-            <CardTitle>AI CTA Suggestion Engine</CardTitle>
-            <CardDescription>Get high-converting Call-To-Action ideas based on your context.</CardDescription>
+            <CardTitle>Product Review Writer</CardTitle>
+            <CardDescription>Generates SEO-optimized blog reviews or YouTube scripts.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ProductReviewWriter />
+          </CardContent>
+        </Card>
+      </TabsContent>
+      <TabsContent value="cta-optimizer">
+        <Card>
+          <CardHeader>
+            <CardTitle>CTA Optimizer</CardTitle>
+            <CardDescription>Suggests strong calls to action based on tone and intent.</CardDescription>
           </CardHeader>
           <CardContent>
             <CtaSuggestor />
           </CardContent>
         </Card>
       </TabsContent>
-      <TabsContent value="content-ideas">
+      <TabsContent value="product-hook">
         <Card>
           <CardHeader>
-            <CardTitle>AI Content Ideation Assistant</CardTitle>
-            <CardDescription>Brainstorm engaging content ideas for your niche and format.</CardDescription>
+            <CardTitle>Product Hook Generator</CardTitle>
+            <CardDescription>Short, punchy hook ideas tailored for social posts, landing pages, or ads.</CardDescription>
           </CardHeader>
           <CardContent>
-            <ContentIdeator />
+            <ProductHookGenerator />
           </CardContent>
         </Card>
       </TabsContent>

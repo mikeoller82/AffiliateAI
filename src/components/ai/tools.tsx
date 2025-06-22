@@ -13,8 +13,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Loader2, Wand2, Copy } from "lucide-react";
 import { generateAdCopy, type GenerateAdCopyOutput } from '@/ai/flows/generate-ad-copy';
 import { suggestCTAs, type SuggestCTAsOutput } from '@/ai/flows/suggest-ctas';
-import { ideateContent, type IdeateContentOutput } from '@/ai/flows/ideate-content';
 import { generateEmailContent, type GenerateEmailContentOutput } from '@/ai/flows/generate-email-content';
+import { generateProductReview, type GenerateProductReviewOutput } from '@/ai/flows/generate-product-review';
+import { generateProductHook, type GenerateProductHookOutput } from '@/ai/flows/generate-product-hook';
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 
@@ -67,7 +68,7 @@ export function AdCopyGenerator() {
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <FormField control={form.control} name="product" render={({ field }) => (
             <FormItem>
-              <FormLabel>Product / Service Name</FormLabel>
+              <FormLabel>Product / Offer Description</FormLabel>
               <FormControl><Input placeholder="e.g., SaaS for project management" {...field} /></FormControl>
               <FormMessage />
             </FormItem>
@@ -88,9 +89,11 @@ export function AdCopyGenerator() {
                 </FormControl>
                 <SelectContent>
                   <SelectItem value="Facebook">Facebook</SelectItem>
+                  <SelectItem value="TikTok">TikTok</SelectItem>
+                  <SelectItem value="X">X (Twitter)</SelectItem>
+                  <SelectItem value="Pinterest">Pinterest</SelectItem>
                   <SelectItem value="Google Ads">Google Ads</SelectItem>
                   <SelectItem value="LinkedIn">LinkedIn</SelectItem>
-                  <SelectItem value="Twitter">Twitter / X</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
@@ -169,8 +172,8 @@ export function CtaSuggestor() {
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <FormField control={form.control} name="context" render={({ field }) => (
             <FormItem>
-              <FormLabel>Context</FormLabel>
-              <FormControl><Textarea placeholder="Describe where the Call-To-Action will be used, e.g., 'Landing page for a free webinar on real estate investing'." {...field} /></FormControl>
+              <FormLabel>Context / Intent</FormLabel>
+              <FormControl><Textarea placeholder="Describe where the Call-To-Action will be used and what the goal is, e.g., 'Landing page for a free webinar on real estate investing'." {...field} /></FormControl>
               <FormMessage />
             </FormItem>
           )} />
@@ -197,34 +200,34 @@ export function CtaSuggestor() {
   );
 }
 
-// Content Ideator
-const contentIdeationSchema = z.object({
-  niche: z.string().min(3, "Niche is required."),
-  format: z.string().min(1, "Format is required."),
+// Product Review Writer
+const productReviewSchema = z.object({
+  productName: z.string().min(3, "Product name is required."),
+  features: z.string().min(10, "Please describe some features or benefits."),
 });
 
-export function ContentIdeator() {
-  const [result, setResult] = useState<IdeateContentOutput | null>(null);
+export function ProductReviewWriter() {
+  const [result, setResult] = useState<GenerateProductReviewOutput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  const form = useForm<z.infer<typeof contentIdeationSchema>>({
-    resolver: zodResolver(contentIdeationSchema),
-    defaultValues: { niche: "", format: "blog_post" },
+  const form = useForm<z.infer<typeof productReviewSchema>>({
+    resolver: zodResolver(productReviewSchema),
+    defaultValues: { productName: "", features: "" },
   });
 
-  async function onSubmit(values: z.infer<typeof contentIdeationSchema>) {
+  async function onSubmit(values: z.infer<typeof productReviewSchema>) {
     setIsLoading(true);
     setResult(null);
     try {
-      const response = await ideateContent(values);
+      const response = await generateProductReview(values);
       setResult(response);
     } catch (error) {
       console.error(error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to generate content ideas. Please try again.",
+        description: "Failed to generate product review. Please try again.",
       });
     } finally {
       setIsLoading(false);
@@ -235,25 +238,98 @@ export function ContentIdeator() {
     <div className="space-y-6">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <FormField control={form.control} name="niche" render={({ field }) => (
+          <FormField control={form.control} name="productName" render={({ field }) => (
             <FormItem>
-              <FormLabel>Content Niche</FormLabel>
-              <FormControl><Input placeholder="e.g., Sustainable gardening" {...field} /></FormControl>
+              <FormLabel>Product Name</FormLabel>
+              <FormControl><Input placeholder="e.g., The Amazing Widget Pro" {...field} /></FormControl>
               <FormMessage />
             </FormItem>
           )} />
-          <FormField control={form.control} name="format" render={({ field }) => (
+           <FormField control={form.control} name="features" render={({ field }) => (
             <FormItem>
-              <FormLabel>Content Format</FormLabel>
+              <FormLabel>Key Features / Talking Points</FormLabel>
+              <FormControl><Textarea placeholder="List the key features, benefits, and selling points of the product." {...field} /></FormControl>
+              <FormMessage />
+            </FormItem>
+          )} />
+          <Button type="submit" disabled={isLoading}>
+            <Wand2 className="mr-2 h-4 w-4" />
+            {isLoading ? "Generating..." : "Generate Review"}
+          </Button>
+        </form>
+      </Form>
+      {isLoading && <LoadingSpinner />}
+      {result && (
+        <Card className="mt-6 bg-muted/30">
+          <CardHeader><CardTitle>Generated Product Review (Markdown)</CardTitle></CardHeader>
+          <CardContent>
+            <Textarea className="min-h-[400px] whitespace-pre-wrap" value={result.review} readOnly />
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+}
+
+
+// Product Hook Generator
+const productHookSchema = z.object({
+  productDescription: z.string().min(10, 'Product description is required.'),
+  emotion: z.string().min(1, 'Emotion is required.'),
+});
+
+export function ProductHookGenerator() {
+  const [result, setResult] = useState<GenerateProductHookOutput | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
+
+  const form = useForm<z.infer<typeof productHookSchema>>({
+    resolver: zodResolver(productHookSchema),
+    defaultValues: { productDescription: "", emotion: "Curiosity" },
+  });
+
+  async function onSubmit(values: z.infer<typeof productHookSchema>) {
+    setIsLoading(true);
+    setResult(null);
+    try {
+      const response = await generateProductHook(values);
+      setResult(response);
+    } catch (error) {
+      console.error(error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to generate product hooks. Please try again.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+           <FormField control={form.control} name="productDescription" render={({ field }) => (
+            <FormItem>
+              <FormLabel>Product / Offer Description</FormLabel>
+              <FormControl><Textarea placeholder="Briefly describe your product or offer." {...field} /></FormControl>
+              <FormMessage />
+            </FormItem>
+          )} />
+           <FormField control={form.control} name="emotion" render={({ field }) => (
+            <FormItem>
+              <FormLabel>Target Emotion</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
-                  <SelectTrigger><SelectValue placeholder="Select a format" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder="Select an emotion" /></SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="blog_post">Blog Post</SelectItem>
-                  <SelectItem value="youtube_video">YouTube Video</SelectItem>
-                  <SelectItem value="podcast_episode">Podcast Episode</SelectItem>
-                  <SelectItem value="newsletter">Newsletter</SelectItem>
+                  <SelectItem value="Curiosity">Curiosity</SelectItem>
+                  <SelectItem value="Urgency">Urgency</SelectItem>
+                  <SelectItem value="Transformation">Transformation</SelectItem>
+                  <SelectItem value="Pain Point">Pain Point</SelectItem>
+                   <SelectItem value="Contrarian">Contrarian</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
@@ -261,17 +337,17 @@ export function ContentIdeator() {
           )} />
           <Button type="submit" disabled={isLoading}>
             <Wand2 className="mr-2 h-4 w-4" />
-            {isLoading ? "Generating..." : "Generate Ideas"}
+            {isLoading ? "Generating..." : "Generate Hooks"}
           </Button>
         </form>
       </Form>
       {isLoading && <LoadingSpinner />}
       {result && (
         <Card className="mt-6 bg-muted/30">
-          <CardHeader><CardTitle>Generated Content Ideas</CardTitle></CardHeader>
+          <CardHeader><CardTitle>Generated Hooks</CardTitle></CardHeader>
           <CardContent>
-            <ul className="list-disc list-inside space-y-4">
-              {result.ideas.map((idea, i) => <li key={i}>{idea}</li>)}
+            <ul className="list-disc list-inside space-y-2">
+              {result.hooks.map((hook, i) => <li key={i}>{hook}</li>)}
             </ul>
           </CardContent>
         </Card>
