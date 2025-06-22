@@ -16,6 +16,9 @@ const config: Config = {
       },
     },
     extend: {
+      boxShadow: {
+        'glow-primary': '0 0 20px hsl(var(--primary) / 0.25)',
+      },
       fontFamily: {
         sans: ['var(--font-inter)', 'sans-serif'],
         body: ['Inter', 'sans-serif'],
