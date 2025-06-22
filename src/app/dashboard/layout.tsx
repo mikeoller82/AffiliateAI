@@ -24,12 +24,13 @@ import {
   Link as LinkIcon,
   Filter,
   Mail,
-  Sparkles,
+  Rocket,
   Settings,
   HelpCircle,
   Search,
   Bell,
   Users,
+  BrainCircuit,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -39,7 +40,7 @@ const navItems = [
     { href: '/dashboard/funnels', icon: Filter, label: 'Funnels' },
     { href: '/dashboard/crm', icon: Users, label: 'CRM' },
     { href: '/dashboard/email', icon: Mail, label: 'Email Marketing' },
-    { href: '/dashboard/ai-tools', icon: Sparkles, label: 'AI Tools' },
+    { href: '/dashboard/ai-tools', icon: BrainCircuit, label: 'AI Tools' },
 ];
 
 function MainContent({ children }: { children: React.ReactNode }) {
@@ -80,9 +81,9 @@ function AppSidebar() {
             <SidebarHeader className="p-4 border-b">
                 <Link href="/dashboard" className="flex items-center gap-3">
                     <div className="p-2 bg-primary rounded-lg text-primary-foreground">
-                        <Sparkles className="h-6 w-6" />
+                        <Rocket className="h-6 w-6" />
                     </div>
-                    <h1 className="text-xl font-semibold text-foreground">AffiliateAI</h1>
+                    <h1 className="text-xl font-semibold text-foreground">HighLaunchPad</h1>
                 </Link>
             </SidebarHeader>
             <SidebarContent className="p-4">
