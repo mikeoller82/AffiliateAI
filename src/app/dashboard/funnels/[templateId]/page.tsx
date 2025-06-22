@@ -10,11 +10,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PlusCircle, Move, Trash2, PanelTop, PanelBottom, ImageIcon, VideoIcon, Code, Pencil, RectangleHorizontal, Type } from 'lucide-react';
+import { PlusCircle, Move, Trash2, PanelTop, PanelBottom, ImageIcon, VideoIcon, Code, Pencil, RectangleHorizontal, Type, Wand2, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Slider } from '@/components/ui/slider';
+import { generateFunnelCopy, GenerateFunnelCopyInput } from '@/ai/flows/generate-funnel-copy';
+import { useToast } from '@/hooks/use-toast';
+
 
 type ComponentType = 'hero' | 'features' | 'testimonials' | 'header' | 'footer' | 'image' | 'video' | 'customHtml' | 'text' | 'button';
 
@@ -220,6 +223,8 @@ const defaultContent = {
 
 export default function FunnelEditorPage() {
   const params = useParams<{ templateId: string }>();
+  const { toast } = useToast();
+
   const [components, setComponents] = useState<FunnelComponent[]>([
     { id: 1, type: 'header', content: defaultContent.header },
     { id: 2, type: 'hero', content: defaultContent.hero },
@@ -241,10 +246,17 @@ export default function FunnelEditorPage() {
   });
   const [domain, setDomain] = useState('');
   const [slug, setSlug] = useState(params.templateId);
+  const [funnelProductInfo, setFunnelProductInfo] = useState('');
 
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingComponent, setEditingComponent] = useState<FunnelComponent | null>(null);
   const [currentContent, setCurrentContent] = useState<any>({});
+
+  // AI Assistant State
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [aiTargetField, setAiTargetField] = useState({ value: '', label: '' });
+  const [aiIsLoading, setAiIsLoading] = useState(false);
+  const [aiResult, setAiResult] = useState('');
 
 
   const addComponent = (type: ComponentType) => {
@@ -272,9 +284,17 @@ export default function FunnelEditorPage() {
     setButtonStyles(prev => ({ ...prev, [key]: value }));
   }
 
+  const resetAiState = () => {
+    setAiPrompt('');
+    setAiTargetField({ value: '', label: '' });
+    setAiIsLoading(false);
+    setAiResult('');
+  }
+
   const openEditDialog = (component: FunnelComponent) => {
     setEditingComponent(component);
     setCurrentContent(component.content);
+    resetAiState();
     setIsEditDialogOpen(true);
   };
 
@@ -293,6 +313,78 @@ export default function FunnelEditorPage() {
     setEditingComponent(null);
     setCurrentContent({});
   };
+
+  const getEditableFieldsForAI = (type: ComponentType | null) => {
+    if (!type) return [];
+    switch (type) {
+        case 'hero':
+            return [
+                { value: 'title', label: 'Headline' },
+                { value: 'subtitle', label: 'Subtitle' },
+                { value: 'cta', label: 'Button Text' },
+            ];
+        case 'text':
+            return [{ value: 'text', label: 'Text Content' }];
+        case 'button':
+            return [{ value: 'text', label: 'Button Text' }];
+        case 'image':
+            return [{ value: 'alt', label: 'Image Alt Text' }];
+        case 'video':
+        case 'features':
+        case 'testimonials':
+        case 'header':
+            return [{ value: 'title', label: 'Section Title' }];
+        case 'footer':
+            return [{ value: 'copyright', label: 'Copyright Text' }];
+        default:
+            return [];
+    }
+  };
+
+  const handleAiGenerate = async () => {
+    if (!aiTargetField.value || !funnelProductInfo) {
+      toast({
+        variant: 'destructive',
+        title: 'Missing Information',
+        description: 'Please provide a product description in the Settings tab and select a content type to generate.',
+      });
+      return;
+    }
+
+    setAiIsLoading(true);
+    setAiResult('');
+    try {
+      const input: GenerateFunnelCopyInput = {
+        productDescription: funnelProductInfo,
+        copyType: aiTargetField.label,
+        userPrompt: aiPrompt || `Generate a standard ${aiTargetField.label}`,
+      };
+      const result = await generateFunnelCopy(input);
+      setAiResult(result.generatedCopy);
+    } catch (error) {
+      console.error(error);
+      toast({
+        variant: 'destructive',
+        title: 'AI Generation Failed',
+        description: 'An error occurred while generating content. Please try again.',
+      });
+    } finally {
+      setAiIsLoading(false);
+    }
+  };
+
+  const handleUseAiResult = () => {
+    if (aiResult && aiTargetField.value) {
+      handleContentChange(aiTargetField.value, aiResult);
+      toast({
+        title: 'Content Updated',
+        description: `The ${aiTargetField.label.toLowerCase()} has been updated with the AI-generated copy.`,
+      });
+      setAiResult('');
+    }
+  };
+
+  const editableFieldsForAI = getEditableFieldsForAI(editingComponent?.type);
 
 
   return (
@@ -424,6 +516,16 @@ export default function FunnelEditorPage() {
                       onChange={(e) => setSlug(e.target.value)}
                   />
               </div>
+               <div className="space-y-2 pt-4">
+                    <Label htmlFor="funnel-product-info">Product/Offer Description (for AI)</Label>
+                    <Textarea
+                        id="funnel-product-info"
+                        placeholder="Describe the product or service this funnel is for. This will be used as context for the AI Assistant."
+                        value={funnelProductInfo}
+                        onChange={(e) => setFunnelProductInfo(e.target.value)}
+                        className="min-h-[120px]"
+                    />
+                </div>
             </TabsContent>
           </Tabs>
         </div>
@@ -463,8 +565,13 @@ export default function FunnelEditorPage() {
           </div>
         </div>
       </div>
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent className="sm:max-w-2xl">
+      <Dialog open={isEditDialogOpen} onOpenChange={(open) => {
+          if (!open) {
+              setEditingComponent(null);
+          }
+          setIsEditDialogOpen(open);
+      }}>
+          <DialogContent className="sm:max-w-3xl">
               <DialogHeader>
                   <DialogTitle>Edit {editingComponent?.type} Component</DialogTitle>
                   <DialogDescription>
@@ -472,248 +579,300 @@ export default function FunnelEditorPage() {
                   </DialogDescription>
               </DialogHeader>
               
-              <div className="py-4 max-h-[60vh] overflow-y-auto pr-4">
-                {editingComponent?.type === 'text' && (
-                    <div className="space-y-2">
-                        <Label htmlFor="text-content">Text</Label>
-                        <Textarea
-                            id="text-content"
-                            value={currentContent.text || ''}
-                            onChange={(e) => handleContentChange('text', e.target.value)}
-                            className="min-h-[200px]"
-                        />
-                    </div>
-                )}
+              <Tabs defaultValue="content" className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="content">Content</TabsTrigger>
+                    <TabsTrigger value="ai-assistant" disabled={editableFieldsForAI.length === 0}>AI Assistant</TabsTrigger>
+                </TabsList>
 
-                {editingComponent?.type === 'button' && (
-                    <div className="grid gap-4">
+                <TabsContent value="content" className="py-4 max-h-[60vh] overflow-y-auto pr-4">
+                    {editingComponent?.type === 'text' && (
                         <div className="space-y-2">
-                            <Label htmlFor="button-text">Button Text</Label>
-                            <Input
-                                id="button-text"
+                            <Label htmlFor="text-content">Text</Label>
+                            <Textarea
+                                id="text-content"
                                 value={currentContent.text || ''}
                                 onChange={(e) => handleContentChange('text', e.target.value)}
+                                className="min-h-[200px]"
                             />
                         </div>
+                    )}
+
+                    {editingComponent?.type === 'button' && (
+                        <div className="grid gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="button-text">Button Text</Label>
+                                <Input
+                                    id="button-text"
+                                    value={currentContent.text || ''}
+                                    onChange={(e) => handleContentChange('text', e.target.value)}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="button-href">Link URL</Label>
+                                <Input
+                                    id="button-href"
+                                    value={currentContent.href || ''}
+                                    onChange={(e) => handleContentChange('href', e.target.value)}
+                                    placeholder="https://example.com"
+                                />
+                            </div>
+                        </div>
+                    )}
+                    
+                    {editingComponent?.type === 'customHtml' && (
                         <div className="space-y-2">
-                            <Label htmlFor="button-href">Link URL</Label>
-                            <Input
-                                id="button-href"
-                                value={currentContent.href || ''}
-                                onChange={(e) => handleContentChange('href', e.target.value)}
-                                placeholder="https://example.com"
+                            <Label htmlFor="html-content">Custom HTML</Label>
+                            <Textarea
+                                id="html-content"
+                                value={currentContent.html || ''}
+                                onChange={(e) => handleContentChange('html', e.target.value)}
+                                className="min-h-[400px] font-mono text-sm bg-muted/50"
+                                placeholder="<div>Your custom HTML code here</div>"
                             />
                         </div>
-                    </div>
-                )}
-                
-                {editingComponent?.type === 'customHtml' && (
-                    <div className="space-y-2">
-                         <Label htmlFor="html-content">Custom HTML</Label>
-                         <Textarea
-                             id="html-content"
-                             value={currentContent.html || ''}
-                             onChange={(e) => handleContentChange('html', e.target.value)}
-                             className="min-h-[400px] font-mono text-sm bg-muted/50"
-                             placeholder="<div>Your custom HTML code here</div>"
-                         />
-                    </div>
-                )}
+                    )}
 
-                {editingComponent?.type === 'hero' && (
-                    <div className="space-y-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="hero-title">Title</Label>
-                            <Input id="hero-title" value={currentContent.title || ''} onChange={(e) => handleContentChange('title', e.target.value)} />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="hero-subtitle">Subtitle</Label>
-                            <Input id="hero-subtitle" value={currentContent.subtitle || ''} onChange={(e) => handleContentChange('subtitle', e.target.value)} />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="hero-cta">CTA Text</Label>
-                            <Input id="hero-cta" value={currentContent.cta || ''} onChange={(e) => handleContentChange('cta', e.target.value)} />
-                        </div>
-                    </div>
-                )}
-                
-                {editingComponent?.type === 'image' && (
-                    <div className="space-y-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="image-src">Image URL</Label>
-                            <Input id="image-src" value={currentContent.src || ''} onChange={(e) => handleContentChange('src', e.target.value)} />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="image-alt">Alt Text</Label>
-                            <Input id="image-alt" value={currentContent.alt || ''} onChange={(e) => handleContentChange('alt', e.target.value)} />
-                        </div>
-                         <div className="space-y-2">
-                            <Label htmlFor="image-hint">AI Hint</Label>
-                            <Input id="image-hint" value={currentContent.hint || ''} onChange={(e) => handleContentChange('hint', e.target.value)} />
-                            <p className="text-xs text-muted-foreground">One or two keywords for AI image search.</p>
-                        </div>
-                    </div>
-                )}
-
-                {editingComponent?.type === 'video' && (
-                    <div className="space-y-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="video-title">Title</Label>
-                            <Input id="video-title" value={currentContent.title || ''} onChange={(e) => handleContentChange('title', e.target.value)} />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="video-embed">YouTube Embed URL</Label>
-                            <Input id="video-embed" value={currentContent.embedUrl || ''} onChange={(e) => handleContentChange('embedUrl', e.target.value)} />
-                        </div>
-                    </div>
-                )}
-
-                {editingComponent?.type === 'header' && (
-                    <div className="space-y-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="header-title">Brand/Logo Text</Label>
-                            <Input id="header-title" value={currentContent.title || ''} onChange={(e) => handleContentChange('title', e.target.value)} />
-                        </div>
-                        <Label>Navigation Links</Label>
-                        {currentContent.links?.map((link: any, index: number) => (
-                            <div key={index} className="grid grid-cols-12 gap-2 items-center">
-                                <Input className="col-span-5" placeholder="Link Label" value={link.label} onChange={(e) => {
-                                    const newLinks = [...currentContent.links];
-                                    newLinks[index].label = e.target.value;
-                                    handleContentChange('links', newLinks);
-                                }} />
-                                <Input className="col-span-6" placeholder="URL" value={link.href} onChange={(e) => {
-                                     const newLinks = [...currentContent.links];
-                                     newLinks[index].href = e.target.value;
-                                     handleContentChange('links', newLinks);
-                                }} />
-                                <Button variant="ghost" size="icon" className="col-span-1" onClick={() => {
-                                    const newLinks = currentContent.links.filter((_:any, i:number) => i !== index);
-                                    handleContentChange('links', newLinks);
-                                }}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                    {editingComponent?.type === 'hero' && (
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="hero-title">Title</Label>
+                                <Input id="hero-title" value={currentContent.title || ''} onChange={(e) => handleContentChange('title', e.target.value)} />
                             </div>
-                        ))}
-                        <Button variant="outline" onClick={() => {
-                            const newLinks = [...currentContent.links, { label: 'New Link', href: '#' }];
-                            handleContentChange('links', newLinks);
-                        }}><PlusCircle className="mr-2 h-4 w-4" /> Add Link</Button>
-                    </div>
-                )}
-
-                {editingComponent?.type === 'footer' && (
-                    <div className="space-y-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="footer-copyright">Copyright Text</Label>
-                            <Input id="footer-copyright" value={currentContent.copyright || ''} onChange={(e) => handleContentChange('copyright', e.target.value)} />
-                        </div>
-                        <Label>Footer Links</Label>
-                        {currentContent.links?.map((link: any, index: number) => (
-                            <div key={index} className="grid grid-cols-12 gap-2 items-center">
-                                <Input className="col-span-5" placeholder="Link Label" value={link.label} onChange={(e) => {
-                                    const newLinks = [...currentContent.links];
-                                    newLinks[index].label = e.target.value;
-                                    handleContentChange('links', newLinks);
-                                }} />
-                                <Input className="col-span-6" placeholder="URL" value={link.href} onChange={(e) => {
-                                     const newLinks = [...currentContent.links];
-                                     newLinks[index].href = e.target.value;
-                                     handleContentChange('links', newLinks);
-                                }} />
-                                <Button variant="ghost" size="icon" className="col-span-1" onClick={() => {
-                                    const newLinks = currentContent.links.filter((_:any, i:number) => i !== index);
-                                    handleContentChange('links', newLinks);
-                                }}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                            <div className="space-y-2">
+                                <Label htmlFor="hero-subtitle">Subtitle</Label>
+                                <Input id="hero-subtitle" value={currentContent.subtitle || ''} onChange={(e) => handleContentChange('subtitle', e.target.value)} />
                             </div>
-                        ))}
-                        <Button variant="outline" onClick={() => {
-                            const newLinks = [...currentContent.links, { label: 'New Link', href: '#' }];
-                            handleContentChange('links', newLinks);
-                        }}><PlusCircle className="mr-2 h-4 w-4" /> Add Link</Button>
-                    </div>
-                )}
-
-                {editingComponent?.type === 'features' && (
-                    <div className="space-y-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="features-title">Section Title</Label>
-                            <Input id="features-title" value={currentContent.title || ''} onChange={(e) => handleContentChange('title', e.target.value)} />
-                        </div>
-                        <Label>Features</Label>
-                        {currentContent.features?.map((feature: any, index: number) => (
-                             <div key={index} className="grid grid-cols-12 gap-2 p-3 rounded-md border">
-                                <div className="col-span-12 space-y-2">
-                                     <Label htmlFor={`feature-title-${index}`}>Title</Label>
-                                    <Input id={`feature-title-${index}`} placeholder="Feature Title" value={feature.title} onChange={(e) => {
-                                        const newFeatures = [...currentContent.features];
-                                        newFeatures[index].title = e.target.value;
-                                        handleContentChange('features', newFeatures);
-                                    }} />
-                                </div>
-                                <div className="col-span-12 space-y-2">
-                                    <Label htmlFor={`feature-desc-${index}`}>Description</Label>
-                                    <Textarea id={`feature-desc-${index}`} placeholder="Feature Description" value={feature.description} onChange={(e) => {
-                                        const newFeatures = [...currentContent.features];
-                                        newFeatures[index].description = e.target.value;
-                                        handleContentChange('features', newFeatures);
-                                    }} />
-                                </div>
-                                <div className="col-span-12">
-                                     <Button variant="ghost" size="sm" className="w-full text-destructive hover:text-destructive" onClick={() => {
-                                        const newFeatures = currentContent.features.filter((_:any, i:number) => i !== index);
-                                        handleContentChange('features', newFeatures);
-                                    }}><Trash2 className="mr-2 h-4 w-4" /> Remove Feature</Button>
-                                </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="hero-cta">CTA Text</Label>
+                                <Input id="hero-cta" value={currentContent.cta || ''} onChange={(e) => handleContentChange('cta', e.target.value)} />
                             </div>
-                        ))}
-                         <Button variant="outline" className="w-full" onClick={() => {
-                            const newFeatures = [...currentContent.features, { title: 'New Feature', description: 'Enter description here.'}];
-                            handleContentChange('features', newFeatures);
-                        }}><PlusCircle className="mr-2 h-4 w-4" /> Add Feature</Button>
-                    </div>
-                )}
-
-                 {editingComponent?.type === 'testimonials' && (
-                    <div className="space-y-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="testimonials-title">Section Title</Label>
-                            <Input id="testimonials-title" value={currentContent.title || ''} onChange={(e) => handleContentChange('title', e.target.value)} />
                         </div>
-                        <Label>Testimonials</Label>
-                        {currentContent.testimonials?.map((testimonial: any, index: number) => (
-                             <div key={index} className="grid grid-cols-12 gap-2 p-3 rounded-md border">
-                                <div className="col-span-12 space-y-2">
-                                     <Label htmlFor={`testimonial-quote-${index}`}>Quote</Label>
-                                    <Textarea id={`testimonial-quote-${index}`} placeholder="Testimonial quote" value={testimonial.quote} onChange={(e) => {
-                                        const newTestimonials = [...currentContent.testimonials];
-                                        newTestimonials[index].quote = e.target.value;
-                                        handleContentChange('testimonials', newTestimonials);
-                                    }} />
-                                </div>
-                                <div className="col-span-12 space-y-2">
-                                    <Label htmlFor={`testimonial-author-${index}`}>Author</Label>
-                                    <Input id={`testimonial-author-${index}`} placeholder="Author's name" value={testimonial.author} onChange={(e) => {
-                                        const newTestimonials = [...currentContent.testimonials];
-                                        newTestimonials[index].author = e.target.value;
-                                        handleContentChange('testimonials', newTestimonials);
-                                    }} />
-                                </div>
-                                <div className="col-span-12">
-                                     <Button variant="ghost" size="sm" className="w-full text-destructive hover:text-destructive" onClick={() => {
-                                        const newTestimonials = currentContent.testimonials.filter((_:any, i:number) => i !== index);
-                                        handleContentChange('testimonials', newTestimonials);
-                                    }}><Trash2 className="mr-2 h-4 w-4" /> Remove Testimonial</Button>
-                                </div>
+                    )}
+                    
+                    {editingComponent?.type === 'image' && (
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="image-src">Image URL</Label>
+                                <Input id="image-src" value={currentContent.src || ''} onChange={(e) => handleContentChange('src', e.target.value)} />
                             </div>
-                        ))}
-                         <Button variant="outline" className="w-full" onClick={() => {
-                            const newTestimonials = [...currentContent.testimonials, { quote: 'A new testimonial quote.', author: 'New Author'}];
-                            handleContentChange('testimonials', newTestimonials);
-                        }}><PlusCircle className="mr-2 h-4 w-4" /> Add Testimonial</Button>
-                    </div>
-                )}
-              </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="image-alt">Alt Text</Label>
+                                <Input id="image-alt" value={currentContent.alt || ''} onChange={(e) => handleContentChange('alt', e.target.value)} />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="image-hint">AI Hint</Label>
+                                <Input id="image-hint" value={currentContent.hint || ''} onChange={(e) => handleContentChange('hint', e.target.value)} />
+                                <p className="text-xs text-muted-foreground">One or two keywords for AI image search.</p>
+                            </div>
+                        </div>
+                    )}
 
-              <DialogFooter>
+                    {editingComponent?.type === 'video' && (
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="video-title">Title</Label>
+                                <Input id="video-title" value={currentContent.title || ''} onChange={(e) => handleContentChange('title', e.target.value)} />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="video-embed">YouTube Embed URL</Label>
+                                <Input id="video-embed" value={currentContent.embedUrl || ''} onChange={(e) => handleContentChange('embedUrl', e.target.value)} />
+                            </div>
+                        </div>
+                    )}
+
+                    {editingComponent?.type === 'header' && (
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="header-title">Brand/Logo Text</Label>
+                                <Input id="header-title" value={currentContent.title || ''} onChange={(e) => handleContentChange('title', e.target.value)} />
+                            </div>
+                            <Label>Navigation Links</Label>
+                            {currentContent.links?.map((link: any, index: number) => (
+                                <div key={index} className="grid grid-cols-12 gap-2 items-center">
+                                    <Input className="col-span-5" placeholder="Link Label" value={link.label} onChange={(e) => {
+                                        const newLinks = [...currentContent.links];
+                                        newLinks[index].label = e.target.value;
+                                        handleContentChange('links', newLinks);
+                                    }} />
+                                    <Input className="col-span-6" placeholder="URL" value={link.href} onChange={(e) => {
+                                        const newLinks = [...currentContent.links];
+                                        newLinks[index].href = e.target.value;
+                                        handleContentChange('links', newLinks);
+                                    }} />
+                                    <Button variant="ghost" size="icon" className="col-span-1" onClick={() => {
+                                        const newLinks = currentContent.links.filter((_:any, i:number) => i !== index);
+                                        handleContentChange('links', newLinks);
+                                    }}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                                </div>
+                            ))}
+                            <Button variant="outline" onClick={() => {
+                                const newLinks = [...currentContent.links, { label: 'New Link', href: '#' }];
+                                handleContentChange('links', newLinks);
+                            }}><PlusCircle className="mr-2 h-4 w-4" /> Add Link</Button>
+                        </div>
+                    )}
+
+                    {editingComponent?.type === 'footer' && (
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="footer-copyright">Copyright Text</Label>
+                                <Input id="footer-copyright" value={currentContent.copyright || ''} onChange={(e) => handleContentChange('copyright', e.target.value)} />
+                            </div>
+                            <Label>Footer Links</Label>
+                            {currentContent.links?.map((link: any, index: number) => (
+                                <div key={index} className="grid grid-cols-12 gap-2 items-center">
+                                    <Input className="col-span-5" placeholder="Link Label" value={link.label} onChange={(e) => {
+                                        const newLinks = [...currentContent.links];
+                                        newLinks[index].label = e.target.value;
+                                        handleContentChange('links', newLinks);
+                                    }} />
+                                    <Input className="col-span-6" placeholder="URL" value={link.href} onChange={(e) => {
+                                        const newLinks = [...currentContent.links];
+                                        newLinks[index].href = e.target.value;
+                                        handleContentChange('links', newLinks);
+                                    }} />
+                                    <Button variant="ghost" size="icon" className="col-span-1" onClick={() => {
+                                        const newLinks = currentContent.links.filter((_:any, i:number) => i !== index);
+                                        handleContentChange('links', newLinks);
+                                    }}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                                </div>
+                            ))}
+                            <Button variant="outline" onClick={() => {
+                                const newLinks = [...currentContent.links, { label: 'New Link', href: '#' }];
+                                handleContentChange('links', newLinks);
+                            }}><PlusCircle className="mr-2 h-4 w-4" /> Add Link</Button>
+                        </div>
+                    )}
+
+                    {editingComponent?.type === 'features' && (
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="features-title">Section Title</Label>
+                                <Input id="features-title" value={currentContent.title || ''} onChange={(e) => handleContentChange('title', e.target.value)} />
+                            </div>
+                            <Label>Features</Label>
+                            {currentContent.features?.map((feature: any, index: number) => (
+                                <div key={index} className="grid grid-cols-12 gap-2 p-3 rounded-md border">
+                                    <div className="col-span-12 space-y-2">
+                                        <Label htmlFor={`feature-title-${index}`}>Title</Label>
+                                        <Input id={`feature-title-${index}`} placeholder="Feature Title" value={feature.title} onChange={(e) => {
+                                            const newFeatures = [...currentContent.features];
+                                            newFeatures[index].title = e.target.value;
+                                            handleContentChange('features', newFeatures);
+                                        }} />
+                                    </div>
+                                    <div className="col-span-12 space-y-2">
+                                        <Label htmlFor={`feature-desc-${index}`}>Description</Label>
+                                        <Textarea id={`feature-desc-${index}`} placeholder="Feature Description" value={feature.description} onChange={(e) => {
+                                            const newFeatures = [...currentContent.features];
+                                            newFeatures[index].description = e.target.value;
+                                            handleContentChange('features', newFeatures);
+                                        }} />
+                                    </div>
+                                    <div className="col-span-12">
+                                        <Button variant="ghost" size="sm" className="w-full text-destructive hover:text-destructive" onClick={() => {
+                                            const newFeatures = currentContent.features.filter((_:any, i:number) => i !== index);
+                                            handleContentChange('features', newFeatures);
+                                        }}><Trash2 className="mr-2 h-4 w-4" /> Remove Feature</Button>
+                                    </div>
+                                </div>
+                            ))}
+                            <Button variant="outline" className="w-full" onClick={() => {
+                                const newFeatures = [...currentContent.features, { title: 'New Feature', description: 'Enter description here.'}];
+                                handleContentChange('features', newFeatures);
+                            }}><PlusCircle className="mr-2 h-4 w-4" /> Add Feature</Button>
+                        </div>
+                    )}
+
+                    {editingComponent?.type === 'testimonials' && (
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="testimonials-title">Section Title</Label>
+                                <Input id="testimonials-title" value={currentContent.title || ''} onChange={(e) => handleContentChange('title', e.target.value)} />
+                            </div>
+                            <Label>Testimonials</Label>
+                            {currentContent.testimonials?.map((testimonial: any, index: number) => (
+                                <div key={index} className="grid grid-cols-12 gap-2 p-3 rounded-md border">
+                                    <div className="col-span-12 space-y-2">
+                                        <Label htmlFor={`testimonial-quote-${index}`}>Quote</Label>
+                                        <Textarea id={`testimonial-quote-${index}`} placeholder="Testimonial quote" value={testimonial.quote} onChange={(e) => {
+                                            const newTestimonials = [...currentContent.testimonials];
+                                            newTestimonials[index].quote = e.target.value;
+                                            handleContentChange('testimonials', newTestimonials);
+                                        }} />
+                                    </div>
+                                    <div className="col-span-12 space-y-2">
+                                        <Label htmlFor={`testimonial-author-${index}`}>Author</Label>
+                                        <Input id={`testimonial-author-${index}`} placeholder="Author's name" value={testimonial.author} onChange={(e) => {
+                                            const newTestimonials = [...currentContent.testimonials];
+                                            newTestimonials[index].author = e.target.value;
+                                            handleContentChange('testimonials', newTestimonials);
+                                        }} />
+                                    </div>
+                                    <div className="col-span-12">
+                                        <Button variant="ghost" size="sm" className="w-full text-destructive hover:text-destructive" onClick={() => {
+                                            const newTestimonials = currentContent.testimonials.filter((_:any, i:number) => i !== index);
+                                            handleContentChange('testimonials', newTestimonials);
+                                        }}><Trash2 className="mr-2 h-4 w-4" /> Remove Testimonial</Button>
+                                    </div>
+                                </div>
+                            ))}
+                            <Button variant="outline" className="w-full" onClick={() => {
+                                const newTestimonials = [...currentContent.testimonials, { quote: 'A new testimonial quote.', author: 'New Author'}];
+                                handleContentChange('testimonials', newTestimonials);
+                            }}><PlusCircle className="mr-2 h-4 w-4" /> Add Testimonial</Button>
+                        </div>
+                    )}
+                </TabsContent>
+
+                <TabsContent value="ai-assistant" className="py-4 max-h-[60vh] overflow-y-auto pr-4">
+                     <div className="space-y-4">
+                        <div className="space-y-2">
+                            <Label>Content to Generate</Label>
+                            <Select value={aiTargetField.value} onValueChange={(v) => {
+                                const field = editableFieldsForAI.find(f => f.value === v);
+                                if (field) setAiTargetField(field);
+                            }}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select what to generate..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {editableFieldsForAI.map(field => (
+                                        <SelectItem key={field.value} value={field.value}>{field.label}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="ai-prompt">Prompt / Instruction</Label>
+                            <Textarea
+                                id="ai-prompt"
+                                placeholder="e.g., Make it sound more urgent and exclusive."
+                                value={aiPrompt}
+                                onChange={(e) => setAiPrompt(e.target.value)}
+                            />
+                        </div>
+                        <Button onClick={handleAiGenerate} disabled={aiIsLoading || !aiTargetField.value}>
+                            {aiIsLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Wand2 className="mr-2 h-4 w-4" />}
+                            Generate with AI
+                        </Button>
+
+                        {(aiIsLoading || aiResult) && (
+                             <div className="space-y-2 pt-4">
+                                <Label>Generated Result</Label>
+                                <div className="p-4 rounded-md border bg-muted min-h-[120px]">
+                                    {aiIsLoading && <div className="flex items-center gap-2 text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" /><span>Generating...</span></div>}
+                                    {aiResult && <p className="whitespace-pre-wrap">{aiResult}</p>}
+                                </div>
+                                {aiResult && <Button onClick={handleUseAiResult}>Use this copy</Button>}
+                            </div>
+                        )}
+                    </div>
+                </TabsContent>
+              </Tabs>
+
+              <DialogFooter className="mt-4">
                   <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>Cancel</Button>
                   <Button onClick={saveChanges}>Save Changes</Button>
               </DialogFooter>
