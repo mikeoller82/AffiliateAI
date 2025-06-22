@@ -1,14 +1,15 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { AdCopyGenerator, CtaSuggestor, ContentIdeator } from '@/components/ai/tools';
+import { AdCopyGenerator, CtaSuggestor, ContentIdeator, EmailGenerator } from '@/components/ai/tools';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function AIToolsPage() {
   return (
     <Tabs defaultValue="ad-copy" className="w-full">
-      <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3">
+      <TabsList className="grid w-full grid-cols-1 sm:grid-cols-4">
         <TabsTrigger value="ad-copy">Ad Copy</TabsTrigger>
         <TabsTrigger value="cta-suggestions">CTA Suggestions</TabsTrigger>
         <TabsTrigger value="content-ideas">Content Ideas</TabsTrigger>
+        <TabsTrigger value="email-content">Email Content</TabsTrigger>
       </TabsList>
       <TabsContent value="ad-copy">
         <Card>
@@ -40,6 +41,17 @@ export default function AIToolsPage() {
           </CardHeader>
           <CardContent>
             <ContentIdeator />
+          </CardContent>
+        </Card>
+      </TabsContent>
+      <TabsContent value="email-content">
+        <Card>
+          <CardHeader>
+            <CardTitle>AI Email Assistant</CardTitle>
+            <CardDescription>Generate compelling email subject lines and body copy in seconds.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <EmailGenerator />
           </CardContent>
         </Card>
       </TabsContent>

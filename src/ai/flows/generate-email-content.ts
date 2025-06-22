@@ -1,4 +1,3 @@
-// This file is machine-generated - edit at your own risk!
 
 'use server';
 
@@ -46,7 +45,7 @@ Product Details: {{{productDetails}}}
 
 Output the response in JSON format.
 {
-  "subject_lines": ["subject line 1", "subject line 2", ...],
+  "subjectLines": ["subject line 1", "subject line 2", ...],
   "body": "email body..."
 }
 `,

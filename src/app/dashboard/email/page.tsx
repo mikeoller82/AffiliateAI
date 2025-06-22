@@ -5,6 +5,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { PlusCircle, MoreHorizontal, Edit, BarChart, Send, Trash2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
 
 const campaigns = [
     { id: 1, name: "Welcome Sequence", status: "Active", sent: 1250, openRate: "45.8%", clickRate: "12.3%" },
@@ -30,9 +31,11 @@ export default function EmailPage() {
                             <CardTitle>Email Campaigns</CardTitle>
                             <CardDescription>Manage your email sequences and broadcasts.</CardDescription>
                         </div>
-                        <Button>
-                            <PlusCircle className="mr-2 h-4 w-4" />
-                            New Campaign
+                        <Button asChild>
+                           <Link href="/dashboard/email/new">
+                             <PlusCircle className="mr-2 h-4 w-4" />
+                             New Campaign
+                           </Link>
                         </Button>
                     </CardHeader>
                     <CardContent>
