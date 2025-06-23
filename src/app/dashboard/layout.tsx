@@ -30,6 +30,7 @@ import {
   Search,
   Bell,
   BrainCircuit,
+  FileText,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Logo } from '@/components/icons/logo';
@@ -41,6 +42,7 @@ const navItems = [
     { href: '/dashboard/crm', icon: Users, label: 'CRM' },
     { href: '/dashboard/email', icon: Mail, label: 'Email Marketing' },
     { href: '/dashboard/ai-tools', icon: BrainCircuit, label: 'AI Tools' },
+    { href: '/dashboard/notion-pad', icon: FileText, label: 'Editor' },
 ];
 
 function MainContent({ children }: { children: React.ReactNode }) {
