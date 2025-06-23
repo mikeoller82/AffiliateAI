@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -68,8 +69,10 @@ export default function AutomationsPage() {
                             </div>
                         </CardContent>
                         <CardFooter className="mt-auto flex flex-col sm:flex-row gap-2">
-                             <Button variant="outline" className="w-full">
-                                <Edit className="mr-2 h-4 w-4" /> Edit
+                             <Button variant="outline" className="w-full" asChild>
+                                <Link href="/dashboard/automations/new">
+                                    <Edit className="mr-2 h-4 w-4" /> Edit
+                                </Link>
                             </Button>
                             <Button variant="destructive" className="w-full">
                                 <Trash2 className="mr-2 h-4 w-4" /> Delete
