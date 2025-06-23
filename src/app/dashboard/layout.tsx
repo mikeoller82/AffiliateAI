@@ -31,6 +31,7 @@ import {
   Bell,
   BrainCircuit,
   FileText,
+  Workflow,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Logo } from '@/components/icons/logo';
@@ -41,6 +42,7 @@ const navItems = [
     { href: '/dashboard/funnels', icon: Filter, label: 'Funnels' },
     { href: '/dashboard/crm', icon: Users, label: 'CRM' },
     { href: '/dashboard/email', icon: Mail, label: 'Email Marketing' },
+    { href: '/dashboard/automations', icon: Workflow, label: 'Automations' },
     { href: '/dashboard/ai-tools', icon: BrainCircuit, label: 'AI Tools' },
     { href: '/dashboard/notion-pad', icon: FileText, label: 'Editor' },
 ];
@@ -49,9 +51,7 @@ function MainContent({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
     const pageTitle = navItems.find(item => pathname.startsWith(item.href))?.label || 'Dashboard';
     
-    // Check if the current page is a funnel editor page
-    const isFunnelEditor = /^\/dashboard\/funnels\/./.test(pathname);
-
+    const isBuilderPage = /^\/dashboard\/funnels\/|^\/dashboard\/automations\/new/.test(pathname);
 
     return (
         <div className="flex flex-col h-screen bg-background">
@@ -71,7 +71,7 @@ function MainContent({ children }: { children: React.ReactNode }) {
                     </Button>
                 </div>
             </header>
-            <main className={cn("flex-1 overflow-y-auto", !isFunnelEditor && "p-6")}>{children}</main>
+            <main className={cn("flex-1 overflow-y-auto", !isBuilderPage && "p-6")}>{children}</main>
         </div>
     );
 }
