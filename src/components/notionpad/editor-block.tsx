@@ -7,7 +7,7 @@ import Placeholder from '@tiptap/extension-placeholder';
 import Link from '@tiptap/extension-link';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, Trash2 } from 'lucide-react';
+import { GripVertical, Trash2, Copy, Wand2 } from 'lucide-react';
 import type { Block } from './types';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -17,9 +17,11 @@ interface EditorBlockProps {
   block: Block;
   updateContent: (id: string, content: any) => void;
   deleteBlock: (id: string) => void;
+  duplicateBlock: (id: string) => void;
+  openAiAssist: (id: string) => void;
 }
 
-export function EditorBlock({ block, updateContent, deleteBlock }: EditorBlockProps) {
+export function EditorBlock({ block, updateContent, deleteBlock, duplicateBlock, openAiAssist }: EditorBlockProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: block.id });
 
   const style = {
@@ -39,7 +41,7 @@ export function EditorBlock({ block, updateContent, deleteBlock }: EditorBlockPr
         },
       }),
       Placeholder.configure({
-        placeholder: "Start writing...",
+        placeholder: "Type '/' for commands, or just start writing...",
       }),
     ],
     content: block.content,
@@ -70,15 +72,16 @@ export function EditorBlock({ block, updateContent, deleteBlock }: EditorBlockPr
         {editor && <EditorBubbleMenu editor={editor} />}
         <EditorContent editor={editor} />
       </div>
-      <div className="opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
-         <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7"
-            onClick={() => deleteBlock(block.id)}
-        >
+       <div className="absolute right-0 top-0.5 flex items-center gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openAiAssist(block.id)} title="AI Assist">
+              <Wand2 className="h-4 w-4 text-muted-foreground hover:text-primary"/>
+          </Button>
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => duplicateBlock(block.id)} title="Duplicate">
+              <Copy className="h-4 w-4 text-muted-foreground hover:text-primary"/>
+          </Button>
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => deleteBlock(block.id)} title="Delete">
             <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive"/>
-        </Button>
+          </Button>
       </div>
     </div>
   );
