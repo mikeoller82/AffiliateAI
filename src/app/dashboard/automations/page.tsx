@@ -67,7 +67,7 @@ export default function AutomationsPage() {
                                 <p><strong>Steps:</strong> {automation.steps}</p>
                             </div>
                         </CardContent>
-                        <CardFooter className="mt-auto flex gap-2">
+                        <CardFooter className="mt-auto flex flex-col sm:flex-row gap-2">
                              <Button variant="outline" className="w-full">
                                 <Edit className="mr-2 h-4 w-4" /> Edit
                             </Button>
