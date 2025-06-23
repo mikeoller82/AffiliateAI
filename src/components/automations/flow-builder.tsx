@@ -12,9 +12,6 @@ import ReactFlow, {
   type Connection,
   type Edge,
   type Node,
-  type OnNodesChange,
-  type OnEdgesChange,
-  type NodeProps,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 
@@ -24,54 +21,15 @@ import { TriggerNode, ActionNode, DelayNode, ConditionNode } from './nodes';
 import { Button } from '../ui/button';
 import { Save, PanelLeft } from 'lucide-react';
 
-const initialNodes: Node[] = [
-  {
-    id: '1',
-    type: 'trigger',
-    position: { x: 250, y: 50 },
-    data: { 
-        icon: 'PlayCircle', 
-        title: 'Lead Form Submitted', 
-        config: { formId: 'form_1' } 
-    },
-  },
-  {
-    id: '2',
-    type: 'action',
-    position: { x: 250, y: 250 },
-    data: { 
-        icon: 'Mail', 
-        title: 'Send Welcome Email', 
-        config: { 
-            subject: 'Welcome to the family!', 
-            body: 'Hi {{contact.name}}, thanks for signing up!' 
-        }
-    },
-  },
-  {
-    id: '3',
-    type: 'delay',
-    position: { x: 250, y: 450 },
-    data: {
-        icon: 'Hourglass',
-        title: 'Wait',
-        config: {
-            duration: 2,
-            unit: 'days'
-        }
-    }
-  }
-];
+interface FlowBuilderProps {
+    initialNodes?: Node[];
+    initialEdges?: Edge[];
+}
 
-const initialEdges: Edge[] = [
-    { id: 'e1-2', source: '1', target: '2', animated: true },
-    { id: 'e1-3', source: '2', target: '3', animated: true },
-];
-
-let id = 4;
+let id = 100; // start from a higher number to avoid conflicts with template IDs
 const getId = () => `${id++}`;
 
-export function FlowBuilder() {
+export function FlowBuilder({ initialNodes = [], initialEdges = [] }: FlowBuilderProps) {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
