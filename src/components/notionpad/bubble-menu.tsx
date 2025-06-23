@@ -4,7 +4,6 @@ import { Bold, Italic, Link as LinkIcon } from 'lucide-react';
 import type { Editor } from '@tiptap/core';
 import { Button } from '@/components/ui/button';
 import { useCallback } from 'react';
-import { cn } from '@/lib/utils';
 
 type EditorBubbleMenuProps = Omit<BubbleMenuProps, 'children'> & {
     editor: Editor;
@@ -29,6 +28,8 @@ export const EditorBubbleMenu = ({ editor, ...props }: EditorBubbleMenuProps) =>
     // update link
     editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
   }, [editor]);
+
+  if (!editor) return null;
 
   return (
     <BubbleMenu
