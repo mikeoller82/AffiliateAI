@@ -1,7 +1,7 @@
+// Import the functions you need from the SDKs you need
+import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
 
-import { initializeApp, getApps, getApp, type FirebaseApp } from 'firebase/app';
-import { getAnalytics, isSupported } from "firebase/analytics";
-
+// Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
@@ -12,29 +12,21 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
 };
 
-// Check if all required environment variables are present
-export const isFirebaseConfigured = !!(
-  firebaseConfig.apiKey &&
-  firebaseConfig.authDomain &&
-  firebaseConfig.projectId
-);
+// A function to check if the required Firebase config values are provided
+export const isFirebaseConfigured = () => {
+  return !!(
+    firebaseConfig.apiKey &&
+    firebaseConfig.authDomain &&
+    firebaseConfig.projectId
+  );
+};
 
-let app: FirebaseApp;
-
-if (isFirebaseConfigured) {
-  app = getApps().length ? getApp() : initializeApp(firebaseConfig);
-  // Initialize Analytics only on the client side where it is supported
-  if (typeof window !== 'undefined') {
-      isSupported().then(supported => {
-          if (supported) {
-              getAnalytics(app);
-          }
-      });
+// A function to get the Firebase app instance, initializing it only when needed.
+export function getFirebaseApp(): FirebaseApp | null {
+  if (!isFirebaseConfigured()) {
+    console.error("Firebase is not configured. Please check your environment variables.");
+    return null;
   }
-} else {
-  // If Firebase is not configured, provide a mock object to prevent build-time crashes.
-  // This helps during build time where env vars might not be available.
-  app = {} as FirebaseApp;
-}
 
-export { app };
+  return getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+}
