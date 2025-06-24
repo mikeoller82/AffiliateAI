@@ -7,8 +7,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, redirect } from 'next/navigation';
 import { useAuth } from '@/contexts/auth-context';
-import { auth } from '@/lib/firebase';
-import { signOut } from 'firebase/auth';
+import { app } from '@/lib/firebase';
+import { getAuth, signOut } from 'firebase/auth';
 import {
   SidebarProvider,
   Sidebar,
@@ -110,6 +110,7 @@ function AppSidebar() {
 
     const handleSignOut = async () => {
         try {
+            const auth = getAuth(app);
             await signOut(auth);
             toast({
                 title: "Signed Out",
@@ -200,16 +201,25 @@ function AppSidebar() {
 }
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-    const { user } = useAuth();
+    const { user, loading } = useAuth();
+    const pathname = usePathname();
     
     useEffect(() => {
-        if (!user) {
+        if (!loading && !user) {
             redirect('/login');
         }
-    }, [user]);
+    }, [user, loading, pathname]);
+
+    if (loading) {
+         return (
+            <div className="flex h-screen w-full items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin" />
+            </div>
+        )
+    }
 
     if (!user) {
-        return null; // or a loading spinner, but AuthProvider already has one
+        return null;
     }
     
     return (
