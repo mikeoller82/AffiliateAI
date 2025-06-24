@@ -68,7 +68,7 @@ export default function WebsitesPage() {
                         </CardContent>
                         <CardFooter className="mt-auto grid grid-cols-2 gap-2 pt-4">
                             <Button variant="outline" className="w-full" asChild>
-                                <Link href={`/dashboard/websites/${website.id}`} target="_blank" rel="noopener noreferrer">
+                                <Link href={`/sites/${website.id}`} target="_blank" rel="noopener noreferrer">
                                     <LinkIcon className="mr-2 h-4 w-4" /> View Live
                                 </Link>
                             </Button>
