@@ -1,5 +1,4 @@
 
-import { nanoid } from 'nanoid';
 import type { FormField, FormSettings } from './form-types';
 
 export interface FormTemplate {
@@ -24,8 +23,8 @@ export const blankTemplate: FormTemplate = {
         successMessage: 'Thank you for your submission!',
     },
     fields: [
-        { id: nanoid(), type: 'text', label: 'Name', placeholder: 'Enter your name', required: true },
-        { id: nanoid(), type: 'email', label: 'Email', placeholder: 'Enter your email', required: true },
+        { id: 'field_name', type: 'text', label: 'Name', placeholder: 'Enter your name', required: true },
+        { id: 'field_email', type: 'email', label: 'Email', placeholder: 'Enter your email', required: true },
     ]
 }
 
@@ -42,8 +41,8 @@ export const formTemplates: FormTemplate[] = [
             successMessage: "Thanks! Your playbook is on its way to your inbox.",
         },
         fields: [
-            { id: nanoid(), type: 'text', label: 'First Name', placeholder: 'Enter your first name', required: true },
-            { id: nanoid(), type: 'email', label: 'Email Address', placeholder: 'Enter your email address', required: true },
+            { id: 'lm_field_name', type: 'text', label: 'First Name', placeholder: 'Enter your first name', required: true },
+            { id: 'lm_field_email', type: 'email', label: 'Email Address', placeholder: 'Enter your email address', required: true },
         ],
     },
     {
@@ -58,9 +57,9 @@ export const formTemplates: FormTemplate[] = [
             successMessage: "We've received your message and will get back to you shortly.",
         },
         fields: [
-            { id: nanoid(), type: 'text', label: 'Full Name', placeholder: 'e.g., Jane Doe', required: true },
-            { id: nanoid(), type: 'email', label: 'Work Email', placeholder: 'you@company.com', required: true },
-            { id: nanoid(), type: 'textarea', label: 'Message', placeholder: 'How can we help you?', required: true },
+            { id: 'cu_field_name', type: 'text', label: 'Full Name', placeholder: 'e.g., Jane Doe', required: true },
+            { id: 'cu_field_email', type: 'email', label: 'Work Email', placeholder: 'you@company.com', required: true },
+            { id: 'cu_field_message', type: 'textarea', label: 'Message', placeholder: 'How can we help you?', required: true },
         ],
     },
     {
@@ -75,16 +74,18 @@ export const formTemplates: FormTemplate[] = [
             successMessage: "You're registered! Check your email for the confirmation and link.",
         },
         fields: [
-            { id: nanoid(), type: 'text', label: 'First Name', placeholder: 'Your first name', required: true },
-            { id: nanoid(), type: 'email', label: 'Best Email', placeholder: 'Where should we send the link?', required: true },
-            { id: nanoid(), type: 'checkbox', label: 'Yes, send me reminders before the webinar starts.', required: false },
+            { id: 'wr_field_name', type: 'text', label: 'First Name', placeholder: 'Your first name', required: true },
+            { id: 'wr_field_email', type: 'email', label: 'Best Email', placeholder: 'Where should we send the link?', required: true },
+            { id: 'wr_field_reminders', type: 'checkbox', label: 'Yes, send me reminders before the webinar starts.', required: false },
         ],
     },
 ];
+
+const allTemplates = [blankTemplate, ...formTemplates];
 
 export function getTemplateById(id: string | null): FormTemplate {
     if (!id) {
         return blankTemplate;
     }
-    return formTemplates.find(template => template.id === id) || blankTemplate;
+    return allTemplates.find(template => template.id === id) || blankTemplate;
 }
