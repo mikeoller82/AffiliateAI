@@ -8,7 +8,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { getFirebaseInstances } from '@/lib/firebase';
+import { useAuth } from '@/contexts/auth-context';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -29,15 +29,7 @@ export default function SignupPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [isAuthReady, setIsAuthReady] = useState(false);
-
-  // Eagerly initialize to check availability, but use lazily.
-  try {
-      getFirebaseInstances();
-      if (!isAuthReady) setIsAuthReady(true);
-  } catch (error) {
-      if(isAuthReady) setIsAuthReady(false);
-  }
+  const { auth } = useAuth();
 
   const form = useForm<z.infer<typeof signupFormSchema>>({
     resolver: zodResolver(signupFormSchema),
@@ -48,9 +40,16 @@ export default function SignupPage() {
   });
 
   async function onSubmit(values: z.infer<typeof signupFormSchema>) {
+    if (!auth) {
+      toast({
+        variant: 'destructive',
+        title: 'Authentication Not Ready',
+        description: 'The authentication service is not available. Please wait a moment and try again.',
+      });
+      return;
+    }
     setIsLoading(true);
     try {
-      const { auth } = getFirebaseInstances();
       await createUserWithEmailAndPassword(auth, values.email, values.password);
       toast({
         title: 'Account Created!',
@@ -62,7 +61,7 @@ export default function SignupPage() {
       let description = 'An unexpected error occurred. Please try again.';
        if (error.code === 'auth/email-already-in-use') {
           description = 'This email address is already in use. Please try logging in.';
-      } else if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found' || error.code === 'auth/configuration-not-found') {
+      } else if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found' || error.code === 'auth/configuration-not-found' || error.code === 'auth/api-key-not-valid') {
           description = 'There was a problem with the authentication service. Please try again later.';
       } else if (error.message) {
           description = error.message;
@@ -120,13 +119,13 @@ export default function SignupPage() {
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full" disabled={isLoading || !isAuthReady}>
+              <Button type="submit" className="w-full" disabled={isLoading || !auth}>
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Create Account
               </Button>
-               {!isAuthReady && (
-                <p className="text-xs text-center text-destructive">
-                    Firebase is not configured. Please contact support.
+               {!auth && (
+                <p className="text-xs text-center text-muted-foreground">
+                    Initializing authentication...
                 </p>
               )}
             </form>

@@ -45,16 +45,16 @@ function PlanCard({ product, onSubscribe, isLoading, isCurrent }: { product: typ
 
 
 export function BillingForm() {
-    const { user, subscription, loading } = useAuth();
+    const { user, subscription, loading, db } = useAuth();
     const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
 
     const handleSubscribe = async (priceId: string) => {
-        if (!user) {
+        if (!user || !db) {
             alert('You must be logged in to subscribe.');
             return;
         }
         setIsCheckoutLoading(true);
-        await redirectToCheckout(priceId);
+        await redirectToCheckout(db, user, priceId);
         // The user will be redirected, so we don't need to set loading to false here.
     };
 
