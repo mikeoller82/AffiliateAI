@@ -74,5 +74,3 @@ export const getNewsletterTemplateById = (id: string | undefined): NewsletterTem
   if (!id) return newsletterTemplates[0];
   return newsletterTemplates.find(t => t.id === id) || newsletterTemplates[0];
 }
-
-    
