@@ -1,28 +1,24 @@
 
+'use client';
+
+import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { PlusCircle, Edit } from "lucide-react";
+import { PlusCircle, Edit, Mails } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
-const newsletters = [
-    {
-        id: "product-update-q2",
-        title: "Q2 Product Updates",
-        description: "Announcing new features and improvements for our users.",
-        image: "https://placehold.co/600x400",
-        hint: "product announcement",
-    },
-    {
-        id: "weekly-tips",
-        title: "Weekly Growth Tips",
-        description: "A roundup of the best marketing tips of the week.",
-        image: "https://placehold.co/600x400",
-        hint: "newsletter email",
-    },
-];
+interface Newsletter {
+    id: string;
+    title: string;
+    description: string;
+    image: string;
+    hint: string;
+}
 
 export default function NewslettersPage() {
+    const [newsletters, setNewsletters] = useState<Newsletter[]>([]);
+
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -60,9 +56,12 @@ export default function NewslettersPage() {
                 ))}
                  <Card className="flex flex-col items-center justify-center border-dashed hover:border-primary transition-colors min-h-[380px]">
                     <Button asChild variant="ghost" className="h-full w-full">
-                         <Link href="/dashboard/newsletter/default" className="flex flex-col items-center justify-center h-full w-full">
-                            <PlusCircle className="h-12 w-12 text-muted-foreground" />
-                            <p className="mt-2 text-muted-foreground">Create New Newsletter</p>
+                         <Link href="/dashboard/newsletter/default" className="flex flex-col items-center justify-center h-full w-full text-center">
+                            <div className="p-4 bg-primary/10 rounded-full mb-4">
+                                <Mails className="h-12 w-12 text-primary" />
+                            </div>
+                            <p className="font-semibold">Create New Newsletter</p>
+                            <p className="text-sm text-muted-foreground px-4">Design a new newsletter landing page.</p>
                         </Link>
                     </Button>
                 </Card>
@@ -70,4 +69,3 @@ export default function NewslettersPage() {
         </div>
     );
 }
-

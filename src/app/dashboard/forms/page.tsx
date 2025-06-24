@@ -1,11 +1,16 @@
 
+'use client';
+
+import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { PlusCircle, Edit, BarChart3 } from "lucide-react";
+import { PlusCircle, Edit, BarChart3, ClipboardList } from "lucide-react";
 import Link from "next/link";
-import { formTemplates } from "@/lib/form-templates";
+import type { FormTemplate } from "@/lib/form-templates";
 
 export default function FormsPage() {
+    const [forms, setForms] = useState<FormTemplate[]>([]);
+
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -23,7 +28,7 @@ export default function FormsPage() {
                 </Button>
             </div>
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {formTemplates.map(form => (
+                {forms.map(form => (
                     <Card key={form.id} className="flex flex-col">
                         <CardHeader>
                             <CardTitle>{form.name}</CardTitle>
@@ -51,11 +56,14 @@ export default function FormsPage() {
                         </CardFooter>
                     </Card>
                 ))}
-                 <Card className="flex flex-col items-center justify-center border-dashed hover:border-primary transition-colors">
+                 <Card className="flex flex-col items-center justify-center border-dashed hover:border-primary transition-colors min-h-[300px]">
                     <Button asChild variant="ghost" className="h-full w-full">
-                         <Link href="/dashboard/forms/new" className="flex flex-col items-center justify-center h-full w-full">
-                            <PlusCircle className="h-12 w-12 text-muted-foreground" />
-                            <p className="mt-2 text-muted-foreground">Create New Form</p>
+                         <Link href="/dashboard/forms/new" className="flex flex-col items-center justify-center h-full w-full text-center">
+                            <div className="p-4 bg-green-500/10 rounded-full mb-4">
+                                <ClipboardList className="h-12 w-12 text-green-500" />
+                            </div>
+                            <p className="font-semibold">Create New Form</p>
+                             <p className="text-sm text-muted-foreground px-4">Build a form to capture leads, registrations, and more.</p>
                         </Link>
                     </Button>
                 </Card>

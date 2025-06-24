@@ -1,35 +1,28 @@
 
+'use client';
+
+import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { PlusCircle, Edit, Eye, Clock } from "lucide-react";
+import { PlusCircle, Edit, Eye, Clock, Newspaper } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
-const posts = [
-    {
-        id: "how-to-write-great-copy",
-        title: "How to Write Copy That Converts in 2025",
-        description: "A deep dive into the psychological triggers that make people buy.",
-        image: "https://placehold.co/600x400",
-        hint: "writing desk",
-        status: "Published",
-        author: "John Doe",
-        publishDate: "2025-06-15",
-    },
-    {
-        id: "ai-in-marketing-trends",
-        title: "Top 5 AI Marketing Trends to Watch",
-        description: "Discover the AI tools and strategies that are reshaping the industry.",
-        image: "https://placehold.co/600x400",
-        hint: "AI robot",
-        status: "Draft",
-        author: "Jane Smith",
-        publishDate: null,
-    },
-];
+interface Post {
+    id: string;
+    title: string;
+    description: string;
+    image: string;
+    hint: string;
+    status: 'Published' | 'Draft';
+    author: string;
+    publishDate: string | null;
+}
 
 export default function BlogPage() {
+    const [posts, setPosts] = useState<Post[]>([]);
+
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -79,9 +72,12 @@ export default function BlogPage() {
                 ))}
                  <Card className="flex flex-col items-center justify-center border-dashed hover:border-primary transition-colors min-h-[450px]">
                     <Button asChild variant="ghost" className="h-full w-full">
-                         <Link href="/dashboard/blog/default" className="flex flex-col items-center justify-center h-full w-full">
-                            <PlusCircle className="h-12 w-12 text-muted-foreground" />
-                            <p className="mt-2 text-muted-foreground">Create New Post</p>
+                         <Link href="/dashboard/blog/default" className="flex flex-col items-center justify-center h-full w-full text-center">
+                            <div className="p-4 bg-primary/10 rounded-full mb-4">
+                                <Newspaper className="h-12 w-12 text-primary" />
+                            </div>
+                            <p className="font-semibold">Create New Post</p>
+                            <p className="text-sm text-muted-foreground px-4">Write a new article to engage your audience.</p>
                         </Link>
                     </Button>
                 </Card>

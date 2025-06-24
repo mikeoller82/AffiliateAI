@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -6,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { PlusCircle, Users, Filter, X } from "lucide-react";
+import { PlusCircle, Users, Filter, X, FolderKanban } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from '@/components/ui/separator';
 
@@ -29,67 +30,6 @@ interface Segment {
     rules: RuleGroup[];
 }
 
-const initialSegments: Segment[] = [
-    { 
-        id: 1, 
-        name: "Active Subscribers", 
-        description: "Contacts who opened an email in the last 30 days.", 
-        count: 18450,
-        rules: [
-            {
-                logic: 'AND',
-                rules: [
-                    { field: 'Last Email Open', operator: 'is within the last', value: '30 days' }
-                ]
-            }
-        ]
-    },
-    { 
-        id: 2, 
-        name: "New Leads", 
-        description: "Contacts added in the last 30 days with the 'Lead' tag.", 
-        count: 215,
-        rules: [
-            {
-                logic: 'AND',
-                rules: [
-                    { field: 'Date Added', operator: 'is within the last', value: '30 days' },
-                    { field: 'Tag', operator: 'is', value: 'Lead' }
-                ]
-            }
-        ]
-    },
-    { 
-        id: 3, 
-        name: "High-Value Customers", 
-        description: "Contacts with the 'VIP' tag.", 
-        count: 430,
-        rules: [
-            {
-                logic: 'AND',
-                rules: [
-                    { field: 'Tag', operator: 'is', value: 'VIP' }
-                ]
-            }
-        ]
-    },
-    { 
-        id: 4, 
-        name: "Inactive Contacts", 
-        description: "Contacts who have not engaged in 90 days.", 
-        count: 1240,
-        rules: [
-             {
-                logic: 'AND',
-                rules: [
-                    { field: 'Last Email Open', operator: 'is not within the last', value: '90 days' },
-                    { field: 'Last Click', operator: 'is not within the last', value: '90 days' }
-                ]
-            }
-        ]
-    },
-];
-
 const fieldOptions = ["Tag", "Date Added", "Email Address", "Last Email Open", "Last Click"];
 const operatorOptions: Record<string, string[]> = {
     Tag: ["is", "is not", "contains", "does not contain"],
@@ -101,6 +41,7 @@ const operatorOptions: Record<string, string[]> = {
 
 export default function SegmentsPage() {
     const { toast } = useToast();
+    const [segments, setSegments] = useState<Segment[]>([]);
     const [isRuleEditorOpen, setIsRuleEditorOpen] = useState(false);
     const [selectedSegment, setSelectedSegment] = useState<Segment | null>(null);
     
@@ -112,7 +53,7 @@ export default function SegmentsPage() {
     };
 
     const handleEditRulesClick = (segment: Segment) => {
-        setSelectedSegment(segment);
+        setSelectedSegment(JSON.parse(JSON.stringify(segment)));
         setIsRuleEditorOpen(true);
     };
 
@@ -186,29 +127,43 @@ export default function SegmentsPage() {
                         Create Segment
                     </Button>
                 </div>
-                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                    {initialSegments.map(segment => (
-                        <Card key={segment.id} className="flex flex-col">
-                            <CardHeader>
-                                <CardTitle>{segment.name}</CardTitle>
-                                <CardDescription className="h-10">{segment.description}</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="flex items-center gap-2 text-2xl font-bold">
-                                    <Users className="h-6 w-6 text-muted-foreground"/>
-                                    {segment.count.toLocaleString()}
-                                </div>
-                                <p className="text-xs text-muted-foreground">Contacts in segment</p>
-                            </CardContent>
-                            <CardFooter className="mt-auto">
-                                <Button variant="outline" className="w-full" onClick={() => handleEditRulesClick(segment)}>
-                                    <Filter className="mr-2 h-4 w-4" />
-                                    View & Edit Rules
-                                </Button>
-                            </CardFooter>
-                        </Card>
-                    ))}
-                </div>
+                {segments.length === 0 ? (
+                    <Card className="flex flex-col items-center justify-center border-dashed min-h-[400px]">
+                        <div className="text-center">
+                            <FolderKanban className="h-12 w-12 mx-auto text-muted-foreground" />
+                            <h3 className="mt-4 text-lg font-semibold">No Segments Found</h3>
+                            <p className="mt-1 text-sm text-muted-foreground">Group your contacts with powerful filtering.</p>
+                            <Button className="mt-4" onClick={() => handleAction('Create Segment')}>
+                                <PlusCircle className="mr-2 h-4 w-4" />
+                                Create Segment
+                            </Button>
+                        </div>
+                    </Card>
+                ) : (
+                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                        {segments.map(segment => (
+                            <Card key={segment.id} className="flex flex-col">
+                                <CardHeader>
+                                    <CardTitle>{segment.name}</CardTitle>
+                                    <CardDescription className="h-10">{segment.description}</CardDescription>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="flex items-center gap-2 text-2xl font-bold">
+                                        <Users className="h-6 w-6 text-muted-foreground"/>
+                                        {segment.count.toLocaleString()}
+                                    </div>
+                                    <p className="text-xs text-muted-foreground">Contacts in segment</p>
+                                </CardContent>
+                                <CardFooter className="mt-auto">
+                                    <Button variant="outline" className="w-full" onClick={() => handleEditRulesClick(segment)}>
+                                        <Filter className="mr-2 h-4 w-4" />
+                                        View & Edit Rules
+                                    </Button>
+                                </CardFooter>
+                            </Card>
+                        ))}
+                    </div>
+                )}
             </div>
             
             <Dialog open={isRuleEditorOpen} onOpenChange={setIsRuleEditorOpen}>

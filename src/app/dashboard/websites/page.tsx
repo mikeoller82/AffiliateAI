@@ -1,34 +1,27 @@
 
+'use client';
+
+import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Badge } from "@/components/ui/badge";
-import { PlusCircle, Lightbulb, Eye, Link as LinkIcon, Users, Edit } from "lucide-react";
+import { PlusCircle, Lightbulb, Eye, Link as LinkIcon, Users, Edit, Globe } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
-const websites = [
-    {
-        id: "service-business",
-        title: "Service Business",
-        description: "A professional template for consultants, agencies, or local businesses.",
-        image: "https://placehold.co/600x400",
-        hint: "business website",
-        stats: { visitors: "1.2k", leads: 45, conversion: "3.8%" },
-        aiInsight: "Your FAQ section has the highest engagement. Consider turning each question into a blog post."
-    },
-    {
-        id: "portfolio",
-        title: "Creator Portfolio",
-        description: "Showcase your best work with this clean, modern portfolio template.",
-        image: "https://placehold.co/600x400",
-        hint: "art portfolio",
-        stats: { visitors: "8.9k", leads: 12, conversion: "0.1%" },
-        aiInsight: "Add a clear Call-To-Action on each project page to guide visitors to your contact form."
-    },
-];
+interface Website {
+    id: string;
+    title: string;
+    description: string;
+    image: string;
+    hint: string;
+    stats: { visitors: string; leads: number; conversion: string };
+    aiInsight: string;
+}
 
 export default function WebsitesPage() {
+    const [websites, setWebsites] = useState<Website[]>([]);
+    
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -99,9 +92,12 @@ export default function WebsitesPage() {
                 ))}
                  <Card className="flex flex-col items-center justify-center border-dashed hover:border-primary transition-colors min-h-[450px]">
                     <Button asChild variant="ghost" className="h-full w-full">
-                         <Link href="/dashboard/websites/default" className="flex flex-col items-center justify-center h-full w-full">
-                            <PlusCircle className="h-12 w-12 text-muted-foreground" />
-                            <p className="mt-2 text-muted-foreground">Create New Website</p>
+                         <Link href="/dashboard/websites/default" className="flex flex-col items-center justify-center h-full w-full text-center">
+                             <div className="p-4 bg-primary/10 rounded-full mb-4">
+                                <Globe className="h-12 w-12 text-primary" />
+                            </div>
+                            <p className="font-semibold">Create New Website</p>
+                            <p className="text-sm text-muted-foreground px-4">Build a professional website for your business or portfolio.</p>
                         </Link>
                     </Button>
                 </Card>
