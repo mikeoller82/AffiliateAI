@@ -1,3 +1,4 @@
+
 import { initializeApp, getApps, getApp, type FirebaseApp } from 'firebase/app';
 import { getAnalytics, isSupported } from "firebase/analytics";
 
@@ -11,6 +12,7 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
 };
 
+// Check if all required environment variables are present
 export const isFirebaseConfigured = !!(
   firebaseConfig.apiKey &&
   firebaseConfig.authDomain &&
@@ -31,7 +33,8 @@ if (isFirebaseConfigured) {
   }
 } else {
   // If Firebase is not configured, provide a mock object to prevent build-time crashes.
+  // This helps during build time where env vars might not be available.
   app = {} as FirebaseApp;
 }
 
-export { app, isFirebaseConfigured };
+export { app };
