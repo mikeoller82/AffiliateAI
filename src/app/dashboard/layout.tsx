@@ -34,6 +34,8 @@ import {
   Workflow,
   ClipboardList,
   Globe,
+  Newspaper,
+  Mails,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Logo } from '@/components/icons/logo';
@@ -43,6 +45,8 @@ const navItems = [
     { href: '/dashboard/links', icon: LinkIcon, label: 'Affiliate Links' },
     { href: '/dashboard/funnels', icon: Filter, label: 'Funnels' },
     { href: '/dashboard/websites', icon: Globe, label: 'Websites' },
+    { href: '/dashboard/blog', icon: Newspaper, label: 'Blog' },
+    { href: '/dashboard/newsletter', icon: Mails, label: 'Newsletters' },
     { href: '/dashboard/forms', icon: ClipboardList, label: 'Forms' },
     { href: '/dashboard/crm', icon: Users, label: 'CRM' },
     { href: '/dashboard/email', icon: Mail, label: 'Email Marketing' },
@@ -67,7 +71,7 @@ function MainContent({ children }: { children: React.ReactNode }) {
     
     const pageTitle = getPageTitle();
     
-    const isBuilderPage = /^\/dashboard\/(funnels|websites|automations|forms)\//.test(pathname);
+    const isBuilderPage = /^\/dashboard\/(funnels|websites|automations|forms|blog|newsletter)\//.test(pathname);
 
     return (
         <div className="flex flex-col h-screen bg-background">
