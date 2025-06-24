@@ -1,12 +1,17 @@
 
+'use client';
+
+import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { PlusCircle, Play, Pause, Edit, Trash2 } from "lucide-react";
+import { PlusCircle, Play, Pause, Edit, Trash2, Workflow } from "lucide-react";
 import Link from "next/link";
-import { automationTemplates } from "@/lib/automation-templates";
+import type { AutomationTemplate } from "@/lib/automation-templates";
 
 export default function AutomationsPage() {
+    const [automations, setAutomations] = useState<AutomationTemplate[]>([]);
+
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -24,7 +29,7 @@ export default function AutomationsPage() {
                 </Button>
             </div>
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {automationTemplates.map(automation => (
+                {automations.map(automation => (
                     <Card key={automation.id} className="flex flex-col">
                         <CardHeader>
                             <div className="flex justify-between items-start">
@@ -54,11 +59,14 @@ export default function AutomationsPage() {
                         </CardFooter>
                     </Card>
                 ))}
-                 <Card className="flex flex-col items-center justify-center border-dashed hover:border-primary transition-colors">
+                 <Card className="flex flex-col items-center justify-center border-dashed hover:border-primary transition-colors min-h-[300px]">
                     <Button asChild variant="ghost" className="h-full w-full">
-                         <Link href="/dashboard/automations/blank" className="flex flex-col items-center justify-center h-full w-full">
-                            <PlusCircle className="h-12 w-12 text-muted-foreground" />
-                            <p className="mt-2 text-muted-foreground">Create New Automation</p>
+                         <Link href="/dashboard/automations/welcome-sequence" className="flex flex-col items-center justify-center h-full w-full text-center">
+                             <div className="p-4 bg-purple-500/10 rounded-full mb-4">
+                                <Workflow className="h-12 w-12 text-purple-500" />
+                            </div>
+                            <p className="font-semibold">Create New Automation</p>
+                            <p className="text-sm text-muted-foreground px-4">Start with a blank canvas or use a proven template.</p>
                         </Link>
                     </Button>
                 </Card>

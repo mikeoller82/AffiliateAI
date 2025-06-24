@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from "react";
@@ -11,17 +12,18 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 
-const initialContacts = [
-    { id: 1, name: "John Doe", email: "john.doe@example.com", avatar: "https://placehold.co/40x40", date: "2024-05-20", tags: ["Lead", "Engaged"] },
-    { id: 2, name: "Jane Smith", email: "jane.smith@example.com", avatar: "https://placehold.co/40x40", date: "2024-05-19", tags: ["Customer"] },
-    { id: 3, name: "Samuel Green", email: "samuel.green@example.com", avatar: "https://placehold.co/40x40", date: "2024-05-19", tags: ["Lead"] },
-    { id: 4, name: "Lisa White", email: "lisa.white@example.com", avatar: "https://placehold.co/40x40", date: "2024-05-18", tags: ["Customer", "VIP"] },
-    { id: 5, name: "Mike Black", email: "mike.black@example.com", avatar: "https://placehold.co/40x40", date: "2024-05-17", tags: ["Inactive"] },
-];
+interface Contact {
+    id: number;
+    name: string;
+    email: string;
+    avatar: string;
+    date: string;
+    tags: string[];
+}
 
 export default function ContactsPage() {
     const { toast } = useToast();
-    const [contacts, setContacts] = useState(initialContacts);
+    const [contacts, setContacts] = useState<Contact[]>([]);
     
     const handleDeleteContact = (id: number) => {
         setContacts(contacts.filter(c => c.id !== id));
@@ -76,7 +78,13 @@ export default function ContactsPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {contacts.map((contact) => (
+                            {contacts.length === 0 ? (
+                                <TableRow>
+                                    <TableCell colSpan={4} className="h-24 text-center">
+                                        No contacts found.
+                                    </TableCell>
+                                </TableRow>
+                            ) : contacts.map((contact) => (
                                 <TableRow key={contact.id}>
                                     <TableCell className="font-medium">
                                         <div className="flex items-center gap-3">

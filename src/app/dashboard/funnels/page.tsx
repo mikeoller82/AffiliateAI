@@ -1,52 +1,28 @@
 
+'use client';
+
+import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
-import { PlusCircle, Lightbulb, TrendingUp, UserPlus, HeartPulse } from "lucide-react";
+import { PlusCircle, Lightbulb, TrendingUp, UserPlus, HeartPulse, Filter } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
-const funnels = [
-    {
-        id: "lead-magnet-funnel",
-        title: "Lead Magnet Funnel",
-        description: "Capture leads by offering a free ebook or guide.",
-        image: "https://placehold.co/600x400",
-        hint: "ebook download",
-        stats: { ctr: 12.5, optInRate: 28.3, healthScore: 88 },
-        aiInsight: "Excellent opt-in rate! To improve further, A/B test the headline on your landing page."
-    },
-    {
-        id: "webinar-funnel",
-        title: "Webinar Funnel",
-        description: "Promote your live or automated webinar to engage an audience.",
-        image: "https://placehold.co/600x400",
-        hint: "webinar presentation",
-        stats: { ctr: 8.2, optInRate: 19.1, healthScore: 76 },
-        aiInsight: "The show-up rate can be improved. Send an SMS reminder 1 hour before the webinar starts."
-    },
-    {
-        id: "product-launch-funnel",
-        title: "Product Launch Funnel",
-        description: "Build excitement and sell your new product.",
-        image: "https://placehold.co/600x400",
-        hint: "product launch",
-        stats: { ctr: 6.7, optInRate: 15.4, healthScore: 65 },
-        aiInsight: "The drop-off rate on the checkout page is high. Consider adding a satisfaction guarantee badge."
-    },
-    {
-        id: "consulting-funnel",
-        title: "Consulting Funnel",
-        description: "Get clients for your consulting or coaching business.",
-        image: "https://placehold.co/600x400",
-        hint: "business meeting",
-        stats: { ctr: 9.9, optInRate: 21.2, healthScore: 82 },
-        aiInsight: "Strong performance. To optimize, add video testimonials to the booking page to increase trust."
-    },
-];
+interface Funnel {
+    id: string;
+    title: string;
+    description: string;
+    image: string;
+    hint: string;
+    stats: { ctr: number; optInRate: number; healthScore: number };
+    aiInsight: string;
+}
 
 export default function FunnelsPage() {
+    const [funnels, setFunnels] = useState<Funnel[]>([]);
+
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -121,6 +97,17 @@ export default function FunnelsPage() {
                         </CardFooter>
                     </Card>
                 ))}
+                 <Card className="flex flex-col items-center justify-center border-dashed hover:border-primary transition-colors min-h-[480px]">
+                    <Button asChild variant="ghost" className="h-full w-full">
+                         <Link href="/dashboard/funnels/lead-magnet-funnel" className="flex flex-col items-center justify-center h-full w-full text-center">
+                            <div className="p-4 bg-secondary/10 rounded-full mb-4">
+                                <Filter className="h-12 w-12 text-secondary" />
+                            </div>
+                            <p className="font-semibold">Create New Funnel</p>
+                            <p className="text-sm text-muted-foreground px-4">Start with a template to capture leads, sell products, or host webinars.</p>
+                        </Link>
+                    </Button>
+                </Card>
             </div>
         </div>
     );

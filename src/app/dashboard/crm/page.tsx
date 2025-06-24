@@ -1,35 +1,36 @@
 
+'use client';
+
+import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PlusCircle, Filter, GripVertical } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-const pipelineData = {
-    newLeads: [
-        { id: 'lead-1', name: 'Alice Johnson', value: 2500, tags: ['Hot Lead'], company: 'Innovate Corp' },
-        { id: 'lead-2', name: 'Bob Williams', value: 1000, tags: ['Website'], company: 'Solutions Inc.' },
-    ],
-    contacted: [
-        { id: 'lead-3', name: 'Charlie Brown', value: 8000, tags: ['Follow-up'], company: 'Tech Giant' },
-    ],
-    proposalSent: [
-        { id: 'lead-4', name: 'Diana Miller', value: 5000, tags: ['Negotiating'], company: 'Marketing Pro' },
-        { id: 'lead-5', name: 'Ethan Davis', value: 12000, tags: [], company: 'Synergy LLC' },
-    ],
-    won: [
-        { id: 'lead-6', name: 'Fiona Garcia', value: 7500, tags: ['Closed'], company: 'Creative Co.' },
-    ]
+interface Lead {
+    id: string;
+    name: string;
+    value: number;
+    tags: string[];
+    company: string;
+}
+
+interface PipelineData {
+    newLeads: Lead[];
+    contacted: Lead[];
+    proposalSent: Lead[];
+    won: Lead[];
+}
+
+const initialPipelineData: PipelineData = {
+    newLeads: [],
+    contacted: [],
+    proposalSent: [],
+    won: []
 };
 
-const pipelineColumns = [
-    { id: 'newLeads', title: 'New Leads', data: pipelineData.newLeads },
-    { id: 'contacted', title: 'Contacted', data: pipelineData.contacted },
-    { id: 'proposalSent', title: 'Proposal Sent', data: pipelineData.proposalSent },
-    { id: 'won', title: 'Won', data: pipelineData.won },
-];
-
-function LeadCard({ lead }: { lead: any }) {
+function LeadCard({ lead }: { lead: Lead }) {
     return (
         <Card className="mb-4 group">
             <CardContent className="p-4">
@@ -56,6 +57,15 @@ function LeadCard({ lead }: { lead: any }) {
 }
 
 export default function CrmPage() {
+    const [pipelineData, setPipelineData] = useState<PipelineData>(initialPipelineData);
+
+    const pipelineColumns = [
+        { id: 'newLeads', title: 'New Leads', data: pipelineData.newLeads },
+        { id: 'contacted', title: 'Contacted', data: pipelineData.contacted },
+        { id: 'proposalSent', title: 'Proposal Sent', data: pipelineData.proposalSent },
+        { id: 'won', title: 'Won', data: pipelineData.won },
+    ];
+
     return (
         <div className="flex flex-col h-full">
             <div className="flex items-center justify-between pb-4">
@@ -82,7 +92,13 @@ export default function CrmPage() {
                     <div key={column.id} className="bg-muted/50 rounded-lg p-4 flex flex-col">
                         <h3 className="text-lg font-semibold tracking-tight mb-4">{column.title} ({column.data.length})</h3>
                         <div className="flex-1 overflow-y-auto pr-2 -mr-2">
-                           {column.data.map(lead => <LeadCard key={lead.id} lead={lead} />)}
+                           {column.data.length === 0 ? (
+                               <div className="flex flex-col items-center justify-center h-full text-center py-12 border-2 border-dashed rounded-lg">
+                                   <p className="text-muted-foreground text-sm">Drag leads here</p>
+                               </div>
+                           ) : (
+                            column.data.map(lead => <LeadCard key={lead.id} lead={lead} />)
+                           )}
                         </div>
                     </div>
                 ))}

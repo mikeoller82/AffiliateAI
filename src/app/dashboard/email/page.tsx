@@ -12,29 +12,35 @@ import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 
-const initialCampaigns = [
-    { id: 1, name: "Welcome Sequence", status: "Active", sent: 1250, openRate: "45.8%", clickRate: "12.3%" },
-    { id: 2, name: "Summer Promo 2024", status: "Sent", sent: 8730, openRate: "22.1%", clickRate: "4.5%" },
-    { id: 3, name: "New Product Teaser", status: "Draft", sent: 0, openRate: "N/A", clickRate: "N/A" },
-    { id: 4, name: "Weekly Newsletter", status: "Active", sent: 22400, openRate: "35.2%", clickRate: "8.9%" },
-];
+interface Campaign {
+    id: number;
+    name: string;
+    status: 'Active' | 'Sent' | 'Draft';
+    sent: number;
+    openRate: string;
+    clickRate: string;
+}
 
-const subscribers = [
-    { id: 1, email: "john.doe@example.com", name: "John Doe", date: "2024-05-20", avatar: "https://placehold.co/40x40" },
-    { id: 2, email: "jane.smith@example.com", name: "Jane Smith", date: "2024-05-19", avatar: "https://placehold.co/40x40" },
-    { id: 3, email: "samuel.green@example.com", name: "Samuel Green", date: "2024-05-19", avatar: "https://placehold.co/40x40" },
-    { id: 4, email: "lisa.white@example.com", name: "Lisa White", date: "2024-05-18", avatar: "https://placehold.co/40x40" },
-];
+interface Subscriber {
+    id: number;
+    email: string;
+    name: string;
+    date: string;
+    avatar: string;
+}
 
-const segments = [
-    { id: 1, name: "Active Subscribers", count: 18450 },
-    { id: 2, name: "New Leads (Last 30 Days)", count: 215 },
-    { id: 3, name: "High-Value Customers", count: 430 },
-]
+interface Segment {
+    id: number;
+    name: string;
+    count: number;
+}
+
 
 export default function EmailPage() {
     const { toast } = useToast();
-    const [campaigns, setCampaigns] = useState(initialCampaigns);
+    const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+    const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
+    const [segments, setSegments] = useState<Segment[]>([]);
 
     const handleDeleteCampaign = (id: number) => {
         setCampaigns(campaigns.filter(c => c.id !== id));
@@ -79,7 +85,13 @@ export default function EmailPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {campaigns.map((campaign) => (
+                                {campaigns.length === 0 ? (
+                                    <TableRow>
+                                        <TableCell colSpan={5} className="h-24 text-center">
+                                            No campaigns found.
+                                        </TableCell>
+                                    </TableRow>
+                                ) : campaigns.map((campaign) => (
                                     <TableRow key={campaign.id}>
                                         <TableCell className="font-medium">{campaign.name}</TableCell>
                                         <TableCell>
@@ -123,7 +135,9 @@ export default function EmailPage() {
                         <CardDescription>View your recent subscribers or manage your full contact list.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        {subscribers.map(sub => (
+                        {subscribers.length === 0 ? (
+                             <div className="text-sm text-center text-muted-foreground py-4">No recent subscribers.</div>
+                        ) : subscribers.map(sub => (
                              <div className="flex items-center gap-4" key={sub.id}>
                                 <Avatar>
                                     <AvatarImage src={sub.avatar} data-ai-hint="profile avatar"/>
@@ -146,7 +160,9 @@ export default function EmailPage() {
                         <CardDescription>Group your contacts based on behavior and properties.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-3">
-                        {segments.map(seg => (
+                         {segments.length === 0 ? (
+                             <div className="text-sm text-center text-muted-foreground py-4">No segments created.</div>
+                        ) : segments.map(seg => (
                             <div key={seg.id} className="flex justify-between items-center text-sm">
                                 <span className="font-medium">{seg.name}</span>
                                 <span className="text-muted-foreground">{seg.count.toLocaleString()} contacts</span>
