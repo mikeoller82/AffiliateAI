@@ -1,8 +1,9 @@
+'use client';
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { PlusCircle, Users, Filter, ArrowRight } from "lucide-react";
-import Link from "next/link";
+import { PlusCircle, Users, Filter } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 const segments = [
     { id: 1, name: "Active Subscribers", description: "Contacts who opened an email in the last 30 days.", count: 18450 },
@@ -13,6 +14,15 @@ const segments = [
 
 
 export default function SegmentsPage() {
+    const { toast } = useToast();
+    
+    const handleAction = (action: string) => {
+        toast({
+            title: "Action Triggered",
+            description: `The "${action}" action is not yet implemented.`,
+        });
+    };
+
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -22,7 +32,7 @@ export default function SegmentsPage() {
                         Create dynamic groups of contacts based on rules and filters.
                     </p>
                 </div>
-                <Button>
+                <Button onClick={() => handleAction('Create Segment')}>
                     <PlusCircle className="mr-2 h-4 w-4" />
                     Create Segment
                 </Button>
@@ -42,7 +52,7 @@ export default function SegmentsPage() {
                             <p className="text-xs text-muted-foreground">Contacts in segment</p>
                         </CardContent>
                         <CardFooter className="mt-auto">
-                            <Button variant="outline" className="w-full">
+                            <Button variant="outline" className="w-full" onClick={() => handleAction('View & Edit Rules')}>
                                 <Filter className="mr-2 h-4 w-4" />
                                 View & Edit Rules
                             </Button>
