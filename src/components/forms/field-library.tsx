@@ -1,7 +1,6 @@
-
 'use client';
 import { Button } from '@/components/ui/button';
-import { Input, Pilcrow, AtSign, Phone, List, CheckSquare, Calendar, FileUp, Hash } from 'lucide-react';
+import { FormInput, Pilcrow, AtSign, Phone, List, CheckSquare, Calendar, FileUp, Hash } from 'lucide-react';
 import type { FormFieldType } from '@/lib/form-types';
 
 interface FieldLibrarySidebarProps {
@@ -9,7 +8,7 @@ interface FieldLibrarySidebarProps {
 }
 
 const fieldTypes: { type: FormFieldType, label: string, icon: React.ElementType }[] = [
-    { type: 'text', label: 'Text Input', icon: Input },
+    { type: 'text', label: 'Text Input', icon: FormInput },
     { type: 'textarea', label: 'Text Area', icon: Pilcrow },
     { type: 'email', label: 'Email', icon: AtSign },
     { type: 'phone', label: 'Phone', icon: Phone },
