@@ -1,34 +1,31 @@
 
 'use client';
 
-import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { PlusCircle, Edit, BarChart3, ClipboardList } from "lucide-react";
 import Link from "next/link";
-import type { FormTemplate } from "@/lib/form-templates";
+import { formTemplates, type FormTemplate } from "@/lib/form-templates";
 
 export default function FormsPage() {
-    const [forms, setForms] = useState<FormTemplate[]>([]);
-
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-2xl font-bold tracking-tight">Forms</h2>
+                    <h2 className="text-2xl font-bold tracking-tight">Form Templates</h2>
                     <p className="text-muted-foreground">
-                        Create and manage your lead capture and survey forms.
+                        Create a new form from a pre-built template.
                     </p>
                 </div>
                 <Button asChild>
                     <Link href="/dashboard/forms/new">
                         <PlusCircle className="mr-2 h-4 w-4" />
-                        New Form
+                        New Blank Form
                     </Link>
                 </Button>
             </div>
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {forms.map(form => (
+                {formTemplates.map(form => (
                     <Card key={form.id} className="flex flex-col">
                         <CardHeader>
                             <CardTitle>{form.name}</CardTitle>
@@ -47,11 +44,8 @@ export default function FormsPage() {
                         <CardFooter className="mt-auto flex gap-2">
                              <Button variant="outline" className="w-full" asChild>
                                 <Link href={`/dashboard/forms/new?template=${form.id}`}>
-                                    <Edit className="mr-2 h-4 w-4" /> Edit
+                                    <Edit className="mr-2 h-4 w-4" /> Use Template
                                 </Link>
-                            </Button>
-                            <Button variant="secondary" className="w-full">
-                                <BarChart3 className="mr-2 h-4 w-4" /> Analytics
                             </Button>
                         </CardFooter>
                     </Card>
@@ -62,8 +56,8 @@ export default function FormsPage() {
                             <div className="p-4 bg-green-500/10 rounded-full mb-4">
                                 <ClipboardList className="h-12 w-12 text-green-500" />
                             </div>
-                            <p className="font-semibold">Create New Form</p>
-                             <p className="text-sm text-muted-foreground px-4">Build a form to capture leads, registrations, and more.</p>
+                            <p className="font-semibold">Create Blank Form</p>
+                             <p className="text-sm text-muted-foreground px-4">Build a custom form to capture leads, registrations, and more.</p>
                         </Link>
                     </Button>
                 </Card>

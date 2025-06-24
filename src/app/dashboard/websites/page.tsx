@@ -1,45 +1,33 @@
 
 'use client';
 
-import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { PlusCircle, Lightbulb, Eye, Link as LinkIcon, Users, Edit, Globe } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-
-interface Website {
-    id: string;
-    title: string;
-    description: string;
-    image: string;
-    hint: string;
-    stats: { visitors: string; leads: number; conversion: string };
-    aiInsight: string;
-}
+import { websiteTemplates } from "@/lib/website-templates";
 
 export default function WebsitesPage() {
-    const [websites, setWebsites] = useState<Website[]>([]);
-    
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-2xl font-bold tracking-tight">Websites</h2>
+                    <h2 className="text-2xl font-bold tracking-tight">Website Templates</h2>
                     <p className="text-muted-foreground">
-                        Create and manage your professional websites.
+                        Create a professional website from a pre-built template.
                     </p>
                 </div>
                 <Button asChild>
                     <Link href="/dashboard/websites/default">
                         <PlusCircle className="mr-2 h-4 w-4" />
-                        New Website
+                        New Blank Website
                     </Link>
                 </Button>
             </div>
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
-                {websites.map(website => (
+                {websiteTemplates.map(website => (
                     <Card key={website.id} className="overflow-hidden flex flex-col">
                         <div className="relative h-48 w-full">
                             <Image src={website.image} alt={website.title} fill className="object-cover" data-ai-hint={website.hint} />
@@ -84,7 +72,7 @@ export default function WebsitesPage() {
                             </Button>
                             <Button asChild className="w-full">
                                 <Link href={`/dashboard/websites/${website.id}`}>
-                                    <Edit className="mr-2 h-4 w-4" /> Edit Website
+                                    <Edit className="mr-2 h-4 w-4" /> Use Template
                                 </Link>
                             </Button>
                         </CardFooter>
@@ -96,8 +84,8 @@ export default function WebsitesPage() {
                              <div className="p-4 bg-primary/10 rounded-full mb-4">
                                 <Globe className="h-12 w-12 text-primary" />
                             </div>
-                            <p className="font-semibold">Create New Website</p>
-                            <p className="text-sm text-muted-foreground px-4">Build a professional website for your business or portfolio.</p>
+                            <p className="font-semibold">Start From Scratch</p>
+                            <p className="text-sm text-muted-foreground px-4">Build a professional website with a blank canvas.</p>
                         </Link>
                     </Button>
                 </Card>

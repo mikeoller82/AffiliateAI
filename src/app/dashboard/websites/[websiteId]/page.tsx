@@ -18,7 +18,7 @@ import { Slider } from '@/components/ui/slider';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { generateFunnelCopy, type GenerateFunnelCopyInput } from '@/ai/flows/generate-funnel-copy';
 import { useToast } from '@/hooks/use-toast';
-import { websiteTemplates } from '@/lib/website-templates';
+import { getWebsiteComponentsById } from '@/lib/website-templates';
 import { defaultContent } from '@/lib/default-content';
 import type { Component, ComponentType } from '@/lib/builder-types';
 
@@ -250,7 +250,7 @@ export default function WebsiteEditorPage() {
   const params = useParams<{ websiteId: string }>();
   const { toast } = useToast();
   
-  const initialComponents = websiteTemplates[params.websiteId] || websiteTemplates['default'];
+  const initialComponents = getWebsiteComponentsById(params.websiteId);
 
   const [components, setComponents] = useState<Component[]>(initialComponents);
   const [styles, setStyles] = useState({

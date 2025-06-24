@@ -17,7 +17,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Slider } from '@/components/ui/slider';
 import { generateFunnelCopy, type GenerateFunnelCopyInput } from '@/ai/flows/generate-funnel-copy';
 import { useToast } from '@/hooks/use-toast';
-import { funnelTemplates } from '@/lib/funnel-templates';
+import { getFunnelComponentsById } from '@/lib/funnel-templates';
 import { defaultContent } from '@/lib/default-content';
 import type { Component, ComponentType } from '@/lib/builder-types';
 
@@ -162,7 +162,7 @@ export default function FunnelEditorPage() {
   const params = useParams<{ templateId: string }>();
   const { toast } = useToast();
   
-  const initialComponents = funnelTemplates[params.templateId] || funnelTemplates['default'];
+  const initialComponents = getFunnelComponentsById(params.templateId);
 
   const [components, setComponents] = useState<Component[]>(initialComponents);
   const [styles, setStyles] = useState({
