@@ -1,13 +1,17 @@
+'use client';
+
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { PlusCircle, MoreHorizontal, Edit, BarChart, Send, Trash2, Users, FolderKanban, Settings, ArrowRight } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
+import { useToast } from "@/hooks/use-toast";
 
-const campaigns = [
+const initialCampaigns = [
     { id: 1, name: "Welcome Sequence", status: "Active", sent: 1250, openRate: "45.8%", clickRate: "12.3%" },
     { id: 2, name: "Summer Promo 2024", status: "Sent", sent: 8730, openRate: "22.1%", clickRate: "4.5%" },
     { id: 3, name: "New Product Teaser", status: "Draft", sent: 0, openRate: "N/A", clickRate: "N/A" },
@@ -28,6 +32,24 @@ const segments = [
 ]
 
 export default function EmailPage() {
+    const { toast } = useToast();
+    const [campaigns, setCampaigns] = useState(initialCampaigns);
+
+    const handleDeleteCampaign = (id: number) => {
+        setCampaigns(campaigns.filter(c => c.id !== id));
+        toast({
+            title: "Campaign Deleted",
+            description: "The email campaign has been successfully deleted.",
+        });
+    };
+
+    const handleAction = (action: string) => {
+        toast({
+            title: "Action Triggered",
+            description: `The "${action}" action is not yet implemented.`,
+        });
+    };
+    
     return (
         <div className="grid gap-6 lg:grid-cols-3">
             <div className="lg:col-span-2 space-y-6">
@@ -74,10 +96,15 @@ export default function EmailPage() {
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent align="end">
                                                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                                    <DropdownMenuItem><Edit className="mr-2 h-4 w-4" /> Edit</DropdownMenuItem>
-                                                    <DropdownMenuItem><BarChart className="mr-2 h-4 w-4" /> View Stats</DropdownMenuItem>
-                                                    <DropdownMenuItem><Send className="mr-2 h-4 w-4" /> Send</DropdownMenuItem>
-                                                    <DropdownMenuItem className="text-destructive"><Trash2 className="mr-2 h-4 w-4" /> Delete</DropdownMenuItem>
+                                                    <DropdownMenuItem asChild>
+                                                        <Link href="/dashboard/email/new"><Edit className="mr-2 h-4 w-4" /> Edit</Link>
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem onClick={() => handleAction('View Stats')}><BarChart className="mr-2 h-4 w-4" /> View Stats</DropdownMenuItem>
+                                                    <DropdownMenuItem onClick={() => handleAction('Send')}><Send className="mr-2 h-4 w-4" /> Send</DropdownMenuItem>
+                                                    <DropdownMenuSeparator />
+                                                    <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteCampaign(campaign.id)}>
+                                                        <Trash2 className="mr-2 h-4 w-4" /> Delete
+                                                    </DropdownMenuItem>
                                                 </DropdownMenuContent>
                                             </DropdownMenu>
                                         </TableCell>

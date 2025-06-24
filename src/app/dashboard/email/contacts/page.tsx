@@ -1,14 +1,17 @@
+'use client';
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { PlusCircle, MoreHorizontal, Edit, Trash2, Upload, Tag, Search } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
 
-const contacts = [
+const initialContacts = [
     { id: 1, name: "John Doe", email: "john.doe@example.com", avatar: "https://placehold.co/40x40", date: "2024-05-20", tags: ["Lead", "Engaged"] },
     { id: 2, name: "Jane Smith", email: "jane.smith@example.com", avatar: "https://placehold.co/40x40", date: "2024-05-19", tags: ["Customer"] },
     { id: 3, name: "Samuel Green", email: "samuel.green@example.com", avatar: "https://placehold.co/40x40", date: "2024-05-19", tags: ["Lead"] },
@@ -17,6 +20,24 @@ const contacts = [
 ];
 
 export default function ContactsPage() {
+    const { toast } = useToast();
+    const [contacts, setContacts] = useState(initialContacts);
+    
+    const handleDeleteContact = (id: number) => {
+        setContacts(contacts.filter(c => c.id !== id));
+        toast({
+            title: "Contact Deleted",
+            description: "The contact has been successfully deleted.",
+        });
+    };
+    
+    const handleAction = (action: string) => {
+        toast({
+            title: "Action Triggered",
+            description: `The "${action}" action is not yet implemented.`,
+        });
+    };
+
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -27,11 +48,11 @@ export default function ContactsPage() {
                     </p>
                 </div>
                 <div className="flex gap-2">
-                    <Button variant="outline">
+                    <Button variant="outline" onClick={() => handleAction('Import Contacts')}>
                         <Upload className="mr-2 h-4 w-4" />
                         Import Contacts
                     </Button>
-                    <Button>
+                    <Button onClick={() => handleAction('Add Contact')}>
                         <PlusCircle className="mr-2 h-4 w-4" />
                         Add Contact
                     </Button>
@@ -87,10 +108,10 @@ export default function ContactsPage() {
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end">
                                                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                                <DropdownMenuItem><Edit className="mr-2 h-4 w-4" /> Edit Contact</DropdownMenuItem>
-                                                <DropdownMenuItem><Tag className="mr-2 h-4 w-4" /> Add/Remove Tags</DropdownMenuItem>
+                                                <DropdownMenuItem onClick={() => handleAction('Edit Contact')}><Edit className="mr-2 h-4 w-4" /> Edit Contact</DropdownMenuItem>
+                                                <DropdownMenuItem onClick={() => handleAction('Add/Remove Tags')}><Tag className="mr-2 h-4 w-4" /> Add/Remove Tags</DropdownMenuItem>
                                                 <DropdownMenuSeparator />
-                                                <DropdownMenuItem className="text-destructive"><Trash2 className="mr-2 h-4 w-4" /> Delete Contact</DropdownMenuItem>
+                                                <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteContact(contact.id)}><Trash2 className="mr-2 h-4 w-4" /> Delete Contact</DropdownMenuItem>
                                             </DropdownMenuContent>
                                         </DropdownMenu>
                                     </TableCell>

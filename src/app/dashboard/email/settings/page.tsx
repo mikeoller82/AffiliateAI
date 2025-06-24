@@ -1,12 +1,22 @@
+'use client';
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
+import { useToast } from "@/hooks/use-toast";
 
 export default function EmailSettingsPage() {
+    const { toast } = useToast();
+    
+    const handleSave = () => {
+        toast({
+            title: "Settings Saved",
+            description: "Your email settings have been updated.",
+        });
+    };
+
     return (
         <div className="space-y-6 max-w-4xl mx-auto">
              <div>
@@ -63,7 +73,7 @@ export default function EmailSettingsPage() {
                 </CardContent>
             </Card>
              <div className="flex justify-end">
-                <Button>Save Settings</Button>
+                <Button onClick={handleSave}>Save Settings</Button>
             </div>
         </div>
     )
