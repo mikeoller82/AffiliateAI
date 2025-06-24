@@ -38,6 +38,7 @@ import {
   Globe,
   Newspaper,
   Mails,
+  BookText,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -48,6 +49,7 @@ const navItems = [
     { href: '/dashboard/websites', icon: Globe, label: 'Websites' },
     { href: '/dashboard/blog', icon: Newspaper, label: 'Blog' },
     { href: '/dashboard/newsletter', icon: Mails, label: 'Newsletters' },
+    { href: '/dashboard/docs', icon: BookText, label: 'Docs' },
     { href: '/dashboard/forms', icon: ClipboardList, label: 'Forms' },
     { href: '/dashboard/crm', icon: Users, label: 'CRM' },
     { href: '/dashboard/email', icon: Mail, label: 'Email Marketing' },
@@ -74,7 +76,7 @@ function MainContent({ children }: { children: React.ReactNode }) {
     
     const pageTitle = getPageTitle();
     
-    const isBuilderPage = /^\/dashboard\/(funnels|websites|automations|forms|blog|newsletter)\//.test(pathname);
+    const isBuilderPage = /^\/dashboard\/(funnels|websites|automations|forms|blog|newsletter|docs)\//.test(pathname);
 
     return (
         <div className="flex flex-col h-screen bg-background">
