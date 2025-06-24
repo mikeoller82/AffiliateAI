@@ -8,10 +8,10 @@
  * - GenerateFunnelCopyOutput - The return type for the generateFunnelCopy function.
  */
 
-import {ai} from '@/ai/genkit';
-import {genkit} from 'genkit';
-import {googleAI} from '@genkit-ai/googleai';
-import {z} from 'genkit';
+import { genkit, z } from 'genkit';
+import { googleAI } from '@genkit-ai/googleai';
+import { ai } from '@/ai/genkit';
+
 
 const GenerateFunnelCopyInputSchema = z.object({
   productDescription: z.string().describe('A brief description of the product or service being offered in the funnel.'),
@@ -30,34 +30,40 @@ export async function generateFunnelCopy(input: GenerateFunnelCopyInput): Promis
   return generateFunnelCopyFlow(input);
 }
 
-const promptTemplate = `You are an expert conversion copywriter designing a landing page funnel.
-
-  The product is: {{{productDescription}}}
-
-  Your task is to generate a "{{copyType}}".
-
-  Follow this instruction from the user: {{{userPrompt}}}
-
-  Generate a single, compelling piece of copy. Return ONLY the text for the copy.
-  `;
-
 const generateFunnelCopyFlow = ai.defineFlow(
   {
     name: 'generateFunnelCopyFlow',
     inputSchema: GenerateFunnelCopyInputSchema,
     outputSchema: GenerateFunnelCopyOutputSchema,
   },
-  async (input) => {
+  async ({ productDescription, copyType, userPrompt, apiKey }) => {
     const authAi = genkit({
-      plugins: [googleAI({ apiKey: input.apiKey })],
-      model: 'googleai/gemini-2.0-flash',
+      plugins: [googleAI({ apiKey })],
     });
 
+    const prompt = `You are an expert conversion copywriter designing a landing page funnel.
+
+      The product is: ${productDescription}
+
+      Your task is to generate a "${copyType}".
+
+      Follow this instruction from the user: ${userPrompt}
+
+      Generate a single, compelling piece of copy. Return ONLY the text for the copy.
+      `;
+
     const {output} = await authAi.generate({
-        prompt: promptTemplate,
-        input: input,
-        output: { schema: GenerateFunnelCopyOutputSchema },
+        model: 'googleai/gemini-2.0-flash',
+        prompt: prompt,
+        output: {
+            format: 'json',
+            schema: GenerateFunnelCopyOutputSchema
+        },
     });
-    return output!;
+
+    if (!output) {
+      throw new Error("AI failed to generate a response.");
+    }
+    return output;
   }
 );

@@ -9,10 +9,10 @@
  * - GenerateProductReviewOutput - The return type for the generateProductReview function.
  */
 
-import {ai} from '@/ai/genkit';
-import {genkit} from 'genkit';
-import {googleAI} from '@genkit-ai/googleai';
-import {z} from 'genkit';
+import { genkit, z } from 'genkit';
+import { googleAI } from '@genkit-ai/googleai';
+import { ai } from '@/ai/genkit';
+
 
 const GenerateProductReviewInputSchema = z.object({
   productName: z.string().describe('The name of the product to review.'),
@@ -40,37 +40,44 @@ export async function generateProductReview(
   return generateProductReviewFlow(input);
 }
 
-const promptTemplate = `You are an expert SEO copywriter and affiliate marketer specializing in writing compelling product reviews.
-
-  Generate a product review for the following product. The review should be well-structured, engaging, and optimized for search engines.
-
-  Product Name: {{{productName}}}
-  Key Features/Talking Points: {{{features}}}
-
-  Structure the review in Markdown format as follows:
-  - A catchy introduction that hooks the reader.
-  - A "Pros" section with a bulleted list.
-  - A "Cons" section with a bulleted list.
-  - A concluding summary that helps the reader make a decision.
-  `;
-
 const generateProductReviewFlow = ai.defineFlow(
   {
     name: 'generateProductReviewFlow',
     inputSchema: GenerateProductReviewInputSchema,
     outputSchema: GenerateProductReviewOutputSchema,
   },
-  async input => {
+  async ({ productName, features, apiKey }) => {
     const authAi = genkit({
-      plugins: [googleAI({ apiKey: input.apiKey })],
-      model: 'googleai/gemini-2.0-flash',
+      plugins: [googleAI({ apiKey })],
     });
 
+    const prompt = `You are an expert SEO copywriter and affiliate marketer specializing in writing compelling product reviews.
+
+      Generate a product review for the following product. The review should be well-structured, engaging, and optimized for search engines.
+
+      Product Name: ${productName}
+      Key Features/Talking Points: ${features}
+
+      Structure the review in Markdown format as follows:
+      - A catchy introduction that hooks the reader.
+      - A "Pros" section with a bulleted list.
+      - A "Cons" section with a bulleted list.
+      - A concluding summary that helps the reader make a decision.
+      `;
+
+
     const {output} = await authAi.generate({
-        prompt: promptTemplate,
-        input: input,
-        output: { schema: GenerateProductReviewOutputSchema },
+        model: 'googleai/gemini-2.0-flash',
+        prompt: prompt,
+        output: { 
+            format: 'json',
+            schema: GenerateProductReviewOutputSchema 
+        },
     });
-    return output!;
+
+    if (!output) {
+      throw new Error("AI failed to generate a response.");
+    }
+    return output;
   }
 );

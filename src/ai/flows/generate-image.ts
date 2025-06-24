@@ -8,10 +8,10 @@
  * - GenerateImageOutput - The return type for the generateImage function.
  */
 
-import {ai} from '@/ai/genkit';
-import {genkit} from 'genkit';
-import {googleAI} from '@genkit-ai/googleai';
-import {z} from 'genkit';
+import { genkit, z } from 'genkit';
+import { googleAI } from '@genkit-ai/googleai';
+import { ai } from '@/ai/genkit';
+
 
 const GenerateImageInputSchema = z.object({
   prompt: z.string().describe('A detailed text description of the image to generate.'),
@@ -35,14 +35,14 @@ const generateImageFlow = ai.defineFlow(
     inputSchema: GenerateImageInputSchema,
     outputSchema: GenerateImageOutputSchema,
   },
-  async (input) => {
+  async ({ prompt, aspectRatio, apiKey }) => {
     const authAi = genkit({
-      plugins: [googleAI({ apiKey: input.apiKey })],
+      plugins: [googleAI({ apiKey })],
     });
 
     const { media } = await authAi.generate({
       model: 'googleai/gemini-2.0-flash-preview-image-generation',
-      prompt: `(Aspect Ratio: ${input.aspectRatio}) ${input.prompt}`,
+      prompt: `(Aspect Ratio: ${aspectRatio}) ${prompt}`,
       config: {
         responseModalities: ['TEXT', 'IMAGE'],
       },
