@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { User, Building, Mail, Globe, Key, CreditCard, Users, Trash2, MoreHorizontal } from 'lucide-react';
+import { BillingForm } from '@/components/dashboard/billing-form';
 
 function SettingsPageComponent() {
     const searchParams = useSearchParams();
@@ -37,10 +38,10 @@ function SettingsPageComponent() {
                 <TabsList className="flex flex-col h-full bg-transparent p-0 border-r w-full md:w-48">
                     <TabsTrigger value="profile" className="w-full justify-start gap-2"><User />Profile</TabsTrigger>
                     <TabsTrigger value="workspace" className="w-full justify-start gap-2"><Building />Workspace</TabsTrigger>
+                    <TabsTrigger value="billing" className="w-full justify-start gap-2"><CreditCard />Billing</TabsTrigger>
                     <TabsTrigger value="email" className="w-full justify-start gap-2"><Mail />Email</TabsTrigger>
                     <TabsTrigger value="domains" className="w-full justify-start gap-2"><Globe />Domains</TabsTrigger>
                     <TabsTrigger value="api" className="w-full justify-start gap-2"><Key />API Keys</TabsTrigger>
-                    <TabsTrigger value="billing" className="w-full justify-start gap-2"><CreditCard />Billing</TabsTrigger>
                     <TabsTrigger value="team" className="w-full justify-start gap-2"><Users />Team</TabsTrigger>
                 </TabsList>
                 <div className="flex-1">
@@ -75,6 +76,17 @@ function SettingsPageComponent() {
                             <CardHeader><CardTitle>Workspace</CardTitle><CardDescription>Manage your workspace name and general settings.</CardDescription></CardHeader>
                             <CardContent className="space-y-4">
                                 <div className="space-y-2"><Label htmlFor="workspace-name">Workspace Name</Label><Input id="workspace-name" defaultValue="Demo Workspace" /></div>
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+                    <TabsContent value="billing" className="mt-0">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Manage Subscription</CardTitle>
+                                <CardDescription>View your current plan, update payment details, and view billing history.</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <BillingForm />
                             </CardContent>
                         </Card>
                     </TabsContent>
@@ -130,20 +142,6 @@ function SettingsPageComponent() {
                                 <div className="text-center text-muted-foreground border-2 border-dashed rounded-lg p-8">
                                     <p>API access is not enabled on your plan.</p>
                                     <Button variant="outline" className="mt-4" disabled>Generate API Key</Button>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    </TabsContent>
-                     <TabsContent value="billing" className="mt-0">
-                         <Card>
-                            <CardHeader><CardTitle>Billing</CardTitle><CardDescription>Manage your subscription, view invoices, and update payment details.</CardDescription></CardHeader>
-                            <CardContent>
-                                <div className="flex justify-between items-center p-4 border rounded-lg">
-                                    <div>
-                                        <h4 className="font-semibold">Pro Plan</h4>
-                                        <p className="text-muted-foreground text-sm">Renews on July 1, 2025</p>
-                                    </div>
-                                    <Button>Manage Subscription</Button>
                                 </div>
                             </CardContent>
                         </Card>
