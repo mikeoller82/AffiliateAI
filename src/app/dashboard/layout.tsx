@@ -32,6 +32,7 @@ import {
   BrainCircuit,
   FileText,
   Workflow,
+  ClipboardList,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Logo } from '@/components/icons/logo';
@@ -40,6 +41,7 @@ const navItems = [
     { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
     { href: '/dashboard/links', icon: LinkIcon, label: 'Affiliate Links' },
     { href: '/dashboard/funnels', icon: Filter, label: 'Funnels' },
+    { href: '/dashboard/forms', icon: ClipboardList, label: 'Forms' },
     { href: '/dashboard/crm', icon: Users, label: 'CRM' },
     { href: '/dashboard/email', icon: Mail, label: 'Email Marketing' },
     { href: '/dashboard/automations', icon: Workflow, label: 'Automations' },
@@ -51,7 +53,7 @@ function MainContent({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
     const pageTitle = navItems.find(item => pathname.startsWith(item.href))?.label || 'Dashboard';
     
-    const isBuilderPage = /^\/dashboard\/funnels\/|^\/dashboard\/automations\/new/.test(pathname);
+    const isBuilderPage = /^\/dashboard\/funnels\/|^\/dashboard\/automations\/[a-z0-9-]+|^\/dashboard\/forms\/new/.test(pathname);
 
     return (
         <div className="flex flex-col h-screen bg-background">
