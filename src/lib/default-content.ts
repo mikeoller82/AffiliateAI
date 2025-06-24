@@ -76,7 +76,7 @@ export const defaultContent = {
 </div>`
     },
     footer: {
-        copyright: `© ${new Date().getFullYear()} Your Brand. All rights reserved.`,
+        copyright: '© 2025 Your Brand. All rights reserved.',
         links: [
             { label: 'Privacy Policy', href: '#' },
             { label: 'Terms of Service', href: '#' },
@@ -84,7 +84,7 @@ export const defaultContent = {
     },
     countdown: {
         title: 'Limited Time Offer Ends In:',
-        targetDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+        targetDate: '2025-12-31T23:59:59.000Z',
     },
     socials: {
         title: 'Follow Us On Social Media',

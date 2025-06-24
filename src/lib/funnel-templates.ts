@@ -27,7 +27,7 @@ const leadMagnetFunnel: Component[] = [
       ]
     }},
   { id: 5, type: 'text', content: { text: 'Join over 15,000 entrepreneurs who have used this guide to supercharge their marketing. Stop guessing, start growing.' } },
-  { id: 6, type: 'footer', content: { ...defaultContent.footer, copyright: `© ${new Date().getFullYear()} AI Marketing Solutions. All rights reserved.` } }
+  { id: 6, type: 'footer', content: { ...defaultContent.footer, copyright: '© 2025 AI Marketing Solutions. All rights reserved.' } }
 ];
 
 const webinarFunnel: Component[] = [
@@ -48,7 +48,7 @@ const webinarFunnel: Component[] = [
             { quote: 'I was struggling to get leads. After this training, my calendar is booked solid. Unbelievable value.', author: 'Mark P., Financial Consultant' },
         ]
     }},
-    { id: 5, type: 'footer', content: { ...defaultContent.footer, copyright: `© ${new Date().getFullYear()} Client Funnel Secrets. All rights reserved.` } }
+    { id: 5, type: 'footer', content: { ...defaultContent.footer, copyright: '© 2025 Client Funnel Secrets. All rights reserved.' } }
 ];
 
 const productLaunchFunnel: Component[] = [
@@ -70,7 +70,7 @@ const productLaunchFunnel: Component[] = [
             { quote: 'The AI focus feature alone is worth the price. It\'s like having a personal productivity coach.', author: 'Brenda K., Designer' },
         ]
     }},
-    { id: 6, type: 'footer', content: { ...defaultContent.footer, copyright: `© ${new Date().getFullYear()} LaunchPad. All rights reserved.` } }
+    { id: 6, type: 'footer', content: { ...defaultContent.footer, copyright: '© 2025 LaunchPad. All rights reserved.' } }
 ];
 
 const consultingFunnel: Component[] = [
@@ -91,7 +91,7 @@ We'll meet for 30 minutes. We analyze your business live on the call and build y
 
 **Step 3: Grow Your Business**
 You can take the plan and implement it yourself, or you can choose to work with us to execute it. Either way, the plan is yours to keep.` } },
-    { id: 5, type: 'footer', content: { ...defaultContent.footer, copyright: `© ${new Date().getFullYear()} Growth Consultants. All rights reserved.` } }
+    { id: 5, type: 'footer', content: { ...defaultContent.footer, copyright: '© 2025 Growth Consultants. All rights reserved.' } }
 ];
 
 
