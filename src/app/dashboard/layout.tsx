@@ -7,7 +7,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, redirect } from 'next/navigation';
 import { useAuth } from '@/contexts/auth-context';
-import { getFirebaseInstances } from '@/lib/firebase';
+import { useFirebase } from '@/contexts/firebase-context';
 import { signOut } from 'firebase/auth';
 import {
   SidebarProvider,
@@ -107,11 +107,19 @@ function MainContent({ children }: { children: React.ReactNode }) {
 function AppSidebar() {
     const pathname = usePathname();
     const { user } = useAuth();
+    const { auth } = useFirebase();
     const { toast } = useToast();
 
     const handleSignOut = async () => {
+        if (!auth) {
+             toast({
+                variant: 'destructive',
+                title: "Error",
+                description: "Authentication service not available.",
+            });
+            return;
+        }
         try {
-            const { auth } = getFirebaseInstances();
             await signOut(auth);
             toast({
                 title: "Signed Out",
