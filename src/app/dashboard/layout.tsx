@@ -135,7 +135,7 @@ function AppSidebar() {
                     ))}
                 </SidebarMenu>
             </SidebarContent>
-            <SidebarFooter className="mt-auto border-t">
+            <SidebarFooter className="mt-auto border-t p-4 space-y-4">
                  <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton asChild tooltip={{children: 'Support'}}>
