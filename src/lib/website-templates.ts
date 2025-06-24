@@ -2,6 +2,17 @@
 import type { Component } from './builder-types';
 import { defaultContent } from './default-content';
 
+export interface WebsiteTemplate {
+    id: string;
+    title: string;
+    description: string;
+    image: string;
+    hint: string;
+    stats: { visitors: string; leads: number; conversion: string };
+    aiInsight: string;
+    components: Component[];
+}
+
 const serviceBusiness: Component[] = [
   { id: Date.now() + 1, type: 'header', content: { ...defaultContent.header, title: 'Growth Partners' } },
   { id: Date.now() + 2, type: 'hero', content: { title: 'We Help SaaS Companies Scale.', subtitle: 'We\'re a performance marketing agency that drives measurable results for venture-backed SaaS businesses. Stop wasting money, start scaling.', cta: 'Book a Free Strategy Call' } },
@@ -52,8 +63,31 @@ const defaultWebsite: Component[] = [
 ];
 
 
-export const websiteTemplates: { [key: string]: Component[] } = {
-  'service-business': serviceBusiness,
-  'portfolio': portfolio,
-  'default': defaultWebsite
+export const websiteTemplates: WebsiteTemplate[] = [
+  {
+      id: 'service-business',
+      title: 'Service Business',
+      description: 'A professional template for agencies, consultants, or service providers.',
+      image: 'https://placehold.co/600x400.png',
+      hint: 'modern office teamwork',
+      stats: { visitors: '1.2k', leads: 48, conversion: '4.0%' },
+      aiInsight: 'The pricing tiers are clear. Consider adding a "Case Studies" section to build more social proof.',
+      components: serviceBusiness,
+  },
+  {
+      id: 'portfolio',
+      title: 'Portfolio',
+      description: 'Showcase your work and skills with this clean, modern portfolio template.',
+      image: 'https://placehold.co/600x400.png',
+      hint: 'designer portfolio website',
+      stats: { visitors: '840', leads: 12, conversion: '1.4%' },
+      aiInsight: 'Your testimonials are strong. Make the "Contact" call-to-action more visible higher up the page.',
+      components: portfolio,
+  }
+];
+
+export const getWebsiteComponentsById = (id: string | undefined): Component[] => {
+    if (!id || id === 'default') return defaultWebsite;
+    const template = websiteTemplates.find(t => t.id === id);
+    return template ? template.components : defaultWebsite;
 };

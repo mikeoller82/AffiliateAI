@@ -2,6 +2,18 @@
 import type { Component } from './builder-types';
 import { defaultContent } from './default-content';
 
+export interface FunnelTemplate {
+    id: string;
+    title: string;
+    description: string;
+    image: string;
+    hint: string;
+    stats: { ctr: number; optInRate: number; healthScore: number };
+    aiInsight: string;
+    components: Component[];
+}
+
+
 const leadMagnetFunnel: Component[] = [
   { id: Date.now() + 1, type: 'header', content: { ...defaultContent.header, title: 'AI Marketing Solutions' } },
   { id: Date.now() + 2, type: 'hero', content: { title: 'Tired of Marketing That Doesn\'t Work? Steal Our AI Playbook.', subtitle: 'Download the free 20-page guide that shows you how to use AI to get more leads and sales, even if you\'re not a tech expert.', cta: 'Get My Free Guide Now' } },
@@ -92,11 +104,51 @@ const defaultFunnel: Component[] = [
     { id: Date.now() + 6, type: 'footer', content: defaultContent.footer }
 ];
 
+export const funnelTemplates: FunnelTemplate[] = [
+    {
+        id: 'lead-magnet-funnel',
+        title: 'Lead Magnet Funnel',
+        description: 'A classic funnel to capture emails in exchange for a free guide or playbook.',
+        image: 'https://placehold.co/600x400.png',
+        hint: 'marketing funnel analytics',
+        stats: { ctr: 55, optInRate: 32, healthScore: 88 },
+        aiInsight: 'The headline is strong. Consider adding a video testimonial to increase trust and boost opt-in rate.',
+        components: leadMagnetFunnel
+    },
+    {
+        id: 'webinar-funnel',
+        title: 'Webinar Funnel',
+        description: 'Promote a live training event and register attendees.',
+        image: 'https://placehold.co/600x400.png',
+        hint: 'webinar presentation screen',
+        stats: { ctr: 42, optInRate: 28, healthScore: 92 },
+        aiInsight: 'High health score! Your testimonials are effective. Try adding a countdown timer to create urgency.',
+        components: webinarFunnel
+    },
+    {
+        id: 'product-launch-funnel',
+        title: 'Product Launch Funnel',
+        description: 'Announce a new product and drive pre-orders or sales.',
+        image: 'https://placehold.co/600x400.png',
+        hint: 'product launch rocket',
+        stats: { ctr: 61, optInRate: 18, healthScore: 75 },
+        aiInsight: 'Good CTR, but opt-in is low. Clarify the discount offer in the subtitle to improve conversion.',
+        components: productLaunchFunnel
+    },
+    {
+        id: 'consulting-funnel',
+        title: 'Consulting/Strategy Funnel',
+        description: 'Book high-ticket strategy calls with qualified leads.',
+        image: 'https://placehold.co/600x400.png',
+        hint: 'business strategy meeting',
+        stats: { ctr: 38, optInRate: 15, healthScore: 81 },
+        aiInsight: 'Testimonials are compelling. Make the "Book My Free Strategy Session" CTA more prominent.',
+        components: consultingFunnel
+    },
+];
 
-export const funnelTemplates: { [key: string]: Component[] } = {
-  'lead-magnet-funnel': leadMagnetFunnel,
-  'webinar-funnel': webinarFunnel,
-  'product-launch-funnel': productLaunchFunnel,
-  'consulting-funnel': consultingFunnel,
-  'default': defaultFunnel
+export const getFunnelComponentsById = (id: string | undefined): Component[] => {
+    if (!id || id === 'default') return defaultFunnel;
+    const template = funnelTemplates.find(t => t.id === id);
+    return template ? template.components : defaultFunnel;
 };
