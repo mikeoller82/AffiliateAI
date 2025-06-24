@@ -192,16 +192,6 @@ const pricingTiers = [
   {
     name: 'Professional',
     price: '$29',
-<<<<<<< HEAD
-<<<<<<< HEAD
-    description: 'After 30-day free trial',
-    features: ['All features'],
-=======
-    description: 'professional subscription after 30-Day Free trial.',
-    features: ['All features unlocked'],
->>>>>>> 24d5090 (The NextJS app server is having trouble starting. Please identify what c)
-    isPopular: false,
-=======
     description: 'One simple plan with everything you need to launch, automate, and scale your online business.',
     features: [
         'Unlimited Funnels & Websites',
@@ -212,7 +202,6 @@ const pricingTiers = [
         'No "HighLaunchPad" Branding',
     ],
     isPopular: true,
->>>>>>> f8001b6 (also on the landing age the pricing card at the bootm shld be 29 dllars)
   },
 ];
 
@@ -661,8 +650,3 @@ export default function LandingPage() {
     </div>
   )
 }
-<<<<<<< HEAD
-=======
-
-    
->>>>>>> f8001b6 (also on the landing age the pricing card at the bootm shld be 29 dllars)
