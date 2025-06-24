@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -19,6 +20,7 @@ import type { JSONContent } from '@tiptap/react';
 import { generateHTML } from '@tiptap/core';
 import StarterKit from '@tiptap/starter-kit';
 import Link from '@tiptap/extension-link';
+import { useAIKey } from '@/contexts/ai-key-context';
 
 interface AiAssistDialogProps {
   isOpen: boolean;
@@ -46,6 +48,7 @@ export function AiAssistDialog({ isOpen, onOpenChange, content, onReplaceContent
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState('');
   const { toast } = useToast();
+  const { apiKey, promptApiKey } = useAIKey();
 
   const plainText = useMemo(() => {
     if (typeof window === 'undefined' || !content) return '';
@@ -58,6 +61,10 @@ export function AiAssistDialog({ isOpen, onOpenChange, content, onReplaceContent
 
 
   const handleGenerate = async (instruction: string) => {
+    if (!apiKey) {
+        promptApiKey();
+        return;
+    }
     if (!instruction) {
         toast({
             variant: 'destructive',
@@ -81,6 +88,7 @@ export function AiAssistDialog({ isOpen, onOpenChange, content, onReplaceContent
       const input: EditTextInput = {
         text: plainText,
         instruction,
+        apiKey,
       };
       const response = await editText(input);
       setResult(response.editedText);

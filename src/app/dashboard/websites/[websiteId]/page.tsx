@@ -21,6 +21,7 @@ import { useToast } from '@/hooks/use-toast';
 import { getWebsiteComponentsById } from '@/lib/website-templates';
 import { defaultContent } from '@/lib/default-content';
 import type { Component, ComponentType } from '@/lib/builder-types';
+import { useAIKey } from '@/contexts/ai-key-context';
 
 
 // region Preview Components
@@ -249,6 +250,7 @@ const componentMap: { [key in ComponentType]?: React.FC<any> } = {
 export default function WebsiteEditorPage() {
   const params = useParams<{ websiteId: string }>();
   const { toast } = useToast();
+  const { apiKey, promptApiKey } = useAIKey();
   
   const initialComponents = getWebsiteComponentsById(params.websiteId);
 
@@ -368,6 +370,10 @@ export default function WebsiteEditorPage() {
   };
 
   const handleAiGenerate = async () => {
+    if (!apiKey) {
+      promptApiKey();
+      return;
+    }
     if (!aiTargetField.value || !websiteProductInfo) {
       toast({
         variant: 'destructive',
@@ -384,6 +390,7 @@ export default function WebsiteEditorPage() {
         productDescription: websiteProductInfo,
         copyType: aiTargetField.label,
         userPrompt: aiPrompt || `Generate a standard ${aiTargetField.label}`,
+        apiKey,
       };
       const result = await generateFunnelCopy(input);
       setAiResult(result.generatedCopy);

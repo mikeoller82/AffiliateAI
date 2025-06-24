@@ -20,6 +20,7 @@ import { useToast } from '@/hooks/use-toast';
 import { getFunnelComponentsById } from '@/lib/funnel-templates';
 import { defaultContent } from '@/lib/default-content';
 import type { Component, ComponentType } from '@/lib/builder-types';
+import { useAIKey } from '@/contexts/ai-key-context';
 
 
 // Placeholder components for the canvas
@@ -161,6 +162,7 @@ const componentMap: { [key in ComponentType]?: React.FC<any> } = {
 export default function FunnelEditorPage() {
   const params = useParams<{ templateId: string }>();
   const { toast } = useToast();
+  const { apiKey, promptApiKey } = useAIKey();
   
   const initialComponents = getFunnelComponentsById(params.templateId);
 
@@ -274,6 +276,10 @@ export default function FunnelEditorPage() {
   };
 
   const handleAiGenerate = async () => {
+    if (!apiKey) {
+      promptApiKey();
+      return;
+    }
     if (!aiTargetField.value || !funnelProductInfo) {
       toast({
         variant: 'destructive',
@@ -290,6 +296,7 @@ export default function FunnelEditorPage() {
         productDescription: funnelProductInfo,
         copyType: aiTargetField.label,
         userPrompt: aiPrompt || `Generate a standard ${aiTargetField.label}`,
+        apiKey,
       };
       const result = await generateFunnelCopy(input);
       setAiResult(result.generatedCopy);
