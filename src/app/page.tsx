@@ -3,7 +3,51 @@ import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Check, Filter, BrainCircuit, Mail, Users, BarChart3, Link as LinkIcon, Star, Globe, Newspaper, Workflow, Target, Handshake, BotMessageSquare } from 'lucide-react'
+import { Check, Filter, BrainCircuit, Mail, Users, BarChart3, Link as LinkIcon, Star, Globe, Newspaper, Workflow, Target, Handshake, BotMessageSquare, ClipboardList, BookText } from 'lucide-react'
+
+const allInOneFeatures = [
+  {
+    icon: Filter,
+    title: 'Funnels & Landing Pages',
+    description: 'Visually build high-converting sales funnels.'
+  },
+  {
+    icon: Globe,
+    title: 'Websites & Blogs',
+    description: 'Create beautiful, fast websites with our builder.'
+  },
+  {
+    icon: Mail,
+    title: 'Email Marketing',
+    description: 'Engage your audience with powerful email campaigns.'
+  },
+  {
+    icon: Users,
+    title: 'CRM & Pipeline',
+    description: 'Manage all your leads and customers in one place.'
+  },
+  {
+    icon: Workflow,
+    title: 'Marketing Automation',
+    description: 'Visually build workflows that automate your business.'
+  },
+  {
+    icon: BrainCircuit,
+    title: 'AI Content Tools',
+    description: 'Generate copy for ads, emails, and funnels in seconds.'
+  },
+  {
+    icon: ClipboardList,
+    title: 'Forms & Surveys',
+    description: 'Capture leads and feedback with custom forms.'
+  },
+  {
+    icon: LinkIcon,
+    title: 'Affiliate Management',
+    description: 'Track and manage all your affiliate campaigns.'
+  },
+];
+
 
 const showcaseFeatures = [
   {
@@ -114,6 +158,31 @@ export default function LandingPage() {
               </Button>
             </div>
             <p className="mt-4 text-sm text-muted-foreground">No credit card required. Cancel anytime.</p>
+          </div>
+        </section>
+        
+        {/* All-In-One Platform Feature Grid */}
+        <section id="features" className="py-20">
+          <div className="container">
+            <div className="text-center">
+                <h2 className="text-3xl font-bold tracking-tight md:text-4xl">One Platform, Everything You Need</h2>
+                <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">Stop taping together a dozen different tools. HighLaunchPad brings everything under one roof so you can focus on what matters: growing your business.</p>
+            </div>
+            <div className="mt-12 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+                {allInOneFeatures.map((feature) => (
+                    <Card key={feature.title} className="bg-card/50 backdrop-blur-sm">
+                        <CardHeader className="flex flex-row items-center gap-4 space-y-0">
+                           <div className="p-3 rounded-full bg-primary/10 border border-primary/20">
+                                <feature.icon className="h-6 w-6 text-primary"/>
+                            </div>
+                            <CardTitle className="text-lg">{feature.title}</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-muted-foreground">{feature.description}</p>
+                        </CardContent>
+                    </Card>
+                ))}
+            </div>
           </div>
         </section>
 
