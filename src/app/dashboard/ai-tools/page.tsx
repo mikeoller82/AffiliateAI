@@ -1,16 +1,17 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { AdCopyGenerator, CtaSuggestor, EmailGenerator, ProductReviewWriter, ProductHookGenerator } from '@/components/ai/tools';
+import { AdCopyGenerator, CtaSuggestor, EmailGenerator, ProductReviewWriter, ProductHookGenerator, ImageGenerator } from '@/components/ai/tools';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function AIToolsPage() {
   return (
     <Tabs defaultValue="ad-copy" className="w-full">
-      <TabsList className="grid w-full grid-cols-1 sm:grid-cols-5">
+      <TabsList className="grid w-full grid-cols-1 sm:grid-cols-6">
         <TabsTrigger value="ad-copy">Ad Generator</TabsTrigger>
         <TabsTrigger value="product-review">Product Review</TabsTrigger>
         <TabsTrigger value="cta-optimizer">CTA Optimizer</TabsTrigger>
         <TabsTrigger value="product-hook">Hook Generator</TabsTrigger>
         <TabsTrigger value="email-content">Email Content</TabsTrigger>
+        <TabsTrigger value="image-generator">Image Generator</TabsTrigger>
       </TabsList>
       <TabsContent value="ad-copy">
         <Card>
@@ -64,6 +65,17 @@ export default function AIToolsPage() {
           </CardHeader>
           <CardContent>
             <EmailGenerator />
+          </CardContent>
+        </Card>
+      </TabsContent>
+       <TabsContent value="image-generator">
+        <Card>
+          <CardHeader>
+            <CardTitle>AI Image Generator</CardTitle>
+            <CardDescription>Create unique, high-quality images from a text description for your ads, funnels, and content.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ImageGenerator />
           </CardContent>
         </Card>
       </TabsContent>
