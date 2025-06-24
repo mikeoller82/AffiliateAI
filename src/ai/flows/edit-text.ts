@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview An AI agent that edits text based on instructions.
@@ -8,11 +9,14 @@
  */
 
 import {ai} from '@/ai/genkit';
+import {genkit} from 'genkit';
+import {googleAI} from '@genkit-ai/googleai';
 import {z} from 'genkit';
 
 const EditTextInputSchema = z.object({
   text: z.string().describe('The original text to be edited.'),
   instruction: z.string().describe('The instruction for how to edit the text (e.g., "summarize", "fix grammar", "make it more punchy").'),
+  apiKey: z.string().describe('A Google AI API key for authentication.'),
 });
 export type EditTextInput = z.infer<typeof EditTextInputSchema>;
 
@@ -25,11 +29,7 @@ export async function editText(input: EditTextInput): Promise<EditTextOutput> {
   return editTextFlow(input);
 }
 
-const prompt = ai.definePrompt({
-  name: 'editTextPrompt',
-  input: {schema: EditTextInputSchema},
-  output: {schema: EditTextOutputSchema},
-  prompt: `You are an expert copy editor. Your task is to edit the provided text based on the given instruction.
+const promptTemplate = `You are an expert copy editor. Your task is to edit the provided text based on the given instruction.
 
 Instruction: {{{instruction}}}
 
@@ -38,8 +38,7 @@ Original Text:
 {{{text}}}
 ---
 
-Return only the edited text in the 'editedText' field of the JSON output. Do not include any preamble or explanation.`,
-});
+Return only the edited text in the 'editedText' field of the JSON output. Do not include any preamble or explanation.`;
 
 const editTextFlow = ai.defineFlow(
   {
@@ -48,7 +47,16 @@ const editTextFlow = ai.defineFlow(
     outputSchema: EditTextOutputSchema,
   },
   async (input) => {
-    const {output} = await prompt(input);
+    const authAi = genkit({
+      plugins: [googleAI({ apiKey: input.apiKey })],
+      model: 'googleai/gemini-2.0-flash',
+    });
+
+    const {output} = await authAi.generate({
+      prompt: promptTemplate,
+      input: input,
+      output: { schema: EditTextOutputSchema },
+    });
     return output!;
   }
 );

@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview An AI agent that generates images from a text prompt.
@@ -8,11 +9,14 @@
  */
 
 import {ai} from '@/ai/genkit';
+import {genkit} from 'genkit';
+import {googleAI} from '@genkit-ai/googleai';
 import {z} from 'genkit';
 
 const GenerateImageInputSchema = z.object({
   prompt: z.string().describe('A detailed text description of the image to generate.'),
   aspectRatio: z.enum(['1:1', '16:9', '9:16']).describe('The desired aspect ratio for the generated image.'),
+  apiKey: z.string().describe('A Google AI API key for authentication.'),
 });
 export type GenerateImageInput = z.infer<typeof GenerateImageInputSchema>;
 
@@ -32,7 +36,11 @@ const generateImageFlow = ai.defineFlow(
     outputSchema: GenerateImageOutputSchema,
   },
   async (input) => {
-    const { media } = await ai.generate({
+    const authAi = genkit({
+      plugins: [googleAI({ apiKey: input.apiKey })],
+    });
+
+    const { media } = await authAi.generate({
       model: 'googleai/gemini-2.0-flash-preview-image-generation',
       prompt: `(Aspect Ratio: ${input.aspectRatio}) ${input.prompt}`,
       config: {

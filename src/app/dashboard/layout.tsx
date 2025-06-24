@@ -47,6 +47,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { AIKeyProvider } from '@/contexts/ai-key-context';
 
 const navItems = [
     { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -221,11 +222,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }
     
     return (
-        <SidebarProvider>
-            <AppSidebar />
-            <SidebarInset>
-                <MainContent>{children}</MainContent>
-            </SidebarInset>
-        </SidebarProvider>
+        <AIKeyProvider>
+            <SidebarProvider>
+                <AppSidebar />
+                <SidebarInset>
+                    <MainContent>{children}</MainContent>
+                </SidebarInset>
+            </SidebarProvider>
+        </AIKeyProvider>
     );
 }
