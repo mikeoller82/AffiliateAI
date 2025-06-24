@@ -192,24 +192,10 @@ const whoIsItFor = [
 
 const pricingTiers = [
   {
-    name: 'Starter',
-    price: '$97',
-    description: 'For individuals starting their online business.',
-    features: ['1 Website', '3 Funnels', 'Unlimited Contacts', 'Email Marketing', 'CRM'],
-    isPopular: false,
-  },
-  {
-    name: 'Pro',
-    price: '$297',
-    description: 'For growing businesses ready to automate & scale.',
-    features: ['3 Websites', 'Unlimited Funnels', 'Marketing Automation', 'Affiliate Management', 'AI Content Tools'],
-    isPopular: true,
-  },
-  {
-    name: 'Agency',
-    price: '$497',
-    description: 'For agencies managing multiple clients.',
-    features: ['10 Sub-accounts', 'White-label Platform', 'Advanced API Access', 'Priority Support'],
+    name: 'Professional',
+    price: '$29',
+    description: 'After 30-day free trial',
+    features: ['All features'],
     isPopular: false,
   },
 ];
