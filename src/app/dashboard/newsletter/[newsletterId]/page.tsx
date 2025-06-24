@@ -16,7 +16,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Textarea } from '@/components/ui/textarea';
 import { generateFunnelCopy, type GenerateFunnelCopyInput } from '@/ai/flows/generate-funnel-copy';
 import { useToast } from '@/hooks/use-toast';
-import { newsletterTemplates } from '@/lib/newsletter-templates';
+import { getNewsletterTemplateById } from '@/lib/newsletter-templates';
 import { defaultContent } from '@/lib/default-content';
 import type { Component, ComponentType } from '@/lib/builder-types';
 
@@ -154,7 +154,8 @@ export default function NewsletterEditorPage() {
   const params = useParams<{ newsletterId: string }>();
   const { toast } = useToast();
   
-  const initialComponents = newsletterTemplates[params.newsletterId] || newsletterTemplates['default'];
+  const template = getNewsletterTemplateById(params.newsletterId);
+  const initialComponents = template.components;
 
   const [components, setComponents] = useState<Component[]>(initialComponents);
   const [styles, setStyles] = useState({
@@ -380,3 +381,5 @@ export default function NewsletterEditorPage() {
     </>
   );
 }
+
+    

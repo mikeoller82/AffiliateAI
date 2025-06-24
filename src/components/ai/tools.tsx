@@ -365,14 +365,18 @@ const emailFormSchema = z.object({
   productDetails: z.string().min(10, 'Product details must be at least 10 characters.'),
 });
 
-export function EmailGenerator() {
+interface EmailGeneratorProps {
+  defaultValues?: z.infer<typeof emailFormSchema>;
+}
+
+export function EmailGenerator({ defaultValues }: EmailGeneratorProps) {
   const [result, setResult] = useState<GenerateEmailContentOutput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
   const form = useForm<z.infer<typeof emailFormSchema>>({
     resolver: zodResolver(emailFormSchema),
-    defaultValues: { objective: "", tone: "Professional", productDetails: "" },
+    defaultValues: defaultValues || { objective: "", tone: "Professional", productDetails: "" },
   });
 
   async function onSubmit(values: z.infer<typeof emailFormSchema>) {
@@ -577,3 +581,5 @@ export function ImageGenerator() {
     </div>
   );
 }
+
+    

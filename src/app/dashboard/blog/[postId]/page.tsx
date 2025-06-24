@@ -16,7 +16,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Textarea } from '@/components/ui/textarea';
 import { generateFunnelCopy, type GenerateFunnelCopyInput } from '@/ai/flows/generate-funnel-copy';
 import { useToast } from '@/hooks/use-toast';
-import { blogTemplates } from '@/lib/blog-templates';
+import { getBlogTemplateById } from '@/lib/blog-templates';
 import { defaultContent } from '@/lib/default-content';
 import type { Component, ComponentType } from '@/lib/builder-types';
 
@@ -159,7 +159,8 @@ export default function BlogEditorPage() {
   const params = useParams<{ postId: string }>();
   const { toast } = useToast();
   
-  const initialComponents = blogTemplates[params.postId] || blogTemplates['default'];
+  const template = getBlogTemplateById(params.postId);
+  const initialComponents = template.components;
 
   const [components, setComponents] = useState<Component[]>(initialComponents);
   const [styles, setStyles] = useState({
@@ -526,3 +527,5 @@ export default function BlogEditorPage() {
     </>
   );
 }
+
+    
