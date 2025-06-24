@@ -7,8 +7,8 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { createUserWithEmailAndPassword, getAuth } from 'firebase/auth';
-import { getFirebaseApp } from '@/lib/firebase';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { getFirebaseInstances } from '@/lib/firebase';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -39,18 +39,9 @@ export default function SignupPage() {
   });
 
   async function onSubmit(values: z.infer<typeof signupFormSchema>) {
-    const app = getFirebaseApp();
-    if (!app) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Firebase is not configured. Please check your environment variables.',
-      });
-      return;
-    }
     setIsLoading(true);
     try {
-      const auth = getAuth(app);
+      const { auth } = getFirebaseInstances();
       await createUserWithEmailAndPassword(auth, values.email, values.password);
       toast({
         title: 'Account Created!',
@@ -58,6 +49,7 @@ export default function SignupPage() {
       });
       router.push('/dashboard');
     } catch (error: any) {
+      console.error("Signup failed:", error);
       toast({
         variant: 'destructive',
         title: 'Sign Up Failed',
