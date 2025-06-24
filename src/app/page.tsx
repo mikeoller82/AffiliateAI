@@ -1,3 +1,4 @@
+
 import Link from 'next/link'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
@@ -47,7 +48,6 @@ const allInOneFeatures = [
     title: 'Affiliate Management',
     description: 'Track and manage all your affiliate campaigns.'
   },
-  // --- ADDED FEATURES ---
   {
     icon: Video,
     title: 'Courses & Memberships',
@@ -133,7 +133,6 @@ const testimonials = [
     avatar: "https://i.pravatar.cc/40?img=5",
     hint: "woman glasses"
   },
-  // --- ADDED TESTIMONIALS ---
   {
     quote: "As a marketing agency, managing multiple clients was a nightmare of logins and subscriptions. HighLaunchPad consolidated everything. Our efficiency has skyrocketed.",
     name: "David L.",
@@ -157,7 +156,6 @@ const testimonials = [
   },
 ];
 
-// --- NEW DATA FOR NEW SECTIONS ---
 
 const trustedByLogos = [
   { name: 'Quantum Leap', src: 'https://placehold.co/140x40/fafafa/9ca3af?text=QuantumLeap' },
@@ -195,6 +193,7 @@ const pricingTiers = [
     name: 'Professional',
     price: '$29',
 <<<<<<< HEAD
+<<<<<<< HEAD
     description: 'After 30-day free trial',
     features: ['All features'],
 =======
@@ -202,6 +201,18 @@ const pricingTiers = [
     features: ['All features unlocked'],
 >>>>>>> 24d5090 (The NextJS app server is having trouble starting. Please identify what c)
     isPopular: false,
+=======
+    description: 'One simple plan with everything you need to launch, automate, and scale your online business.',
+    features: [
+        'Unlimited Funnels & Websites',
+        'Unlimited Email Marketing',
+        'Full CRM & Pipeline Access',
+        'Complete AI Toolkit',
+        'Course & Membership Hosting',
+        'No "HighLaunchPad" Branding',
+    ],
+    isPopular: true,
+>>>>>>> f8001b6 (also on the landing age the pricing card at the bootm shld be 29 dllars)
   },
 ];
 
@@ -276,7 +287,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* --- NEW: Trusted By Logos Section --- */}
+        {/* Trusted By Logos Section */}
         <section className="py-12 bg-muted/20">
             <div className="container">
                 <p className="text-center font-semibold text-muted-foreground">TRUSTED BY THOUSANDS OF BUSINESSES WORLDWIDE</p>
@@ -322,7 +333,6 @@ export default function LandingPage() {
             </div>
             <div className="mt-12 max-w-4xl mx-auto bg-card rounded-2xl p-8 shadow-lg">
                 <div className="relative">
-                     {/* Connecting line */}
                     <div className="absolute left-4 top-8 bottom-8 w-0.5 bg-border -z-10"></div>
                     
                     <div className="space-y-12">
@@ -371,7 +381,7 @@ export default function LandingPage() {
                         <div className={index % 2 === 1 ? 'md:order-last' : ''}>
                              <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-3 py-1 rounded-full mb-4 font-medium">
                                 <feature.icon className="h-5 w-5"/>
-                                {feature.title.split(' ')[2]} {/* Extracts third word for a short title */}
+                                {feature.title.split(' ')[2]}
                             </div>
                             <h3 className="text-3xl font-bold tracking-tight">{feature.title}</h3>
                             <p className="mt-4 text-lg text-muted-foreground">{feature.description}</p>
@@ -392,7 +402,7 @@ export default function LandingPage() {
             </div>
         </section>
 
-        {/* --- NEW: AI Spotlight Section --- */}
+        {/* AI Spotlight Section */}
         <section id="ai-spotlight" className="py-20 bg-gray-900 text-gray-200">
             <div className="container grid md:grid-cols-2 gap-12 items-center">
                 <div>
@@ -432,7 +442,7 @@ export default function LandingPage() {
             </div>
         </section>
 
-        {/* --- NEW: "Who Is It For?" Section --- */}
+        {/* "Who Is It For?" Section */}
         <section id="for-who" className="py-20">
             <div className="container">
                 <div className="text-center">
@@ -457,7 +467,7 @@ export default function LandingPage() {
             </div>
         </section>
 
-        {/* --- NEW: Comparison Section --- */}
+        {/* Comparison Section */}
         <section id="comparison" className="py-20 bg-muted/40">
             <div className="container">
                 <div className="text-center">
@@ -495,7 +505,7 @@ export default function LandingPage() {
                             <p className="flex items-center gap-2"><Check className="h-4 w-4 text-green-500" /> Email Marketing</p>
                             <p className="flex items-center gap-2"><Check className="h-4 w-4 text-green-500" /> CRM & Pipelines</p>
                             <p className="flex items-center gap-2"><Check className="h-4 w-4 text-green-500" /> And so much more...</p>
-                            <p className="font-bold text-lg mt-4 pt-4 border-t">Total: Starting at just <span className="text-primary">$97/mo</span></p>
+                            <p className="font-bold text-lg mt-4 pt-4 border-t">Total: <span className="text-primary">Free for 30 Days, then $29/mo</span></p>
                         </CardContent>
                     </Card>
                 </div>
@@ -534,14 +544,14 @@ export default function LandingPage() {
             </div>
         </section>
 
-        {/* --- NEW: Pricing Section --- */}
+        {/* Pricing Section */}
         <section id="pricing" className="py-20 bg-muted/40">
             <div className="container">
                 <div className="text-center">
                     <h2 className="text-3xl font-bold tracking-tight md:text-4xl">Simple, Transparent Pricing</h2>
                     <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">Choose the plan that's right for your business. No hidden fees, ever.</p>
                 </div>
-                <div className="mt-12 grid gap-8 md:grid-cols-1 lg:grid-cols-3 max-w-5xl mx-auto">
+                <div className="mt-12 grid gap-8 max-w-md mx-auto">
                     {pricingTiers.map(plan => (
                         <Card key={plan.name} className={`flex flex-col ${plan.isPopular ? 'border-primary border-2 shadow-lg' : ''}`}>
                             {plan.isPopular && (
@@ -561,18 +571,20 @@ export default function LandingPage() {
                                         </li>
                                     ))}
                                 </ul>
-                                <Button className="w-full" variant={plan.isPopular ? 'default' : 'secondary'}>Get Started</Button>
+                                <Button className="w-full" asChild>
+                                  <Link href="/signup">Start Your Free 30-Day Trial</Link>
+                                </Button>
                             </CardContent>
                         </Card>
                     ))}
                 </div>
                 <div className="text-center mt-8">
-                    <Link href="/pricing" className="text-sm font-semibold text-primary hover:underline">See full feature comparison →</Link>
+                    <p className="text-sm text-muted-foreground">All plans start with a 30-day free trial. No credit card needed.</p>
                 </div>
             </div>
         </section>
 
-        {/* --- NEW: FAQ Section --- */}
+        {/* FAQ Section */}
         <section id="faq" className="py-20">
             <div className="container max-w-3xl mx-auto">
                 <div className="text-center">
@@ -649,3 +661,8 @@ export default function LandingPage() {
     </div>
   )
 }
+<<<<<<< HEAD
+=======
+
+    
+>>>>>>> f8001b6 (also on the landing age the pricing card at the bootm shld be 29 dllars)
