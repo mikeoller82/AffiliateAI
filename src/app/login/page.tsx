@@ -8,7 +8,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { getFirebaseInstances } from '@/lib/firebase';
+import { useFirebase } from '@/contexts/firebase-context';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -29,6 +29,7 @@ export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const { auth } = useFirebase();
 
   const form = useForm<z.infer<typeof loginFormSchema>>({
     resolver: zodResolver(loginFormSchema),
@@ -40,8 +41,16 @@ export default function LoginPage() {
 
   async function onSubmit(values: z.infer<typeof loginFormSchema>) {
     setIsLoading(true);
+    if (!auth) {
+      toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Authentication service not available. Please try again later.',
+      });
+      setIsLoading(false);
+      return;
+    }
     try {
-      const { auth } = getFirebaseInstances();
       await signInWithEmailAndPassword(auth, values.email, values.password);
       toast({
         title: 'Success!',
@@ -50,10 +59,16 @@ export default function LoginPage() {
       router.push('/dashboard');
     } catch (error: any) {
       console.error("Login failed:", error);
+      let description = 'An unexpected error occurred. Please try again.';
+      if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found') {
+          description = 'Invalid email or password. Please check your credentials and try again.';
+      } else if (error.code) {
+          description = error.message;
+      }
       toast({
         variant: 'destructive',
         title: 'Login Failed',
-        description: error.message || 'An unexpected error occurred. Please try again.',
+        description: description,
       });
     } finally {
       setIsLoading(false);
@@ -103,7 +118,7 @@ export default function LoginPage() {
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full" disabled={isLoading}>
+              <Button type="submit" className="w-full" disabled={isLoading || !auth}>
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Log In
               </Button>
