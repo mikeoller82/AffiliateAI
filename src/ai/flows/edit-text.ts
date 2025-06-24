@@ -8,10 +8,9 @@
  * - EditTextOutput - The return type for the editText function.
  */
 
-import {ai} from '@/ai/genkit';
-import {genkit} from 'genkit';
-import {googleAI} from '@genkit-ai/googleai';
-import {z} from 'genkit';
+import { genkit, z } from 'genkit';
+import { googleAI } from '@genkit-ai/googleai';
+import { ai } from '@/ai/genkit';
 
 const EditTextInputSchema = z.object({
   text: z.string().describe('The original text to be edited.'),
@@ -29,34 +28,40 @@ export async function editText(input: EditTextInput): Promise<EditTextOutput> {
   return editTextFlow(input);
 }
 
-const promptTemplate = `You are an expert copy editor. Your task is to edit the provided text based on the given instruction.
-
-Instruction: {{{instruction}}}
-
-Original Text:
----
-{{{text}}}
----
-
-Return only the edited text in the 'editedText' field of the JSON output. Do not include any preamble or explanation.`;
-
 const editTextFlow = ai.defineFlow(
   {
     name: 'editTextFlow',
     inputSchema: EditTextInputSchema,
     outputSchema: EditTextOutputSchema,
   },
-  async (input) => {
+  async ({ text, instruction, apiKey }) => {
     const authAi = genkit({
-      plugins: [googleAI({ apiKey: input.apiKey })],
-      model: 'googleai/gemini-2.0-flash',
+      plugins: [googleAI({ apiKey })],
     });
+    
+    const prompt = `You are an expert copy editor. Your task is to edit the provided text based on the given instruction.
+
+Instruction: ${instruction}
+
+Original Text:
+---
+${text}
+---
+
+Return only the edited text in the 'editedText' field of the JSON output. Do not include any preamble or explanation.`;
 
     const {output} = await authAi.generate({
-      prompt: promptTemplate,
-      input: input,
-      output: { schema: EditTextOutputSchema },
+      model: 'googleai/gemini-2.0-flash',
+      prompt: prompt,
+      output: { 
+          format: 'json',
+          schema: EditTextOutputSchema
+      },
     });
-    return output!;
+
+    if (!output) {
+      throw new Error("AI failed to generate a response.");
+    }
+    return output;
   }
 );

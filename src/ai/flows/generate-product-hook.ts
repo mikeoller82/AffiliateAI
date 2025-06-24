@@ -8,10 +8,9 @@
  * - GenerateProductHookOutput - The return type for the generateProductHook function.
  */
 
-import {ai} from '@/ai/genkit';
-import {genkit} from 'genkit';
-import {googleAI} from '@genkit-ai/googleai';
-import {z} from 'genkit';
+import { genkit, z } from 'genkit';
+import { googleAI } from '@genkit-ai/googleai';
+import { ai } from '@/ai/genkit';
 
 const GenerateProductHookInputSchema = z.object({
   productDescription: z.string().describe('A description of the product.'),
@@ -35,33 +34,39 @@ export async function generateProductHook(
   return generateProductHookFlow(input);
 }
 
-const promptTemplate = `You are a master copywriter specializing in creating viral marketing hooks for social media, landing pages, and ads.
-
-  Generate 3-5 short, punchy hook ideas for the following product.
-
-  Product Description: {{{productDescription}}}
-  Target Emotion: {{{emotion}}}
-
-  The hooks should be designed to grab attention and evoke the specified emotion.
-  `;
-
 const generateProductHookFlow = ai.defineFlow(
   {
     name: 'generateProductHookFlow',
     inputSchema: GenerateProductHookInputSchema,
     outputSchema: GenerateProductHookOutputSchema,
   },
-  async input => {
+  async ({ productDescription, emotion, apiKey }) => {
     const authAi = genkit({
-      plugins: [googleAI({ apiKey: input.apiKey })],
-      model: 'googleai/gemini-2.0-flash',
+      plugins: [googleAI({ apiKey })],
     });
 
+    const prompt = `You are a master copywriter specializing in creating viral marketing hooks for social media, landing pages, and ads.
+
+      Generate 3-5 short, punchy hook ideas for the following product.
+
+      Product Description: ${productDescription}
+      Target Emotion: ${emotion}
+
+      The hooks should be designed to grab attention and evoke the specified emotion.
+      `;
+
     const {output} = await authAi.generate({
-        prompt: promptTemplate,
-        input: input,
-        output: { schema: GenerateProductHookOutputSchema },
+        model: 'googleai/gemini-2.0-flash',
+        prompt: prompt,
+        output: { 
+            format: 'json',
+            schema: GenerateProductHookOutputSchema 
+        },
     });
-    return output!;
+
+    if (!output) {
+      throw new Error("AI failed to generate a response.");
+    }
+    return output;
   }
 );

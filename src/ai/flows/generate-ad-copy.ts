@@ -9,11 +9,10 @@
  * - GenerateAdCopyOutput - The return type for the generateAdCopy function.
  */
 
+import { genkit, z } from 'genkit';
+import { googleAI } from '@genkit-ai/googleai';
+import { ai } from '@/ai/genkit';
 
-import {ai} from '@/ai/genkit';
-import {genkit} from 'genkit';
-import {googleAI} from '@genkit-ai/googleai';
-import {z} from 'genkit';
 
 const GenerateAdCopyInputSchema = z.object({
   product: z.string().describe('The product being advertised.'),
@@ -36,41 +35,48 @@ export async function generateAdCopy(input: GenerateAdCopyInput): Promise<Genera
   return generateAdCopyFlow(input);
 }
 
-const promptTemplate = `You are an expert direct-response copywriter specializing in digital advertising.
-
-  Based on the product, audience, and platform, generate compelling ad copy variations.
-
-  Product: {{{product}}}
-  Audience: {{{audience}}}
-  Platform: {{{platform}}}
-
-  Generate 3-5 variations for headlines and descriptions.
-  Ensure the primary text is engaging and relevant to the target audience.
-  The copy should be suitable for the specified platform.
-
-  Output JSON: {
-    "headlines": ["headline 1", "headline 2", ...],
-    "primary_text": "Main ad copy text.",
-    "descriptions": ["description 1", "description 2", ...]
-  }`;
-
 const generateAdCopyFlow = ai.defineFlow(
   {
     name: 'generateAdCopyFlow',
     inputSchema: GenerateAdCopyInputSchema,
     outputSchema: GenerateAdCopyOutputSchema,
   },
-  async input => {
+  async ({ product, audience, platform, apiKey }) => {
     const authAi = genkit({
-        plugins: [googleAI({ apiKey: input.apiKey })],
-        model: 'googleai/gemini-2.0-flash',
+        plugins: [googleAI({ apiKey })],
     });
 
+    const prompt = `You are an expert direct-response copywriter specializing in digital advertising.
+
+      Based on the product, audience, and platform, generate compelling ad copy variations.
+
+      Product: ${product}
+      Audience: ${audience}
+      Platform: ${platform}
+
+      Generate 3-5 variations for headlines and descriptions.
+      Ensure the primary text is engaging and relevant to the target audience.
+      The copy should be suitable for the specified platform.
+
+      Output JSON: {
+        "headlines": ["headline 1", "headline 2", ...],
+        "primary_text": "Main ad copy text.",
+        "descriptions": ["description 1", "description 2", ...]
+      }`;
+
+
     const {output} = await authAi.generate({
-        prompt: promptTemplate,
-        input: input,
-        output: { schema: GenerateAdCopyOutputSchema },
+        model: 'googleai/gemini-2.0-flash',
+        prompt: prompt,
+        output: {
+            format: 'json',
+            schema: GenerateAdCopyOutputSchema 
+        },
     });
-    return output!;
+    
+    if (!output) {
+      throw new Error("AI failed to generate a response.");
+    }
+    return output;
   }
 );

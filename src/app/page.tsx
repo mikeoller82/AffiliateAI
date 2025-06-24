@@ -194,8 +194,13 @@ const pricingTiers = [
   {
     name: 'Professional',
     price: '$29',
+<<<<<<< HEAD
     description: 'After 30-day free trial',
     features: ['All features'],
+=======
+    description: 'professional subscription after 30-Day Free trial.',
+    features: ['All features unlocked'],
+>>>>>>> 24d5090 (The NextJS app server is having trouble starting. Please identify what c)
     isPopular: false,
   },
 ];

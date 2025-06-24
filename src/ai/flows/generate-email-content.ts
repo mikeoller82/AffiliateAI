@@ -8,11 +8,10 @@
  * - GenerateEmailContentInput - The input type for the generateEmailContent function.
  * - GenerateEmailContentOutput - The return type for the generateEmailContent function.
  */
+import { genkit, z } from 'genkit';
+import { googleAI } from '@genkit-ai/googleai';
+import { ai } from '@/ai/genkit';
 
-import {ai} from '@/ai/genkit';
-import {genkit} from 'genkit';
-import {googleAI} from '@genkit-ai/googleai';
-import {z} from 'genkit';
 
 const GenerateEmailContentInputSchema = z.object({
   objective: z
@@ -36,18 +35,6 @@ export async function generateEmailContent(
   return generateEmailContentFlow(input);
 }
 
-const promptTemplate = `You are an expert email copywriter. Generate email subject lines and body copy based on the following information.
-
-Objective: {{{objective}}}
-Tone: {{{tone}}}
-Product Details: {{{productDetails}}}
-
-Output the response in JSON format.
-{
-  "subjectLines": ["subject line 1", "subject line 2", ...],
-  "body": "email body..."
-}
-`;
 
 const generateEmailContentFlow = ai.defineFlow(
   {
@@ -55,18 +42,36 @@ const generateEmailContentFlow = ai.defineFlow(
     inputSchema: GenerateEmailContentInputSchema,
     outputSchema: GenerateEmailContentOutputSchema,
   },
-  async input => {
+  async ({ objective, tone, productDetails, apiKey }) => {
     const authAi = genkit({
-        plugins: [googleAI({ apiKey: input.apiKey })],
-        model: 'googleai/gemini-2.0-flash',
+        plugins: [googleAI({ apiKey })],
     });
+
+    const prompt = `You are an expert email copywriter. Generate email subject lines and body copy based on the following information.
+
+      Objective: ${objective}
+      Tone: ${tone}
+      Product Details: ${productDetails}
+
+      Output the response in JSON format.
+      {
+        "subjectLines": ["subject line 1", "subject line 2", ...],
+        "body": "email body..."
+      }
+      `;
 
     const {output} = await authAi.generate({
-        prompt: promptTemplate,
-        input: input,
-        output: { schema: GenerateEmailContentOutputSchema },
+        model: 'googleai/gemini-2.0-flash',
+        prompt: prompt,
+        output: {
+            format: 'json',
+            schema: GenerateEmailContentOutputSchema
+        },
     });
 
-    return output!;
+    if (!output) {
+      throw new Error("AI failed to generate a response.");
+    }
+    return output;
   }
 );
