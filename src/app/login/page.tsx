@@ -7,8 +7,8 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { signInWithEmailAndPassword, getAuth } from 'firebase/auth';
+import { app, isFirebaseConfigured } from '@/lib/firebase';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -39,8 +39,17 @@ export default function LoginPage() {
   });
 
   async function onSubmit(values: z.infer<typeof loginFormSchema>) {
+    if (!isFirebaseConfigured) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Firebase is not configured. Please check your environment variables.',
+      });
+      return;
+    }
     setIsLoading(true);
     try {
+      const auth = getAuth(app);
       await signInWithEmailAndPassword(auth, values.email, values.password);
       toast({
         title: 'Success!',
