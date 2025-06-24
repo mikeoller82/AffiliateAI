@@ -1,4 +1,3 @@
-
 import Link from 'next/link'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
@@ -6,36 +5,42 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Check, Filter, BrainCircuit, Mail, Users, BarChart3, Link as LinkIcon, Star, Globe, Newspaper, Workflow } from 'lucide-react'
 
-const features = [
+const featureCards = [
   {
-    icon: <Filter className="h-8 w-8 text-primary" />,
-    title: 'Drag-and-Drop Funnel Builder',
-    description: 'Visually create high-converting landing pages and sales funnels with our intuitive, no-code editor.',
+    title: 'Landing Page Builder',
+    description: 'Create stunning pages in minutes',
+    imageSrc: 'https://placehold.co/400x300.png',
+    hint: 'website builder interface'
   },
   {
-    icon: <BrainCircuit className="h-8 w-8 text-primary" />,
-    title: 'AI Content Engine',
-    description: 'Generate compelling emails, ad copy, product reviews, and headlines in seconds. Never stare at a blank page again.',
+    title: 'Email Marketing',
+    description: 'Engage and grow your customer base',
+    imageSrc: 'https://placehold.co/400x300.png',
+    hint: 'email marketing analytics'
   },
   {
-    icon: <Workflow className="h-8 w-8 text-primary" />,
-    title: 'Email Marketing Automation',
-    description: 'Build powerful, automated email sequences that nurture leads and drive sales while you sleep.',
+    title: 'Smart CRM',
+    description: 'Manage your leads and sales pipeline',
+    imageSrc: 'https://placehold.co/400x300.png',
+    hint: 'crm dashboard pipeline'
   },
   {
-    icon: <Users className="h-8 w-8 text-primary" />,
-    title: 'Smart CRM & Lead Management',
-    description: 'Track every interaction and manage your customer relationships effortlessly in our visual pipeline.',
+    title: 'Form Builder',
+    description: 'Optimize growth with opt-in forms',
+    imageSrc: 'https://placehold.co/400x300.png',
+    hint: 'online form builder'
   },
   {
-    icon: <Globe className="h-8 w-8 text-primary" />,
-    title: 'Website & Blog Builder',
-    description: 'Create a stunning, multi-page website or blog to build your brand and attract organic traffic.',
+    title: 'AI Toolkit',
+    description: 'Create on-brand content in seconds',
+    imageSrc: 'https://placehold.co/400x300.png',
+    hint: 'ai content generation'
   },
   {
-    icon: <LinkIcon className="h-8 w-8 text-primary" />,
-    title: 'Affiliate Link Tracking',
-    description: 'Manage and track all your affiliate links in one place to understand your ROI and scale what works.',
+    title: 'Automation Engine',
+    description: 'Simplify your marketing workflows',
+    imageSrc: 'https://placehold.co/400x300.png',
+    hint: 'automation workflow diagram'
   },
 ];
 
@@ -85,7 +90,7 @@ export default function LandingPage() {
               <Link href="/login">Login</Link>
             </Button>
             <Button asChild>
-              <Link href="/signup">Start Free Trial</Link>
+              <Link href="/signup">Get Started</Link>
             </Button>
           </div>
         </div>
@@ -93,37 +98,42 @@ export default function LandingPage() {
 
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="container py-20 text-center md:py-32">
-          <h1 className="text-4xl font-extrabold tracking-tight md:text-6xl">
-            The All-in-One Growth Platform for Digital Entrepreneurs
-          </h1>
-          <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">
-            Stop juggling a dozen different tools. HighLaunchPad gives you the funnels, email automation, AI tools, and CRM you need to launch, automate, and scale your business.
-          </p>
-          <div className="mt-8 flex justify-center gap-4">
-            <Button size="lg" asChild>
-              <Link href="/signup">Start Your Free 30-Day Trial</Link>
-            </Button>
+        <section className="relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-transparent to-secondary/20"></div>
+          <div className="container relative py-20 text-center md:py-32">
+            <h1 className="text-4xl font-extrabold tracking-tight md:text-6xl">
+              The Most Powerful All-In-One Platform For Your Business
+            </h1>
+            <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">
+              HighLaunchPad gives you the funnels, email automation, AI tools, and CRM you need to launch, automate, and scale your business from a single dashboard.
+            </p>
+            <div className="mt-8 flex justify-center gap-4">
+              <Button size="lg" asChild>
+                <Link href="/signup">Start Your Free 30-Day Trial</Link>
+              </Button>
+            </div>
+            <p className="mt-4 text-sm text-muted-foreground">No credit card required. Cancel anytime.</p>
           </div>
-          <p className="mt-4 text-sm text-muted-foreground">No credit card required. Cancel anytime.</p>
         </section>
 
         {/* Features Section */}
-        <section id="features" className="w-full bg-muted py-20">
+        <section id="features" className="w-full bg-muted/50 py-20">
           <div className="container">
             <div className="text-center">
               <h2 className="text-3xl font-bold tracking-tight md:text-4xl">One Platform, Infinite Possibilities</h2>
               <p className="mt-4 text-lg text-muted-foreground">Everything you need to turn your ideas into income.</p>
             </div>
-            <div className="mt-12 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-              {features.map((feature) => (
-                <Card key={feature.title} className="bg-background">
-                  <CardHeader className="flex flex-col items-center text-center">
-                    {feature.icon}
-                    <CardTitle className="mt-4">{feature.title}</CardTitle>
+            <div className="mt-12 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {featureCards.map((feature) => (
+                <Card key={feature.title} className="bg-card overflow-hidden transition-all hover:border-primary/50 hover:shadow-glow-primary">
+                  <CardHeader>
+                    <CardTitle>{feature.title}</CardTitle>
+                    <CardDescription>{feature.description}</CardDescription>
                   </CardHeader>
-                  <CardContent className="text-center">
-                    <p className="text-muted-foreground">{feature.description}</p>
+                  <CardContent>
+                    <div className="aspect-video w-full overflow-hidden rounded-md border">
+                        <Image src={feature.imageSrc} alt={feature.title} width={400} height={300} className="object-cover" data-ai-hint={feature.hint} />
+                    </div>
                   </CardContent>
                 </Card>
               ))}
@@ -159,7 +169,7 @@ export default function LandingPage() {
         </section>
 
         {/* CTA Section */}
-        <section className="w-full bg-primary text-primary-foreground">
+        <section className="w-full bg-primary/90 text-primary-foreground">
           <div className="container flex flex-col items-center py-20 text-center">
             <h2 className="text-3xl font-bold tracking-tight md:text-4xl">Ready to Grow Your Business on Autopilot?</h2>
             <p className="mt-4 max-w-xl text-lg opacity-90">
