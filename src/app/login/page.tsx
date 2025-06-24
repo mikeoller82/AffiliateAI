@@ -99,7 +99,7 @@ export default function LoginPage() {
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input type="email" placeholder="you@example.com" {...field} />
+                      <Input type="email" placeholder="you@example.com" {...field} autoComplete="email" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -112,7 +112,7 @@ export default function LoginPage() {
                   <FormItem>
                     <FormLabel>Password</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="••••••••" {...field} />
+                      <Input type="password" placeholder="••••••••" {...field} autoComplete="current-password" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
