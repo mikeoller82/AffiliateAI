@@ -3,7 +3,7 @@
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { onAuthStateChanged, type User, getAuth } from 'firebase/auth';
-import { app, isFirebaseConfigured } from '@/lib/firebase';
+import { getFirebaseApp, isFirebaseConfigured } from '@/lib/firebase';
 import { Loader2 } from 'lucide-react';
 
 interface AuthContextType {
@@ -18,7 +18,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (isFirebaseConfigured) {
+    const app = getFirebaseApp();
+    if (app) {
         const auth = getAuth(app);
         const unsubscribe = onAuthStateChanged(auth, (user) => {
           setUser(user);

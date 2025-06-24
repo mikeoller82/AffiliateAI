@@ -8,7 +8,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { createUserWithEmailAndPassword, getAuth } from 'firebase/auth';
-import { app, isFirebaseConfigured } from '@/lib/firebase';
+import { getFirebaseApp } from '@/lib/firebase';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -39,7 +39,8 @@ export default function SignupPage() {
   });
 
   async function onSubmit(values: z.infer<typeof signupFormSchema>) {
-    if (!isFirebaseConfigured) {
+    const app = getFirebaseApp();
+    if (!app) {
       toast({
         variant: 'destructive',
         title: 'Error',
