@@ -3,46 +3,47 @@ import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Check, Filter, BrainCircuit, Mail, Users, BarChart3, Link as LinkIcon, Star, Globe, Newspaper, Workflow } from 'lucide-react'
+import { Check, Filter, BrainCircuit, Mail, Users, BarChart3, Link as LinkIcon, Star, Globe, Newspaper, Workflow, Target, Handshake, BotMessageSquare } from 'lucide-react'
 
-const featureCards = [
+const showcaseFeatures = [
   {
-    title: 'Landing Page Builder',
-    description: 'Create stunning pages in minutes',
-    imageSrc: 'https://placehold.co/400x300.png',
-    hint: 'website builder interface'
+    icon: Globe,
+    title: 'Create Websites, Funnels & Landing Pages',
+    description: 'Our intuitive platform allows you to create full-featured websites with custom menus and high-performing, captivating landing pages—all in one place.',
+    points: [
+      'Drag & drop visual builder',
+      'Professionally designed templates',
+      'Blazing fast hosting included'
+    ],
+    imageSrc: 'https://placehold.co/600x400.png',
+    imageHint: 'website builder interface'
   },
   {
-    title: 'Email Marketing',
-    description: 'Engage and grow your customer base',
-    imageSrc: 'https://placehold.co/400x300.png',
-    hint: 'email marketing analytics'
+    icon: Workflow,
+    title: 'Email Marketing & Automations',
+    description: 'Build your list and your relationship with your audience using our powerful email marketing and visual automation builder.',
+    points: [
+        'Visual automation flows',
+        'Advanced contact segmentation',
+        'Detailed analytics & reporting'
+    ],
+    imageSrc: 'https://placehold.co/600x400.png',
+    imageHint: 'email marketing automation'
   },
   {
-    title: 'Smart CRM',
-    description: 'Manage your leads and sales pipeline',
-    imageSrc: 'https://placehold.co/400x300.png',
-    hint: 'crm dashboard pipeline'
-  },
-  {
-    title: 'Form Builder',
-    description: 'Optimize growth with opt-in forms',
-    imageSrc: 'https://placehold.co/400x300.png',
-    hint: 'online form builder'
-  },
-  {
-    title: 'AI Toolkit',
-    description: 'Create on-brand content in seconds',
-    imageSrc: 'https://placehold.co/400x300.png',
-    hint: 'ai content generation'
-  },
-  {
-    title: 'Automation Engine',
-    description: 'Simplify your marketing workflows',
-    imageSrc: 'https://placehold.co/400x300.png',
-    hint: 'automation workflow diagram'
+    icon: Users,
+    title: 'Smart CRM & Pipeline Management',
+    description: 'Manage your entire sales pipeline from lead to close. Track every interaction and never let a lead fall through the cracks.',
+    points: [
+        'Visual sales pipelines',
+        'Contact scoring & tagging',
+        'Full conversation history'
+    ],
+    imageSrc: 'https://placehold.co/600x400.png',
+    imageHint: 'crm dashboard pipeline'
   },
 ];
+
 
 const testimonials = [
   {
@@ -116,55 +117,111 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* Features Section */}
-        <section id="features" className="w-full bg-muted/50 py-20">
+        {/* Marketing Engine Section */}
+        <section id="engine" className="w-full bg-muted/40 py-20">
           <div className="container">
             <div className="text-center">
-              <h2 className="text-3xl font-bold tracking-tight md:text-4xl">One Platform, Infinite Possibilities</h2>
-              <p className="mt-4 text-lg text-muted-foreground">Everything you need to turn your ideas into income.</p>
+              <h2 className="text-3xl font-bold tracking-tight md:text-4xl">Building Your Digital Marketing Engine</h2>
+              <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">All the tools you need in one platform, without having to "duct-tape" multiple platforms together.</p>
             </div>
-            <div className="mt-12 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {featureCards.map((feature) => (
-                <Card key={feature.title} className="bg-card overflow-hidden transition-all hover:border-primary/50 hover:shadow-glow-primary">
-                  <CardHeader>
-                    <CardTitle>{feature.title}</CardTitle>
-                    <CardDescription>{feature.description}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="aspect-video w-full overflow-hidden rounded-md border">
-                        <Image src={feature.imageSrc} alt={feature.title} width={400} height={300} className="object-cover" data-ai-hint={feature.hint} />
+            <div className="mt-12 max-w-4xl mx-auto bg-card rounded-2xl p-8 shadow-lg">
+                <div className="relative">
+                     {/* Connecting line */}
+                    <div className="absolute left-4 top-8 bottom-8 w-0.5 bg-border -z-10"></div>
+                    
+                    <div className="space-y-12">
+                        <div className="flex items-start gap-6">
+                            <div className="flex items-center justify-center bg-red-500/10 rounded-full h-9 w-9 border-2 border-red-500/50 flex-shrink-0">
+                                <Target className="h-5 w-5 text-red-500"/>
+                            </div>
+                            <div>
+                                <h3 className="text-xl font-semibold">Capture</h3>
+                                <p className="text-muted-foreground mt-1">Capture leads using our landing pages, surveys, forms, calendars, inbound phone system & more!</p>
+                            </div>
+                        </div>
+                        <div className="flex items-start gap-6">
+                            <div className="flex items-center justify-center bg-green-500/10 rounded-full h-9 w-9 border-2 border-green-500/50 flex-shrink-0">
+                                <BotMessageSquare className="h-5 w-5 text-green-500"/>
+                            </div>
+                            <div>
+                                <h3 className="text-xl font-semibold">Nurture</h3>
+                                <p className="text-muted-foreground mt-1">Automatically message leads via voicemail, forced calls, SMS, emails, FB Messenger & more!</p>
+                            </div>
+                        </div>
+                        <div className="flex items-start gap-6">
+                            <div className="flex items-center justify-center bg-blue-500/10 rounded-full h-9 w-9 border-2 border-blue-500/50 flex-shrink-0">
+                                <Handshake className="h-5 w-5 text-blue-500"/>
+                            </div>
+                            <div>
+                                <h3 className="text-xl font-semibold">Close</h3>
+                                <p className="text-muted-foreground mt-1">Use our built-in tools to collect payments, schedule appointments, and track analytics!</p>
+                            </div>
+                        </div>
                     </div>
-                  </CardContent>
-                </Card>
-              ))}
+                </div>
+                <Button size="lg" className="w-full mt-12 bg-secondary text-secondary-foreground hover:bg-secondary/90">
+                    Start Your Free 30-Day Trial
+                </Button>
+                 <p className="mt-2 text-center text-xs text-muted-foreground">No obligations, no contracts, cancel at any time.</p>
             </div>
           </div>
         </section>
+        
+        {/* Feature Showcase Section */}
+        <section id="showcase" className="py-20">
+            <div className="container space-y-24">
+                {showcaseFeatures.map((feature, index) => (
+                    <div key={feature.title} className="grid md:grid-cols-2 gap-12 items-center">
+                        <div className={index % 2 === 1 ? 'md:order-last' : ''}>
+                             <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-3 py-1 rounded-full mb-4 font-medium">
+                                <feature.icon className="h-5 w-5"/>
+                                {feature.title}
+                            </div>
+                            <h3 className="text-3xl font-bold tracking-tight">{feature.title}</h3>
+                            <p className="mt-4 text-lg text-muted-foreground">{feature.description}</p>
+                            <ul className="mt-6 space-y-3">
+                                {feature.points.map(point => (
+                                    <li key={point} className="flex items-center gap-3">
+                                        <Check className="h-5 w-5 text-green-500 flex-shrink-0"/>
+                                        <span className="text-muted-foreground">{point}</span>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                        <div className="bg-card p-4 rounded-xl border shadow-lg">
+                             <Image src={feature.imageSrc} alt={feature.title} width={600} height={400} className="object-cover rounded-lg w-full" data-ai-hint={feature.imageHint} />
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </section>
 
         {/* Testimonials Section */}
-        <section id="testimonials" className="container py-20">
-           <div className="text-center">
-              <h2 className="text-3xl font-bold tracking-tight md:text-4xl">Loved by Creators and Marketers Worldwide</h2>
-              <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">Don't just take our word for it. Here's what real users are saying.</p>
-            </div>
-            <div className="mt-12 grid gap-8 md:grid-cols-1 lg:grid-cols-3">
-              {testimonials.map((testimonial) => (
-                <Card key={testimonial.name} className="flex flex-col">
-                  <CardContent className="pt-6 flex-1">
-                    <p className="italic">"{testimonial.quote}"</p>
-                  </CardContent>
-                  <CardHeader className="flex-row items-center gap-4">
-                    <Avatar>
-                      <AvatarImage src={testimonial.avatar} alt={testimonial.name} data-ai-hint={testimonial.hint} />
-                      <AvatarFallback>{testimonial.name.charAt(0)}</AvatarFallback>
-                    </Avatar>
-                    <div>
-                        <p className="font-semibold">{testimonial.name}</p>
-                        <p className="text-sm text-muted-foreground">{testimonial.title}</p>
-                    </div>
-                  </CardHeader>
-                </Card>
-              ))}
+        <section id="testimonials" className="bg-muted/40 py-20">
+           <div className="container">
+               <div className="text-center">
+                  <h2 className="text-3xl font-bold tracking-tight md:text-4xl">Loved by Creators and Marketers Worldwide</h2>
+                  <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">Don't just take our word for it. Here's what real users are saying.</p>
+                </div>
+                <div className="mt-12 grid gap-8 md:grid-cols-1 lg:grid-cols-3">
+                  {testimonials.map((testimonial) => (
+                    <Card key={testimonial.name} className="flex flex-col">
+                      <CardContent className="pt-6 flex-1">
+                        <p className="italic">"{testimonial.quote}"</p>
+                      </CardContent>
+                      <CardHeader className="flex-row items-center gap-4">
+                        <Avatar>
+                          <AvatarImage src={testimonial.avatar} alt={testimonial.name} data-ai-hint={testimonial.hint} />
+                          <AvatarFallback>{testimonial.name.charAt(0)}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                            <p className="font-semibold">{testimonial.name}</p>
+                            <p className="text-sm text-muted-foreground">{testimonial.title}</p>
+                        </div>
+                      </CardHeader>
+                    </Card>
+                  ))}
+                </div>
             </div>
         </section>
 
