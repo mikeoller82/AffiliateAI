@@ -5,7 +5,6 @@ import './automations.css';
 import { Toaster } from "@/components/ui/toaster";
 import { Inter } from 'next/font/google';
 import { AuthProvider } from '@/contexts/auth-context';
-import { FirebaseProvider } from '@/contexts/firebase-context';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
@@ -23,11 +22,9 @@ export default function RootLayout({
     <html lang="en" className={`${inter.variable} dark`}>
       <head />
       <body className="font-sans antialiased">
-        <FirebaseProvider>
-          <AuthProvider>
-            {children}
-          </AuthProvider>
-        </FirebaseProvider>
+        <AuthProvider>
+          {children}
+        </AuthProvider>
         <Toaster />
       </body>
     </html>

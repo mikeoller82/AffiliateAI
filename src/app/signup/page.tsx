@@ -8,7 +8,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { useFirebase } from '@/contexts/firebase-context';
+import { getFirebaseInstances } from '@/lib/firebase';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -29,7 +29,15 @@ export default function SignupPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const { auth } = useFirebase();
+  const [isAuthReady, setIsAuthReady] = useState(false);
+
+  // Eagerly initialize to check availability, but use lazily.
+  try {
+      getFirebaseInstances();
+      if (!isAuthReady) setIsAuthReady(true);
+  } catch (error) {
+      if(isAuthReady) setIsAuthReady(false);
+  }
 
   const form = useForm<z.infer<typeof signupFormSchema>>({
     resolver: zodResolver(signupFormSchema),
@@ -41,16 +49,8 @@ export default function SignupPage() {
 
   async function onSubmit(values: z.infer<typeof signupFormSchema>) {
     setIsLoading(true);
-    if (!auth) {
-        toast({
-            variant: 'destructive',
-            title: 'Initialization Error',
-            description: 'Authentication services are not available. Please try again later or contact support.',
-        });
-        setIsLoading(false);
-        return;
-    }
     try {
+      const { auth } = getFirebaseInstances();
       await createUserWithEmailAndPassword(auth, values.email, values.password);
       toast({
         title: 'Account Created!',
@@ -120,10 +120,15 @@ export default function SignupPage() {
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full" disabled={isLoading || !auth}>
+              <Button type="submit" className="w-full" disabled={isLoading || !isAuthReady}>
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Create Account
               </Button>
+               {!isAuthReady && (
+                <p className="text-xs text-center text-destructive">
+                    Firebase is not configured. Please contact support.
+                </p>
+              )}
             </form>
           </Form>
           <div className="mt-4 text-center text-sm">
