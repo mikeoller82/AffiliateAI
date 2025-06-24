@@ -1,10 +1,14 @@
 
-"use client";
+'use client';
 
 import type React from 'react';
+import { useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { usePathname } from 'next/navigation';
+import { usePathname, redirect } from 'next/navigation';
+import { useAuth } from '@/contexts/auth-context';
+import { auth } from '@/lib/firebase';
+import { signOut } from 'firebase/auth';
 import {
   SidebarProvider,
   Sidebar,
@@ -39,8 +43,10 @@ import {
   Newspaper,
   Mails,
   BookText,
+  LogOut,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
 
 const navItems = [
     { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -55,18 +61,14 @@ const navItems = [
     { href: '/dashboard/email', icon: Mail, label: 'Email Marketing' },
     { href: '/dashboard/automations', icon: Workflow, label: 'Automations' },
     { href: '/dashboard/ai-tools', icon: BrainCircuit, label: 'AI Tools' },
-    { href: '/dashboard/notion-pad', icon: FileText, label: 'Editor' },
 ];
 
 function MainContent({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
     
-    // Improved title logic to handle dynamic routes
     const getPageTitle = () => {
         if (pathname.startsWith('/dashboard/settings')) return 'Settings';
-
         for (const item of navItems) {
-            // Exact match for dashboard or if path starts with item href
              if (pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href))) {
                 return item.label;
             }
@@ -76,7 +78,7 @@ function MainContent({ children }: { children: React.ReactNode }) {
     
     const pageTitle = getPageTitle();
     
-    const isBuilderPage = /^\/dashboard\/(funnels|websites|automations|forms|blog|newsletter|docs)\//.test(pathname);
+    const isBuilderPage = /^\/dashboard\/(funnels|websites|automations|forms|blog|newsletter|docs)\/(\w|\d)/.test(pathname);
 
     return (
         <div className="flex flex-col h-screen bg-background">
@@ -103,6 +105,27 @@ function MainContent({ children }: { children: React.ReactNode }) {
 
 function AppSidebar() {
     const pathname = usePathname();
+    const { user } = useAuth();
+    const { toast } = useToast();
+
+    const handleSignOut = async () => {
+        try {
+            await signOut(auth);
+            toast({
+                title: "Signed Out",
+                description: "You have been successfully signed out.",
+            });
+            // The AuthProvider will handle the redirect
+        } catch (error) {
+            console.error("Error signing out:", error);
+            toast({
+                variant: 'destructive',
+                title: "Error",
+                description: "Failed to sign out. Please try again.",
+            });
+        }
+    };
+    
     const isActive = (href: string) => {
         if (href === '/dashboard') return pathname === href;
         return pathname.startsWith(href);
@@ -159,13 +182,16 @@ function AppSidebar() {
                 <div className="p-2 rounded-lg">
                     <div className="flex items-center gap-4">
                         <Avatar className="h-10 w-10">
-                            <AvatarImage src="https://placehold.co/40x40" data-ai-hint="profile picture"/>
-                            <AvatarFallback>DU</AvatarFallback>
+                            <AvatarImage src={user?.photoURL || "https://placehold.co/40x40.png"} data-ai-hint="profile picture"/>
+                            <AvatarFallback>{user?.email?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
                         </Avatar>
                         <div className="flex-1 overflow-hidden group-data-[collapsible=icon]:hidden">
-                            <p className="font-semibold text-sm truncate">Demo User</p>
-                            <p className="text-xs text-muted-foreground truncate">user@example.com</p>
+                            <p className="font-semibold text-sm truncate">{user?.displayName || 'User'}</p>
+                            <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
                         </div>
+                        <Button variant="ghost" size="icon" onClick={handleSignOut} className="group-data-[collapsible=icon]:hidden">
+                            <LogOut className="h-4 w-4" />
+                        </Button>
                     </div>
                 </div>
             </SidebarFooter>
@@ -174,6 +200,18 @@ function AppSidebar() {
 }
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+    const { user } = useAuth();
+    
+    useEffect(() => {
+        if (!user) {
+            redirect('/login');
+        }
+    }, [user]);
+
+    if (!user) {
+        return null; // or a loading spinner, but AuthProvider already has one
+    }
+    
     return (
         <SidebarProvider>
             <AppSidebar />
