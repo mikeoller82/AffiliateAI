@@ -117,7 +117,6 @@ function AppSidebar() {
                 title: "Signed Out",
                 description: "You have been successfully signed out.",
             });
-            // The AuthProvider will handle the redirect
         } catch (error) {
             console.error("Error signing out:", error);
             toast({
@@ -210,14 +209,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             redirect('/login');
         }
     }, [user, loading, pathname]);
-
-    if (loading) {
-         return (
-            <div className="flex h-screen w-full items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin" />
-            </div>
-        )
-    }
 
     if (!user) {
         return null;
