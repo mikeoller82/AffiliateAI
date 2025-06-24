@@ -1,3 +1,6 @@
+
+'use client';
+
 import { NotionPad } from "@/components/notionpad";
 
 export default function NotionPadPage() {
