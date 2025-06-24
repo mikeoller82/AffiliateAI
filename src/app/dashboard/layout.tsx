@@ -60,6 +60,8 @@ function MainContent({ children }: { children: React.ReactNode }) {
     
     // Improved title logic to handle dynamic routes
     const getPageTitle = () => {
+        if (pathname.startsWith('/dashboard/settings')) return 'Settings';
+
         for (const item of navItems) {
             // Exact match for dashboard or if path starts with item href
              if (pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href))) {
@@ -98,6 +100,10 @@ function MainContent({ children }: { children: React.ReactNode }) {
 
 function AppSidebar() {
     const pathname = usePathname();
+    const isActive = (href: string) => {
+        if (href === '/dashboard') return pathname === href;
+        return pathname.startsWith(href);
+    }
     return (
         <Sidebar>
             <SidebarHeader className="p-4 border-b">
@@ -112,7 +118,7 @@ function AppSidebar() {
                 <SidebarMenu>
                     {navItems.map((item) => (
                         <SidebarMenuItem key={item.href}>
-                            <SidebarMenuButton asChild isActive={pathname.startsWith(item.href) && (item.href === '/dashboard' ? pathname === item.href : true)} tooltip={{children: item.label}}>
+                            <SidebarMenuButton asChild isActive={isActive(item.href)} tooltip={{children: item.label}}>
                                 <Link href={item.href}>
                                     <item.icon />
                                     <span>{item.label}</span>
@@ -133,8 +139,8 @@ function AppSidebar() {
                         </SidebarMenuButton>
                     </SidebarMenuItem>
                     <SidebarMenuItem>
-                        <SidebarMenuButton asChild tooltip={{children: 'Settings'}}>
-                            <Link href="#">
+                        <SidebarMenuButton asChild isActive={isActive('/dashboard/settings')} tooltip={{children: 'Settings'}}>
+                            <Link href="/dashboard/settings">
                                 <Settings />
                                 <span>Settings</span>
                             </Link>
