@@ -40,7 +40,7 @@
     --popover-foreground: 210 20% 98%;
     --primary: 200 98% 52%;
     --primary-foreground: 224 71% 4%;
-    --secondary: 260 100% 70%;
+    --secondary: 145 65% 42%;
     --secondary-foreground: 210 20% 98%;
     --muted: 224 71% 12%;
     --muted-foreground: 215 20% 65%;
@@ -51,11 +51,11 @@
     --border: 224 71% 15%;
     --input: 224 71% 15%;
     --ring: 200 98% 52%;
-    --chart-1: 200 98% 52%; /* cyan */
-    --chart-2: 260 100% 70%; /* purple */
-    --chart-3: 180 98% 45%; /* teal */
-    --chart-4: 280 100% 70%; /* magenta */
-    --chart-5: 320 100% 65%; /* pink */
+    --chart-1: 200 98% 52%;
+    --chart-2: 145 65% 42%;
+    --chart-3: 43 74% 66%;
+    --chart-4: 27 87% 67%;
+    --chart-5: 320 100% 65%;
   }
 }
 

@@ -3,18 +3,18 @@ import type { SVGProps } from 'react';
 export function Logo(props: SVGProps<SVGSVGElement>) {
   return (
     <svg
-      viewBox="0 0 256 256"
+      viewBox="0 0 100 100"
       xmlns="http://www.w3.org/2000/svg"
       {...props}
     >
-      <g fillRule="evenodd">
-        <path fill="#4b5563" d="M60 210h136v16H60z" />
-        <path fill="#4b5563" d="M80 180h16v30H80z" />
-        <path fill="#06b6d4" d="M108 140c-2 15-4 30 20 40 24-10 22-25 20-40H108z" />
-        <path fill="#4b5563" d="M128 10C108 40 108 90 108 140h40c0-50 0-100-20-130z" />
-        <path fill="#4b5563" d="M108 100v40h-20c10-20 15-30 20-40z" />
-        <path fill="#4b5563" d="M148 100v40h20c-10-20-15-30-20-40z" />
-        <circle fill="#FFFFFF" cx="128" cy="60" r="12" />
+      <g>
+        {/* Left Bar */}
+        <path d="M25 95 V60 L40 52 V87 Z" fill="hsl(var(--secondary))" />
+        {/* Middle Bar */}
+        <path d="M45 95 V40 L60 32 V87 Z" fill="hsl(var(--secondary))" />
+        {/* Arrow (Base + Head) */}
+        <path d="M65 95 V25 L80 17 V87 Z" fill="hsl(var(--primary))" />
+        <path d="M55 22 L80 5 L105 22 L80 32 Z" fill="hsl(var(--primary))" />
       </g>
     </svg>
   );
