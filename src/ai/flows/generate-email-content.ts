@@ -10,6 +10,8 @@
  */
 
 import {ai} from '@/ai/genkit';
+import {genkit} from 'genkit';
+import {googleAI} from '@genkit-ai/googleai';
 import {z} from 'genkit';
 
 const GenerateEmailContentInputSchema = z.object({
@@ -18,6 +20,7 @@ const GenerateEmailContentInputSchema = z.object({
     .describe('The objective of the email, e.g., Promote new product X'),
   tone: z.string().describe('The tone of the email, e.g., enthusiastic'),
   productDetails: z.string().describe('Details about the product or service.'),
+  apiKey: z.string().describe('A Google AI API key for authentication.'),
 });
 export type GenerateEmailContentInput = z.infer<typeof GenerateEmailContentInputSchema>;
 
@@ -33,11 +36,7 @@ export async function generateEmailContent(
   return generateEmailContentFlow(input);
 }
 
-const prompt = ai.definePrompt({
-  name: 'generateEmailContentPrompt',
-  input: {schema: GenerateEmailContentInputSchema},
-  output: {schema: GenerateEmailContentOutputSchema},
-  prompt: `You are an expert email copywriter. Generate email subject lines and body copy based on the following information.
+const promptTemplate = `You are an expert email copywriter. Generate email subject lines and body copy based on the following information.
 
 Objective: {{{objective}}}
 Tone: {{{tone}}}
@@ -48,8 +47,7 @@ Output the response in JSON format.
   "subjectLines": ["subject line 1", "subject line 2", ...],
   "body": "email body..."
 }
-`,
-});
+`;
 
 const generateEmailContentFlow = ai.defineFlow(
   {
@@ -58,7 +56,17 @@ const generateEmailContentFlow = ai.defineFlow(
     outputSchema: GenerateEmailContentOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
+    const authAi = genkit({
+        plugins: [googleAI({ apiKey: input.apiKey })],
+        model: 'googleai/gemini-2.0-flash',
+    });
+
+    const {output} = await authAi.generate({
+        prompt: promptTemplate,
+        input: input,
+        output: { schema: GenerateEmailContentOutputSchema },
+    });
+
     return output!;
   }
 );

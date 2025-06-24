@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview An AI agent that generates marketing hooks for a product.
@@ -8,6 +9,8 @@
  */
 
 import {ai} from '@/ai/genkit';
+import {genkit} from 'genkit';
+import {googleAI} from '@genkit-ai/googleai';
 import {z} from 'genkit';
 
 const GenerateProductHookInputSchema = z.object({
@@ -15,6 +18,7 @@ const GenerateProductHookInputSchema = z.object({
   emotion: z
     .string()
     .describe('The target emotion for the hook, e.g., Urgency, Curiosity, Transformation.'),
+  apiKey: z.string().describe('A Google AI API key for authentication.'),
 });
 export type GenerateProductHookInput = z.infer<typeof GenerateProductHookInputSchema>;
 
@@ -31,11 +35,7 @@ export async function generateProductHook(
   return generateProductHookFlow(input);
 }
 
-const prompt = ai.definePrompt({
-  name: 'generateProductHookPrompt',
-  input: {schema: GenerateProductHookInputSchema},
-  output: {schema: GenerateProductHookOutputSchema},
-  prompt: `You are a master copywriter specializing in creating viral marketing hooks for social media, landing pages, and ads.
+const promptTemplate = `You are a master copywriter specializing in creating viral marketing hooks for social media, landing pages, and ads.
 
   Generate 3-5 short, punchy hook ideas for the following product.
 
@@ -43,8 +43,7 @@ const prompt = ai.definePrompt({
   Target Emotion: {{{emotion}}}
 
   The hooks should be designed to grab attention and evoke the specified emotion.
-  `,
-});
+  `;
 
 const generateProductHookFlow = ai.defineFlow(
   {
@@ -53,7 +52,16 @@ const generateProductHookFlow = ai.defineFlow(
     outputSchema: GenerateProductHookOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
+    const authAi = genkit({
+      plugins: [googleAI({ apiKey: input.apiKey })],
+      model: 'googleai/gemini-2.0-flash',
+    });
+
+    const {output} = await authAi.generate({
+        prompt: promptTemplate,
+        input: input,
+        output: { schema: GenerateProductHookOutputSchema },
+    });
     return output!;
   }
 );

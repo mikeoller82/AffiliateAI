@@ -1,4 +1,4 @@
-// src/ai/flows/suggest-ctas.ts
+
 'use server';
 /**
  * @fileOverview This file defines a Genkit flow for suggesting compelling Call-To-Actions (CTAs) based on context.
@@ -9,10 +9,13 @@
  */
 
 import {ai} from '@/ai/genkit';
+import {genkit} from 'genkit';
+import {googleAI} from '@genkit-ai/googleai';
 import {z} from 'genkit';
 
 const SuggestCTAsInputSchema = z.object({
   context: z.string().describe('The context of the landing page or ad, e.g., "Landing page for a free webinar on real estate".'),
+  apiKey: z.string().describe('A Google AI API key for authentication.'),
 });
 export type SuggestCTAsInput = z.infer<typeof SuggestCTAsInputSchema>;
 
@@ -23,16 +26,11 @@ export async function suggestCTAs(input: SuggestCTAsInput): Promise<SuggestCTAsO
   return suggestCTAsFlow(input);
 }
 
-const suggestCTAsPrompt = ai.definePrompt({
-  name: 'suggestCTAsPrompt',
-  input: {schema: SuggestCTAsInputSchema},
-  output: {schema: SuggestCTAsOutputSchema},
-  prompt: `You are an expert marketing assistant. You will suggest compelling CTAs for the given context.
+const promptTemplate = `You are an expert marketing assistant. You will suggest compelling CTAs for the given context.
 
 Context: {{{context}}}
 
-Suggest 3-5 CTAs.`,
-});
+Suggest 3-5 CTAs.`;
 
 const suggestCTAsFlow = ai.defineFlow(
   {
@@ -41,7 +39,16 @@ const suggestCTAsFlow = ai.defineFlow(
     outputSchema: SuggestCTAsOutputSchema,
   },
   async input => {
-    const {output} = await suggestCTAsPrompt(input);
+     const authAi = genkit({
+      plugins: [googleAI({ apiKey: input.apiKey })],
+      model: 'googleai/gemini-2.0-flash',
+    });
+
+    const {output} = await authAi.generate({
+        prompt: promptTemplate,
+        input: input,
+        output: { schema: SuggestCTAsOutputSchema },
+    });
     return output!;
   }
 );

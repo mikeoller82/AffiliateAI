@@ -12,14 +12,15 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Wand2, Copy, Download } from "lucide-react";
-import { generateAdCopy, type GenerateAdCopyOutput } from '@/ai/flows/generate-ad-copy';
-import { suggestCTAs, type SuggestCTAsOutput } from '@/ai/flows/suggest-ctas';
-import { generateEmailContent, type GenerateEmailContentOutput } from '@/ai/flows/generate-email-content';
-import { generateProductReview, type GenerateProductReviewOutput } from '@/ai/flows/generate-product-review';
-import { generateProductHook, type GenerateProductHookOutput } from '@/ai/flows/generate-product-hook';
-import { generateImage, type GenerateImageOutput } from '@/ai/flows/generate-image';
+import { generateAdCopy, type GenerateAdCopyInput, type GenerateAdCopyOutput } from '@/ai/flows/generate-ad-copy';
+import { suggestCTAs, type SuggestCTAsInput, type SuggestCTAsOutput } from '@/ai/flows/suggest-ctas';
+import { generateEmailContent, type GenerateEmailContentInput, type GenerateEmailContentOutput } from '@/ai/flows/generate-email-content';
+import { generateProductReview, type GenerateProductReviewInput, type GenerateProductReviewOutput } from '@/ai/flows/generate-product-review';
+import { generateProductHook, type GenerateProductHookInput, type GenerateProductHookOutput } from '@/ai/flows/generate-product-hook';
+import { generateImage, type GenerateImageInput, type GenerateImageOutput } from '@/ai/flows/generate-image';
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { useAIKey } from '@/contexts/ai-key-context';
 
 function LoadingSpinner() {
   return (
@@ -40,6 +41,7 @@ export function AdCopyGenerator() {
   const [result, setResult] = useState<GenerateAdCopyOutput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { apiKey, promptApiKey } = useAIKey();
 
   const form = useForm<z.infer<typeof adCopyFormSchema>>({
     resolver: zodResolver(adCopyFormSchema),
@@ -47,10 +49,14 @@ export function AdCopyGenerator() {
   });
 
   async function onSubmit(values: z.infer<typeof adCopyFormSchema>) {
+    if (!apiKey) {
+      promptApiKey();
+      return;
+    }
     setIsLoading(true);
     setResult(null);
     try {
-      const response = await generateAdCopy(values);
+      const response = await generateAdCopy({ ...values, apiKey });
       setResult(response);
     } catch (error) {
       console.error(error);
@@ -144,6 +150,7 @@ export function CtaSuggestor() {
   const [result, setResult] = useState<SuggestCTAsOutput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { apiKey, promptApiKey } = useAIKey();
 
   const form = useForm<z.infer<typeof ctaFormSchema>>({
     resolver: zodResolver(ctaFormSchema),
@@ -151,10 +158,14 @@ export function CtaSuggestor() {
   });
 
   async function onSubmit(values: z.infer<typeof ctaFormSchema>) {
+    if (!apiKey) {
+      promptApiKey();
+      return;
+    }
     setIsLoading(true);
     setResult(null);
     try {
-      const response = await suggestCTAs(values);
+      const response = await suggestCTAs({ ...values, apiKey });
       setResult(response);
     } catch (error) {
       console.error(error);
@@ -212,6 +223,7 @@ export function ProductReviewWriter() {
   const [result, setResult] = useState<GenerateProductReviewOutput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { apiKey, promptApiKey } = useAIKey();
 
   const form = useForm<z.infer<typeof productReviewSchema>>({
     resolver: zodResolver(productReviewSchema),
@@ -219,10 +231,14 @@ export function ProductReviewWriter() {
   });
 
   async function onSubmit(values: z.infer<typeof productReviewSchema>) {
+    if (!apiKey) {
+      promptApiKey();
+      return;
+    }
     setIsLoading(true);
     setResult(null);
     try {
-      const response = await generateProductReview(values);
+      const response = await generateProductReview({ ...values, apiKey });
       setResult(response);
     } catch (error) {
       console.error(error);
@@ -284,6 +300,7 @@ export function ProductHookGenerator() {
   const [result, setResult] = useState<GenerateProductHookOutput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { apiKey, promptApiKey } = useAIKey();
 
   const form = useForm<z.infer<typeof productHookSchema>>({
     resolver: zodResolver(productHookSchema),
@@ -291,10 +308,14 @@ export function ProductHookGenerator() {
   });
 
   async function onSubmit(values: z.infer<typeof productHookSchema>) {
+    if (!apiKey) {
+      promptApiKey();
+      return;
+    }
     setIsLoading(true);
     setResult(null);
     try {
-      const response = await generateProductHook(values);
+      const response = await generateProductHook({ ...values, apiKey });
       setResult(response);
     } catch (error) {
       console.error(error);
@@ -373,6 +394,7 @@ export function EmailGenerator({ defaultValues }: EmailGeneratorProps) {
   const [result, setResult] = useState<GenerateEmailContentOutput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { apiKey, promptApiKey } = useAIKey();
 
   const form = useForm<z.infer<typeof emailFormSchema>>({
     resolver: zodResolver(emailFormSchema),
@@ -380,10 +402,14 @@ export function EmailGenerator({ defaultValues }: EmailGeneratorProps) {
   });
 
   async function onSubmit(values: z.infer<typeof emailFormSchema>) {
+    if (!apiKey) {
+      promptApiKey();
+      return;
+    }
     setIsLoading(true);
     setResult(null);
     try {
-      const response = await generateEmailContent(values);
+      const response = await generateEmailContent({ ...values, apiKey });
       setResult(response);
     } catch (error) {
       console.error(error);
@@ -497,6 +523,7 @@ export function ImageGenerator() {
   const [result, setResult] = useState<GenerateImageOutput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { apiKey, promptApiKey } = useAIKey();
 
   const form = useForm<z.infer<typeof imageGeneratorSchema>>({
     resolver: zodResolver(imageGeneratorSchema),
@@ -504,10 +531,14 @@ export function ImageGenerator() {
   });
 
   async function onSubmit(values: z.infer<typeof imageGeneratorSchema>) {
+    if (!apiKey) {
+      promptApiKey();
+      return;
+    }
     setIsLoading(true);
     setResult(null);
     try {
-      const response = await generateImage(values);
+      const response = await generateImage({ ...values, apiKey });
       setResult(response);
     } catch (error) {
       console.error(error);
@@ -581,5 +612,3 @@ export function ImageGenerator() {
     </div>
   );
 }
-
-    

@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -9,6 +10,8 @@
  */
 
 import {ai} from '@/ai/genkit';
+import {genkit} from 'genkit';
+import {googleAI} from '@genkit-ai/googleai';
 import {z} from 'genkit';
 
 const GenerateProductReviewInputSchema = z.object({
@@ -18,6 +21,7 @@ const GenerateProductReviewInputSchema = z.object({
     .describe(
       'Key features, benefits, or talking points about the product.'
     ),
+  apiKey: z.string().describe('A Google AI API key for authentication.'),
 });
 export type GenerateProductReviewInput = z.infer<typeof GenerateProductReviewInputSchema>;
 
@@ -36,11 +40,7 @@ export async function generateProductReview(
   return generateProductReviewFlow(input);
 }
 
-const prompt = ai.definePrompt({
-  name: 'generateProductReviewPrompt',
-  input: {schema: GenerateProductReviewInputSchema},
-  output: {schema: GenerateProductReviewOutputSchema},
-  prompt: `You are an expert SEO copywriter and affiliate marketer specializing in writing compelling product reviews.
+const promptTemplate = `You are an expert SEO copywriter and affiliate marketer specializing in writing compelling product reviews.
 
   Generate a product review for the following product. The review should be well-structured, engaging, and optimized for search engines.
 
@@ -52,8 +52,7 @@ const prompt = ai.definePrompt({
   - A "Pros" section with a bulleted list.
   - A "Cons" section with a bulleted list.
   - A concluding summary that helps the reader make a decision.
-  `,
-});
+  `;
 
 const generateProductReviewFlow = ai.defineFlow(
   {
@@ -62,7 +61,16 @@ const generateProductReviewFlow = ai.defineFlow(
     outputSchema: GenerateProductReviewOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
+    const authAi = genkit({
+      plugins: [googleAI({ apiKey: input.apiKey })],
+      model: 'googleai/gemini-2.0-flash',
+    });
+
+    const {output} = await authAi.generate({
+        prompt: promptTemplate,
+        input: input,
+        output: { schema: GenerateProductReviewOutputSchema },
+    });
     return output!;
   }
 );
