@@ -8,26 +8,14 @@ export function Logo(props: SVGProps<SVGSVGElement>) {
       {...props}
     >
       <g>
-        {/* The base of the launchpad */}
-        <path
-          d="M15 85 H85 L90 95 H10 Z"
-          fill="hsl(var(--secondary))"
-        />
-        
-        {/* The arrow representing launch/growth */}
-        <path
-          d="M50 5 L65 35 H35 Z"
-          fill="hsl(var(--primary))"
-        />
-        
-        {/* The trail/body of the rocket/arrow */}
-        <rect
-          x="42.5"
-          y="30"
-          width="15"
-          height="55"
-          fill="hsl(var(--primary))"
-        />
+        {/* Left Bar */}
+        <path d="M25 95 V60 L40 52 V87 Z" fill="hsl(var(--secondary))" />
+        {/* Middle Bar */}
+        <path d="M45 95 V40 L60 32 V87 Z" fill="hsl(var(--secondary))" />
+        {/* Right Bar and Arrow Body */}
+        <path d="M65 95 V25 L80 17 V87 Z" fill="hsl(var(--primary))" />
+        {/* Arrow Head */}
+        <path d="M55 22 L80 5 L105 22 L80 32 Z" fill="hsl(var(--primary))" />
       </g>
     </svg>
   );
