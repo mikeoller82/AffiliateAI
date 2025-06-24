@@ -81,5 +81,23 @@ export const defaultContent = {
             { label: 'Privacy Policy', href: '#' },
             { label: 'Terms of Service', href: '#' },
         ],
+    },
+    countdown: {
+        title: 'Limited Time Offer Ends In:',
+        targetDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+    },
+    socials: {
+        title: 'Follow Us On Social Media',
+        links: [
+            { platform: 'Twitter', url: '#' },
+            { platform: 'Facebook', url: '#' },
+            { platform: 'Instagram', url: '#' },
+        ]
+    },
+    optinForm: {
+        title: 'Subscribe to Our Newsletter',
+        description: 'Get the latest news and updates delivered straight to your inbox.',
+        cta: 'Subscribe',
+        formId: null,
     }
 };
