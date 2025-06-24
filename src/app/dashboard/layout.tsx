@@ -7,7 +7,6 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, redirect } from 'next/navigation';
 import { useAuth } from '@/contexts/auth-context';
-import { getFirebaseInstances } from '@/lib/firebase';
 import { signOut } from 'firebase/auth';
 import {
   SidebarProvider,
@@ -106,12 +105,19 @@ function MainContent({ children }: { children: React.ReactNode }) {
 
 function AppSidebar() {
     const pathname = usePathname();
-    const { user } = useAuth();
+    const { user, auth } = useAuth();
     const { toast } = useToast();
 
     const handleSignOut = async () => {
+        if (!auth) {
+            toast({
+                variant: 'destructive',
+                title: 'Error',
+                description: 'Authentication service not ready. Cannot sign out.',
+            });
+            return;
+        }
         try {
-            const { auth } = getFirebaseInstances();
             await signOut(auth);
             toast({
                 title: "Signed Out",
@@ -210,7 +216,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         }
     }, [user, loading, pathname]);
 
-    if (!user) {
+    if (loading || !user) {
         return null;
     }
     

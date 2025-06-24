@@ -1,6 +1,5 @@
 'use client';
 
-import { getFirebaseInstances } from './firebase';
 import {
   collection,
   addDoc,
@@ -9,19 +8,19 @@ import {
   query,
   where,
   type DocumentData,
+  type Firestore,
 } from 'firebase/firestore';
 import { loadStripe } from '@stripe/stripe-js';
+import type { User } from 'firebase/auth';
 
-export const redirectToCheckout = async (priceId: string) => {
+
+export const redirectToCheckout = async (db: Firestore, user: User, priceId: string) => {
   if (!priceId) {
     alert('Error: No price ID was provided.');
     return;
   }
   
   try {
-    const { auth, db } = getFirebaseInstances();
-    const user = auth.currentUser;
-
     if (!user) {
       throw new Error("You must be logged in to make a purchase.");
     }
@@ -64,22 +63,19 @@ export const goToBillingPortal = async () => {
 
 
 export const onCurrentUserSubscriptionUpdate = (
+    db: Firestore,
+    user: User,
     callback: (snapshot: { subscriptions: DocumentData[] }) => void
 ) => {
     try {
-        const { auth, db } = getFirebaseInstances();
-        const user = auth.currentUser;
-        if (!user) return () => {};
-
         const subscriptionsRef = collection(db, 'customers', user.uid, 'subscriptions');
         const q = query(subscriptionsRef, where('status', 'in', ['trialing', 'active']));
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const subscriptions = snapshot.docs.map(doc => ({
                 ...doc.data(),
-                // Simulate the structure the app expects
                 items: [{
-                    price: { product: { name: 'Pro Plan' } }, // Assuming only one plan for now
+                    price: { product: { name: 'Pro Plan' } }, 
                 }],
             }));
             callback({ subscriptions });
