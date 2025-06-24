@@ -18,6 +18,19 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// TEMPORARY WORKAROUND: Using hardcoded config to bypass environment loading issue.
+// The root cause is likely the Next.js server needing a restart to load .env variables.
+const firebaseConfig = {
+  apiKey: "AIzaSyDefxmW4h76fC8-R3sKMIW8ngr4iCt-FNM",
+  authDomain: "fir-veilnet.firebaseapp.com",
+  projectId: "firebase-veilnet",
+  storageBucket: "firebase-veilnet.firebasestorage.app",
+  messagingSenderId: "785697647146",
+  appId: "1:785697647146:web:ab4c9d90c2e0cd6becb153",
+  measurementId: "G-FNJ36PCZFN"
+};
+
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [subscription, setSubscription] = useState<DocumentData | null>(null);
@@ -27,20 +40,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [configError, setConfigError] = useState<string | null>(null);
 
   useEffect(() => {
-    const firebaseConfig = {
-      apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-      authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-      projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-      storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-      messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-      appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-      measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
-    };
-
+    // This check is now somewhat redundant but safe to keep.
     const isFirebaseConfigured = firebaseConfig.apiKey && firebaseConfig.projectId;
 
     if (!isFirebaseConfigured) {
-      setConfigError('Firebase configuration is missing. Please ensure NEXT_PUBLIC_FIREBASE variables are set in your .env file.');
+      setConfigError('Firebase configuration is missing or incomplete in the hardcoded config object.');
       setLoading(false);
       return;
     }
@@ -63,7 +67,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return () => unsubscribeAuth();
     } catch(e) {
         console.error("Firebase initialization error:", e);
-        setConfigError("Could not initialize Firebase. Please check your configuration.");
+        const errorMessage = e instanceof Error ? e.message : "An unknown error occurred.";
+        setConfigError(`Could not initialize Firebase. Please check your configuration. Error: ${errorMessage}`);
         setLoading(false);
     }
   }, []);
