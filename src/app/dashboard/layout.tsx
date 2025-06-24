@@ -33,6 +33,7 @@ import {
   FileText,
   Workflow,
   ClipboardList,
+  Globe,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Logo } from '@/components/icons/logo';
@@ -41,6 +42,7 @@ const navItems = [
     { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
     { href: '/dashboard/links', icon: LinkIcon, label: 'Affiliate Links' },
     { href: '/dashboard/funnels', icon: Filter, label: 'Funnels' },
+    { href: '/dashboard/websites', icon: Globe, label: 'Websites' },
     { href: '/dashboard/forms', icon: ClipboardList, label: 'Forms' },
     { href: '/dashboard/crm', icon: Users, label: 'CRM' },
     { href: '/dashboard/email', icon: Mail, label: 'Email Marketing' },
@@ -51,9 +53,21 @@ const navItems = [
 
 function MainContent({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
-    const pageTitle = navItems.find(item => pathname.startsWith(item.href))?.label || 'Dashboard';
     
-    const isBuilderPage = /^\/dashboard\/funnels\/|^\/dashboard\/automations\/[a-z0-9-]+|^\/dashboard\/forms\/new/.test(pathname);
+    // Improved title logic to handle dynamic routes
+    const getPageTitle = () => {
+        for (const item of navItems) {
+            // Exact match for dashboard or if path starts with item href
+             if (pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href))) {
+                return item.label;
+            }
+        }
+        return 'Dashboard';
+    };
+    
+    const pageTitle = getPageTitle();
+    
+    const isBuilderPage = /^\/dashboard\/(funnels|websites|automations|forms)\//.test(pathname);
 
     return (
         <div className="flex flex-col h-screen bg-background">
