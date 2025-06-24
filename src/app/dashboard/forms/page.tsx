@@ -3,30 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { PlusCircle, Edit, BarChart3 } from "lucide-react";
 import Link from "next/link";
-
-const forms = [
-    {
-        id: "form-1",
-        title: "Lead Magnet Opt-in",
-        description: "Captures name and email for the AI Playbook.",
-        submissions: 1254,
-        conversionRate: 34.2,
-    },
-    {
-        id: "form-2",
-        title: "Contact Us",
-        description: "Standard contact form for the main website.",
-        submissions: 342,
-        conversionRate: 88.1,
-    },
-    {
-        id: "form-3",
-        title: "Webinar Registration",
-        description: "Form for the weekly live training session.",
-        submissions: 812,
-        conversionRate: 22.5,
-    },
-];
+import { formTemplates } from "@/lib/form-templates";
 
 export default function FormsPage() {
     return (
@@ -46,10 +23,10 @@ export default function FormsPage() {
                 </Button>
             </div>
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {forms.map(form => (
+                {formTemplates.map(form => (
                     <Card key={form.id} className="flex flex-col">
                         <CardHeader>
-                            <CardTitle>{form.title}</CardTitle>
+                            <CardTitle>{form.name}</CardTitle>
                             <CardDescription className="h-10">{form.description}</CardDescription>
                         </CardHeader>
                         <CardContent className="grid grid-cols-2 gap-4">
