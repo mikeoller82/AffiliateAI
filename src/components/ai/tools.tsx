@@ -2,6 +2,7 @@
 "use client";
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -10,12 +11,13 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Wand2, Copy } from "lucide-react";
+import { Loader2, Wand2, Copy, Download } from "lucide-react";
 import { generateAdCopy, type GenerateAdCopyOutput } from '@/ai/flows/generate-ad-copy';
 import { suggestCTAs, type SuggestCTAsOutput } from '@/ai/flows/suggest-ctas';
 import { generateEmailContent, type GenerateEmailContentOutput } from '@/ai/flows/generate-email-content';
 import { generateProductReview, type GenerateProductReviewOutput } from '@/ai/flows/generate-product-review';
 import { generateProductHook, type GenerateProductHookOutput } from '@/ai/flows/generate-product-hook';
+import { generateImage, type GenerateImageOutput } from '@/ai/flows/generate-image';
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 
@@ -473,6 +475,101 @@ export function EmailGenerator() {
                  <div className="p-4 rounded-md bg-background border">
                      <p className="whitespace-pre-wrap">{result.body}</p>
                  </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+}
+
+// Image Generator
+const imageGeneratorSchema = z.object({
+  prompt: z.string().min(10, 'A detailed prompt is required.'),
+  aspectRatio: z.enum(['1:1', '16:9', '9:16']),
+});
+
+export function ImageGenerator() {
+  const [result, setResult] = useState<GenerateImageOutput | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
+
+  const form = useForm<z.infer<typeof imageGeneratorSchema>>({
+    resolver: zodResolver(imageGeneratorSchema),
+    defaultValues: { prompt: "", aspectRatio: "1:1" },
+  });
+
+  async function onSubmit(values: z.infer<typeof imageGeneratorSchema>) {
+    setIsLoading(true);
+    setResult(null);
+    try {
+      const response = await generateImage(values);
+      setResult(response);
+    } catch (error) {
+      console.error(error);
+      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
+      toast({
+        variant: "destructive",
+        title: "Error Generating Image",
+        description: errorMessage,
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+           <FormField control={form.control} name="prompt" render={({ field }) => (
+            <FormItem>
+              <FormLabel>Image Prompt</FormLabel>
+              <FormControl><Textarea placeholder="e.g., A photorealistic image of an astronaut riding a horse on Mars" {...field} className="min-h-[100px]" /></FormControl>
+              <FormMessage />
+            </FormItem>
+          )} />
+           <FormField control={form.control} name="aspectRatio" render={({ field }) => (
+            <FormItem>
+              <FormLabel>Aspect Ratio</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger><SelectValue placeholder="Select an aspect ratio" /></SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="1:1">Square (1:1)</SelectItem>
+                  <SelectItem value="16:9">Widescreen (16:9)</SelectItem>
+                  <SelectItem value="9:16">Portrait (9:16)</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )} />
+          <Button type="submit" disabled={isLoading}>
+            <Wand2 className="mr-2 h-4 w-4" />
+            {isLoading ? "Generating..." : "Generate Image"}
+          </Button>
+        </form>
+      </Form>
+      
+      {isLoading && <LoadingSpinner />}
+      
+      {result && (
+        <Card className="mt-6 bg-muted/30">
+          <CardHeader>
+            <CardTitle>Generated Image</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="relative aspect-video w-full max-w-lg mx-auto rounded-lg overflow-hidden border">
+                <Image src={result.imageDataUri} alt={form.getValues('prompt')} fill className="object-contain"/>
+            </div>
+            <div className="flex justify-center">
+              <Button asChild>
+                <a href={result.imageDataUri} download={`${form.getValues('prompt').substring(0, 20)}.png`}>
+                  <Download className="mr-2 h-4 w-4" />
+                  Download Image
+                </a>
+              </Button>
             </div>
           </CardContent>
         </Card>
