@@ -8,7 +8,7 @@ import { products } from '@/lib/stripe-products';
 import { redirectToCheckout, goToBillingPortal } from '@/lib/stripe';
 import { Loader2, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { Subscription } from '@stripe/firestore-stripe-payments';
+import type { DocumentData } from 'firebase/firestore';
 
 function PlanCard({ product, onSubscribe, isLoading, isCurrent }: { product: typeof products[0], onSubscribe: (priceId: string) => void, isLoading: boolean, isCurrent: boolean }) {
     const priceIdToSubscribe = isCurrent ? '' : product.priceId;
@@ -67,18 +67,19 @@ export function BillingForm() {
     }
 
     if (subscription) {
+        const sub = subscription as DocumentData;
         return (
             <Card>
                 <CardHeader>
                     <CardTitle>Your Subscription</CardTitle>
                      <CardDescription>
-                        You are currently on the <strong>{subscription.items[0]?.price.product.name || 'Unknown'}</strong> plan.
-                        Your subscription is {subscription.status}.
+                        You are currently on the <strong>{sub.items[0]?.price.product.name || 'Pro'}</strong> plan.
+                        Your subscription is {sub.status}.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
                     <p className="text-sm text-muted-foreground">
-                        Your plan will {subscription.cancel_at_period_end ? 'cancel' : 'renew'} on {new Date(subscription.current_period_end * 1000).toLocaleDateString()}.
+                        Your plan will {sub.cancel_at_period_end ? 'cancel' : 'renew'} on {new Date(sub.current_period_end.seconds * 1000).toLocaleDateString()}.
                     </p>
                 </CardContent>
                 <CardFooter>

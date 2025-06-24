@@ -5,11 +5,11 @@ import { onAuthStateChanged, type User } from 'firebase/auth';
 import { getFirebaseInstances } from '@/lib/firebase';
 import { Loader2 } from 'lucide-react';
 import { onCurrentUserSubscriptionUpdate } from '@/lib/stripe';
-import type { Subscription } from '@stripe/firestore-stripe-payments';
+import type { DocumentData } from 'firebase/firestore';
 
 interface AuthContextType {
   user: User | null;
-  subscription: Subscription | null;
+  subscription: DocumentData | null;
   loading: boolean;
 }
 
@@ -17,7 +17,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [subscription, setSubscription] = useState<Subscription | null>(null);
+  const [subscription, setSubscription] = useState<DocumentData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -31,9 +31,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (userAuth) {
           // User is logged in, now we listen for their subscription status
           unsubscribeSub = onCurrentUserSubscriptionUpdate((snapshot) => {
-            const newSubscription = snapshot.subscriptions.filter(
-              (sub) => sub.status === 'active' || sub.status === 'trialing'
-            )[0] || null;
+            const newSubscription = snapshot.subscriptions[0] || null;
             setSubscription(newSubscription);
             setLoading(false); // Done loading user and subscription
           });
