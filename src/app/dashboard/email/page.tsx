@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from "react";
@@ -163,7 +164,7 @@ export default function EmailPage() {
                     </CardHeader>
                     <CardContent>
                         <Button asChild variant="outline" className="w-full">
-                             <Link href="/dashboard/email/settings">Go to Settings <ArrowRight className="ml-2 h-4 w-4"/></Link>
+                             <Link href="/dashboard/settings?tab=email">Go to Settings <ArrowRight className="ml-2 h-4 w-4"/></Link>
                         </Button>
                     </CardContent>
                 </Card>
