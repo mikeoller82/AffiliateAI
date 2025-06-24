@@ -7,48 +7,34 @@ import { Card, CardFooter, CardHeader, CardTitle, CardDescription } from "@/comp
 import { PlusCircle, Edit, Mails } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-
-interface Newsletter {
-    id: string;
-    title: string;
-    description: string;
-    image: string;
-    hint: string;
-}
+import { newsletterTemplates } from '@/lib/newsletter-templates';
 
 export default function NewslettersPage() {
-    const [newsletters, setNewsletters] = useState<Newsletter[]>([]);
 
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-2xl font-bold tracking-tight">Newsletters</h2>
+                    <h2 className="text-2xl font-bold tracking-tight">Newsletter Templates</h2>
                     <p className="text-muted-foreground">
-                        Create and manage your email-style landing pages.
+                        Create a beautiful, single-page newsletter from a pre-built template.
                     </p>
                 </div>
-                <Button asChild>
-                    <Link href="/dashboard/newsletter/default">
-                        <PlusCircle className="mr-2 h-4 w-4" />
-                        New Newsletter
-                    </Link>
-                </Button>
             </div>
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
-                {newsletters.map(newsletter => (
-                    <Card key={newsletter.id} className="overflow-hidden flex flex-col">
-                        <div className="relative h-48 w-full">
-                            <Image src={newsletter.image} alt={newsletter.title} fill className="object-cover" data-ai-hint={newsletter.hint} />
+                {newsletterTemplates.map(template => (
+                    <Card key={template.id} className="overflow-hidden flex flex-col">
+                        <div className="relative h-48 w-full bg-muted">
+                            <Image src={template.image} alt={template.title} fill className="object-cover" data-ai-hint={template.hint} />
                         </div>
                         <CardHeader>
-                            <CardTitle className="text-lg">{newsletter.title}</CardTitle>
-                            <CardDescription className="h-10 pt-1">{newsletter.description}</CardDescription>
+                            <CardTitle className="text-lg">{template.title}</CardTitle>
+                            <CardDescription className="h-10 pt-1">{template.description}</CardDescription>
                         </CardHeader>
                         <CardFooter className="mt-auto">
                             <Button asChild className="w-full">
-                                <Link href={`/dashboard/newsletter/${newsletter.id}`}>
-                                    <Edit className="mr-2 h-4 w-4" /> Edit Newsletter
+                                <Link href={`/dashboard/newsletter/${template.id}`}>
+                                    <Edit className="mr-2 h-4 w-4" /> Use Template
                                 </Link>
                             </Button>
                         </CardFooter>
@@ -60,8 +46,8 @@ export default function NewslettersPage() {
                             <div className="p-4 bg-primary/10 rounded-full mb-4">
                                 <Mails className="h-12 w-12 text-primary" />
                             </div>
-                            <p className="font-semibold">Create New Newsletter</p>
-                            <p className="text-sm text-muted-foreground px-4">Design a new newsletter landing page.</p>
+                            <p className="font-semibold">Start From Scratch</p>
+                            <p className="text-sm text-muted-foreground px-4">Design a new newsletter page with a blank canvas.</p>
                         </Link>
                     </Button>
                 </Card>
@@ -69,3 +55,5 @@ export default function NewslettersPage() {
         </div>
     );
 }
+
+    

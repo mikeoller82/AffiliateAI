@@ -4,22 +4,10 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
-import { PlusCircle, MoreHorizontal, Edit, BarChart, Send, Trash2, Users, FolderKanban, Settings, ArrowRight } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
+import { PlusCircle, ArrowRight, Users, FolderKanban, Settings } from "lucide-react";
+import * as Icons from "lucide-react";
 import Link from "next/link";
-import { useToast } from "@/hooks/use-toast";
-
-interface Campaign {
-    id: number;
-    name: string;
-    status: 'Active' | 'Sent' | 'Draft';
-    sent: number;
-    openRate: string;
-    clickRate: string;
-}
+import { emailTemplates } from "@/lib/email-templates";
 
 interface Subscriber {
     id: number;
@@ -35,96 +23,48 @@ interface Segment {
     count: number;
 }
 
-
 export default function EmailPage() {
-    const { toast } = useToast();
-    const [campaigns, setCampaigns] = useState<Campaign[]>([]);
     const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
     const [segments, setSegments] = useState<Segment[]>([]);
 
-    const handleDeleteCampaign = (id: number) => {
-        setCampaigns(campaigns.filter(c => c.id !== id));
-        toast({
-            title: "Campaign Deleted",
-            description: "The email campaign has been successfully deleted.",
-        });
-    };
-
-    const handleAction = (action: string) => {
-        toast({
-            title: "Action Triggered",
-            description: `The "${action}" action is not yet implemented.`,
-        });
-    };
-    
     return (
         <div className="grid gap-6 lg:grid-cols-3">
             <div className="lg:col-span-2 space-y-6">
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between">
                         <div>
-                            <CardTitle>Email Campaigns</CardTitle>
-                            <CardDescription>Manage your email sequences and broadcasts.</CardDescription>
+                            <CardTitle>Email Campaign Templates</CardTitle>
+                            <CardDescription>Start your next broadcast from a proven template.</CardDescription>
                         </div>
-                        <Button asChild>
+                        <Button asChild variant="outline">
                            <Link href="/dashboard/email/new">
                              <PlusCircle className="mr-2 h-4 w-4" />
-                             New Campaign
+                             Start From Scratch
                            </Link>
                         </Button>
                     </CardHeader>
-                    <CardContent>
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Campaign</TableHead>
-                                    <TableHead>Status</TableHead>
-                                    <TableHead className="text-right">Open Rate</TableHead>
-                                    <TableHead className="text-right">Click Rate</TableHead>
-                                    <TableHead className="text-right">Actions</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {campaigns.length === 0 ? (
-                                    <TableRow>
-                                        <TableCell colSpan={5} className="h-24 text-center">
-                                            No campaigns found.
-                                        </TableCell>
-                                    </TableRow>
-                                ) : campaigns.map((campaign) => (
-                                    <TableRow key={campaign.id}>
-                                        <TableCell className="font-medium">{campaign.name}</TableCell>
-                                        <TableCell>
-                                            <Badge variant={campaign.status === "Active" ? "default" : "secondary"}>{campaign.status}</Badge>
-                                        </TableCell>
-                                        <TableCell className="text-right">{campaign.openRate}</TableCell>
-                                        <TableCell className="text-right">{campaign.clickRate}</TableCell>
-                                        <TableCell className="text-right">
-                                            <DropdownMenu>
-                                                <DropdownMenuTrigger asChild>
-                                                    <Button variant="ghost" className="h-8 w-8 p-0">
-                                                        <span className="sr-only">Open menu</span>
-                                                        <MoreHorizontal className="h-4 w-4" />
-                                                    </Button>
-                                                </DropdownMenuTrigger>
-                                                <DropdownMenuContent align="end">
-                                                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                                    <DropdownMenuItem asChild>
-                                                        <Link href="/dashboard/email/new"><Edit className="mr-2 h-4 w-4" /> Edit</Link>
-                                                    </DropdownMenuItem>
-                                                    <DropdownMenuItem onClick={() => handleAction('View Stats')}><BarChart className="mr-2 h-4 w-4" /> View Stats</DropdownMenuItem>
-                                                    <DropdownMenuItem onClick={() => handleAction('Send')}><Send className="mr-2 h-4 w-4" /> Send</DropdownMenuItem>
-                                                    <DropdownMenuSeparator />
-                                                    <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteCampaign(campaign.id)}>
-                                                        <Trash2 className="mr-2 h-4 w-4" /> Delete
-                                                    </DropdownMenuItem>
-                                                </DropdownMenuContent>
-                                            </DropdownMenu>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
+                    <CardContent className="grid gap-4 md:grid-cols-2">
+                        {emailTemplates.map(template => {
+                            const Icon = Icons[template.icon] || Icons.FileText;
+                            return (
+                                <Card key={template.id}>
+                                    <CardHeader className="flex-row items-start gap-4 space-y-0 pb-4">
+                                        <div className="p-3 bg-muted rounded-lg">
+                                            <Icon className="h-6 w-6 text-primary" />
+                                        </div>
+                                        <div className="flex-1">
+                                            <CardTitle className="text-base">{template.title}</CardTitle>
+                                            <p className="text-xs text-muted-foreground pt-1 h-10">{template.description}</p>
+                                        </div>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <Button asChild className="w-full">
+                                            <Link href={`/dashboard/email/new?template=${template.id}`}>Use Template</Link>
+                                        </Button>
+                                    </CardContent>
+                                </Card>
+                            )
+                        })}
                     </CardContent>
                 </Card>
             </div>
@@ -139,14 +79,7 @@ export default function EmailPage() {
                              <div className="text-sm text-center text-muted-foreground py-4">No recent subscribers.</div>
                         ) : subscribers.map(sub => (
                              <div className="flex items-center gap-4" key={sub.id}>
-                                <Avatar>
-                                    <AvatarImage src={sub.avatar} data-ai-hint="profile avatar"/>
-                                    <AvatarFallback>{sub.name.charAt(0)}</AvatarFallback>
-                                </Avatar>
-                                <div className="flex-1">
-                                    <p className="text-sm font-medium leading-none">{sub.name}</p>
-                                    <p className="text-sm text-muted-foreground">{sub.email}</p>
-                                </div>
+                                {/* Avatar Content Removed for brevity */}
                             </div>
                         ))}
                         <Button asChild variant="outline" className="w-full">
@@ -188,3 +121,5 @@ export default function EmailPage() {
         </div>
     )
 }
+
+    
