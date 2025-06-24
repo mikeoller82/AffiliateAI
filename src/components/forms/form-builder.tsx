@@ -13,19 +13,15 @@ import { Button } from '@/components/ui/button';
 import { Eye, Settings, Save } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-const initialFields: FormField[] = [
-    { id: nanoid(), type: 'email', label: 'Email', placeholder: 'Enter your email', required: true },
-    { id: nanoid(), type: 'text', label: 'Name', placeholder: 'Enter your name', required: true },
-];
+interface FormBuilderProps {
+    initialFields: FormField[];
+    initialSettings: FormSettings;
+}
 
-export function FormBuilder() {
-    const [fields, setFields] = useState<FormField[]>(initialFields);
+export function FormBuilder({ initialFields, initialSettings }: FormBuilderProps) {
+    const [fields, setFields] = useState<FormField[]>(() => JSON.parse(JSON.stringify(initialFields)));
     const [selectedField, setSelectedField] = useState<FormField | null>(null);
-    const [formSettings, setFormSettings] = useState<FormSettings>({
-        name: 'New Form',
-        submitButtonText: 'Submit Now',
-        successMessage: 'Thanks for your submission!',
-    });
+    const [formSettings, setFormSettings] = useState<FormSettings>(initialSettings);
 
     const addField = (type: FormField['type']) => {
         const newField: FormField = {
@@ -35,6 +31,11 @@ export function FormBuilder() {
             placeholder: '',
             required: false,
         };
+
+        if (type === 'checkbox') {
+            newField.label = 'I agree to the terms and conditions';
+        }
+
         setFields(prev => [...prev, newField]);
         setSelectedField(newField);
     };
