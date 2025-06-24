@@ -44,8 +44,8 @@ export default function LoginPage() {
     if (!auth) {
       toast({
           variant: 'destructive',
-          title: 'Error',
-          description: 'Authentication service not available. Please try again later.',
+          title: 'Initialization Error',
+          description: 'Authentication services are not available. Please try again later or contact support.',
       });
       setIsLoading(false);
       return;

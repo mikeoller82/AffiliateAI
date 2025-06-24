@@ -44,8 +44,8 @@ export default function SignupPage() {
     if (!auth) {
         toast({
             variant: 'destructive',
-            title: 'Error',
-            description: 'Authentication service not available. Please try again later.',
+            title: 'Initialization Error',
+            description: 'Authentication services are not available. Please try again later or contact support.',
         });
         setIsLoading(false);
         return;
@@ -62,7 +62,9 @@ export default function SignupPage() {
       let description = 'An unexpected error occurred. Please try again.';
        if (error.code === 'auth/email-already-in-use') {
           description = 'This email address is already in use. Please try logging in.';
-      } else if (error.code) {
+      } else if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found' || error.code === 'auth/configuration-not-found') {
+          description = 'There was a problem with the authentication service. Please try again later.';
+      } else if (error.message) {
           description = error.message;
       }
       toast({
