@@ -37,6 +37,12 @@ export const defaultContent = {
         description: 'Have a question? Fill out the form below and we\'ll get back to you as soon as possible.',
         formId: null,
     },
+    authorBox: {
+        name: 'Jane Doe',
+        bio: 'Jane is a leading expert in digital marketing with over 10 years of experience.',
+        avatarSrc: 'https://placehold.co/100x100.png',
+        avatarHint: 'author avatar',
+    },
     header: {
         title: 'Your Brand',
         links: [
