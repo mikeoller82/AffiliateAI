@@ -158,11 +158,11 @@ const testimonials = [
 
 
 const trustedByLogos = [
-  { name: 'Quantum Leap', src: 'https://placehold.co/140x40/fafafa/9ca3af?text=QuantumLeap' },
-  { name: 'Apex Digital', src: 'https://placehold.co/140x40/fafafa/9ca3af?text=Apex+Digital' },
-  { name: 'Creator Hub', src: 'https://placehold.co/140x40/fafafa/9ca3af?text=CreatorHub' },
-  { name: 'Momentum Co.', src: 'https://placehold.co/140x40/fafafa/9ca3af?text=MomentumCo' },
-  { name: 'Synergy Inc.', src: 'https://placehold.co/140x40/fafafa/9ca3af?text=Synergy+Inc.' },
+  { name: 'Quantum Leap', src: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTtz_fXq4yyXKQ_rs5JqS_FtVFffvmiwCWQ9A&s' },
+  { name: 'Apex Digital', src: 'https://d1yjjnpx0p53s8.cloudfront.net/styles/logo-original-577x577/s3/092015/apex_logo.png?itok=gXGtqXkH' },
+  { name: 'Creator Hub', src: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTCEPLgfZfVt8kfZIJA8k5sQUNieety2deDbg&s' },
+  { name: 'Momentum Co.', src: 'https://cdn.prod.website-files.com/64f1edd73fcc46e5077b8da4/663c0aaacd0204a7d6889cab_ByBlocks%C2%AE%20%E2%80%95%20Momentum%20Co..png' },
+  { name: 'Synergy Inc.', src: 'https://images-platform.99static.com/eVg6kAxkMHMNJjJa2YnlisoCStA=/500x500/top/smart/99designs-contests-attachments/30/30123/attachment_30123697' },
 ];
 
 const whoIsItFor = [
