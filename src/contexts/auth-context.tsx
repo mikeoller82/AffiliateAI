@@ -2,8 +2,8 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
-import { onAuthStateChanged, type User, getAuth } from 'firebase/auth';
-import { getFirebaseApp, isFirebaseConfigured } from '@/lib/firebase';
+import { onAuthStateChanged, type User } from 'firebase/auth';
+import { getFirebaseInstances } from '@/lib/firebase';
 import { Loader2 } from 'lucide-react';
 
 interface AuthContextType {
@@ -18,18 +18,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const app = getFirebaseApp();
-    if (app) {
-        const auth = getAuth(app);
+    try {
+        // getFirebaseInstances will throw an error if not configured, which we catch.
+        const { auth } = getFirebaseInstances();
         const unsubscribe = onAuthStateChanged(auth, (user) => {
           setUser(user);
           setLoading(false);
         });
+        // Unsubscribe from the listener when the component unmounts
         return () => unsubscribe();
-    } else {
-        // If firebase is not configured, we are not in a loading state and there is no user.
-        setLoading(false);
-        setUser(null);
+    } catch (error) {
+        // This will catch the "Firebase is not configured" error
+        console.error("Firebase auth error in AuthProvider:", error);
+        setLoading(false); // Stop loading, as we know auth state can't be determined
     }
   }, []);
 

@@ -7,8 +7,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, redirect } from 'next/navigation';
 import { useAuth } from '@/contexts/auth-context';
-import { getFirebaseApp } from '@/lib/firebase';
-import { getAuth, signOut } from 'firebase/auth';
+import { getFirebaseInstances } from '@/lib/firebase';
+import { signOut } from 'firebase/auth';
 import {
   SidebarProvider,
   Sidebar,
@@ -110,18 +110,8 @@ function AppSidebar() {
     const { toast } = useToast();
 
     const handleSignOut = async () => {
-        const app = getFirebaseApp();
-        if (!app) {
-            toast({
-                variant: 'destructive',
-                title: "Sign Out Failed",
-                description: "Firebase is not configured.",
-            });
-            return;
-        }
-
         try {
-            const auth = getAuth(app);
+            const { auth } = getFirebaseInstances();
             await signOut(auth);
             toast({
                 title: "Signed Out",
