@@ -34,7 +34,7 @@ const serviceBusiness: Component[] = [
       ]
   }},
   { id: 6, type: 'faq', content: defaultContent.faq },
-  { id: 7, type: 'footer', content: { ...defaultContent.footer, copyright: `© ${new Date().getFullYear()} Growth Partners. All rights reserved.` } }
+  { id: 7, type: 'footer', content: { ...defaultContent.footer, copyright: '© 2025 Growth Partners. All rights reserved.' } }
 ];
 
 const portfolio: Component[] = [
@@ -50,7 +50,7 @@ const portfolio: Component[] = [
         ]
     }},
     { id: 6, type: 'contact', content: { ...defaultContent.contact, title: 'Let\'s build something great together.', description: 'I\'m currently available for freelance projects. Send me a message to get started.' } },
-    { id: 7, type: 'footer', content: { ...defaultContent.footer, copyright: `© ${new Date().getFullYear()} Jane Doe. All rights reserved.` } }
+    { id: 7, type: 'footer', content: { ...defaultContent.footer, copyright: '© 2025 Jane Doe. All rights reserved.' } }
 ];
 
 const defaultWebsite: Component[] = [
