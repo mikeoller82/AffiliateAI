@@ -19,24 +19,26 @@ export default function CoursesPage() {
     const [userCourses, setUserCourses] = useState<Course[]>([]);
     const [isLoadingCourses, setIsLoadingCourses] = useState(true);
     const [isCreatingCourse, setIsCreatingCourse] = useState(false);
-    const [coursesError, setCoursesError] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchCourses = async () => {
             setIsLoadingCourses(true);
-            setCoursesError(null);
             try {
                 const courses = await getUserCourses();
                 setUserCourses(courses);
             } catch (error) {
                 console.error("Failed to fetch user courses:", error);
-                setCoursesError("Could not load courses. Please ensure your Firebase project has Firestore enabled and is configured correctly.");
+                toast({
+                    variant: "destructive",
+                    title: "Error Loading Courses",
+                    description: "Could not load course data.",
+                });
             } finally {
                 setIsLoadingCourses(false);
             }
         };
         fetchCourses();
-    }, []);
+    }, [toast]);
 
     const handleCreateCourse = async (template?: CourseTemplate) => {
         setIsCreatingCourse(true);
@@ -62,7 +64,7 @@ export default function CoursesPage() {
             toast({
                 variant: "destructive",
                 title: "Course Creation Failed",
-                description: "Could not create the course in the database. Please check your connection and Firestore setup.",
+                description: "Could not create the course. Please try again.",
             });
             setIsCreatingCourse(false);
         }
@@ -77,15 +79,7 @@ export default function CoursesPage() {
                 </div>
             );
         }
-        if (coursesError) {
-             return (
-                <div className="flex flex-col items-center justify-center h-32 border border-dashed rounded-lg bg-destructive/10 text-destructive">
-                    <AlertTriangle className="h-8 w-8 mb-2" />
-                    <p className="font-semibold">Error Loading Courses</p>
-                    <p className="text-sm text-center max-w-md">{coursesError}</p>
-                </div>
-            );
-        }
+       
         if (userCourses.length > 0) {
             return (
                  <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">

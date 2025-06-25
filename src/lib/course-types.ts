@@ -1,8 +1,8 @@
+
 // src/lib/course-types.ts
 
-// Using a generic placeholder for Firestore Timestamp for now.
-// In a real Firebase project, you'd import and use `firebase.firestore.Timestamp`.
-interface FirestoreTimestamp {
+// A simplified Timestamp that matches what Firestore returns, but can be created locally.
+export interface FirestoreTimestamp {
   seconds: number;
   nanoseconds: number;
   toDate: () => Date;
@@ -50,8 +50,8 @@ export interface Course {
   thumbnailUrl?: string;
   isPublished: boolean;
   modulesOrder: string[]; // Array of module IDs to maintain order
-  createdAt: FirestoreTimestamp; // Or Date
-  updatedAt: FirestoreTimestamp; // Or Date
+  createdAt: FirestoreTimestamp; 
+  updatedAt: FirestoreTimestamp; 
 }
 
 // Example of how you might structure data in Firestore:
