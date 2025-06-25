@@ -136,7 +136,6 @@ export default function CourseEditorPage() {
     const [modules, setModules] = useState<Module[]>([]);
     const [lessonsByModule, setLessonsByModule] = useState<{ [moduleId: string]: Lesson[] }>({});
     
-    const [loadingError, setLoadingError] = useState<string | null>(null);
     const [isLoadingCourse, setIsLoadingCourse] = useState(true);
     const [isLoadingModules, setIsLoadingModules] = useState(false);
     const [isLoadingLessons, setIsLoadingLessons] = useState<{ [moduleId: string]: boolean }>({});
@@ -166,7 +165,6 @@ export default function CourseEditorPage() {
         if (!courseId) return;
         setIsLoadingCourse(true);
         setIsLoadingModules(true);
-        setLoadingError(null);
         try {
             const courseData = await getCourse(courseId);
             setCourse(courseData);
@@ -182,12 +180,9 @@ export default function CourseEditorPage() {
                     lessonsMap[module.id] = allLessons[index];
                 });
                 setLessonsByModule(lessonsMap);
-            } else {
-                 setLoadingError(`The course with ID ${courseId} could not be found. It may have been deleted.`);
             }
         } catch (error) {
             console.error("Failed to fetch course data:", error);
-            setLoadingError("Could not load course data. Please ensure your Firebase project has Firestore enabled and is configured correctly.");
         } finally {
             setIsLoadingCourse(false);
             setIsLoadingModules(false);
@@ -389,12 +384,14 @@ export default function CourseEditorPage() {
         );
     }
     
-    if (loadingError) {
-         return (
+    if (!course) {
+        return (
             <div className="flex flex-col items-center justify-center min-h-[calc(100vh-8rem)] p-4 text-center">
                  <AlertTriangle className="h-12 w-12 text-destructive mb-4" />
                 <p className="text-xl font-semibold">Error Loading Course</p>
-                <p className="mt-2 text-muted-foreground max-w-md">{loadingError}</p>
+                <p className="mt-2 text-muted-foreground max-w-md">
+                    The course could not be found. It may have been deleted or the connection to the database failed.
+                </p>
                 <Button asChild variant="outline" className="mt-6">
                     <Link href="/dashboard/courses">
                         <ArrowLeft className="mr-2 h-4 w-4" /> Back to Courses
@@ -403,8 +400,6 @@ export default function CourseEditorPage() {
             </div>
         );
     }
-    
-    if (!course) return null; // Should be covered by loadingError case now
 
 
     return (
