@@ -53,6 +53,75 @@ const portfolio: Component[] = [
     { id: 7, type: 'footer', content: { ...defaultContent.footer, copyright: '© 2025 Jane Doe. All rights reserved.' } }
 ];
 
+const localRestaurant: Component[] = [
+    { id: 1, type: 'header', content: { ...defaultContent.header, title: 'The Golden Spoon' } },
+    { id: 2, type: 'hero', content: { title: 'Authentic Italian Cuisine', subtitle: 'Experience the taste of Italy right here in your city. Fresh ingredients, traditional recipes.', cta: 'View Menu', ctaSecondary: 'Reserve a Table' } },
+    { id: 3, type: 'text', content: { text: '### Our Story\nFor over 20 years, The Golden Spoon has been a family-owned establishment dedicated to serving authentic Italian dishes. Our commitment to quality ingredients and time-honored recipes has made us a local favorite.' } },
+    { id: 4, type: 'features', content: {
+        title: 'Our Specialties',
+        features: [
+            { title: 'Handmade Pasta', description: 'Fresh pasta made in-house daily.' },
+            { title: 'Wood-Fired Pizza', description: 'Crispy, delicious pizzas from our special oven.' },
+            { title: 'Fine Wines', description: 'A curated selection of Italian wines.' },
+        ]
+    }},
+    { id: 5, type: 'testimonials', content: { title: 'What Our Customers Say', testimonials: [
+        { quote: 'The best pasta I have ever had! A cozy place with a great atmosphere.', author: 'Food Critic' },
+        { quote: 'A true gem. The service was excellent and the food was divine.', author: 'Local Guide' },
+    ]}},
+    { id: 6, type: 'contact', content: { ...defaultContent.contact, title: 'Come Visit Us', description: '123 Pasta Lane, Foodie City | (555) 123-4567 | Open daily 5 PM - 11 PM' } },
+    { id: 7, type: 'footer', content: { ...defaultContent.footer, copyright: '© 2025 The Golden Spoon. All rights reserved.' } }
+];
+
+const realEstateAgent: Component[] = [
+    { id: 1, type: 'header', content: { ...defaultContent.header, title: 'John Realty' } },
+    { id: 2, type: 'hero', content: { title: 'Your Dream Home Awaits', subtitle: 'John Doe, helping you find the perfect property. Your trusted real estate advisor.', cta: 'Search Properties', ctaSecondary: 'Get a Free Home Valuation' } },
+    { id: 3, type: 'image', content: { src: 'https://placehold.co/1200x800.png', alt: 'Real estate agent headshot', hint: 'professional realtor photo' } },
+    { id: 4, type: 'text', content: { text: '### About John\nWith over a decade of experience in the local market, I have the expertise to guide you through the buying or selling process. I am committed to getting you the best deal.' } },
+    { id: 5, type: 'features', content: {
+        title: 'Featured Listings',
+        features: [
+            { title: 'Sunnyvale Villa', description: '$1,200,000 - 4 bed, 3 bath' },
+            { title: 'Downtown Condo', description: '$750,000 - 2 bed, 2 bath' },
+            { title: 'Suburban Family Home', description: '$950,000 - 5 bed, 4 bath' },
+        ]
+    }},
+    { id: 6, type: 'testimonials', content: { title: 'What My Clients Say', testimonials: [
+        { quote: 'John made the home buying process so easy and stress-free. Highly recommended!', author: 'The Smiths' },
+        { quote: 'He sold our house in a week for over the asking price. A true professional.', author: 'The Joneses' },
+    ]}},
+    { id: 7, type: 'contact', content: { ...defaultContent.contact, title: 'Let\'s Find Your Next Home', description: 'Get in touch for a no-obligation consultation.' } },
+    { id: 8, type: 'footer', content: { ...defaultContent.footer, copyright: '© 2025 John Realty. All rights reserved.' } }
+];
+
+const fitnessCoach: Component[] = [
+    { id: 1, type: 'header', content: { ...defaultContent.header, title: 'FitLife Coaching' } },
+    { id: 2, type: 'hero', content: { title: 'Transform Your Body, Transform Your Life', subtitle: 'Personalized fitness and nutrition plans to help you achieve your goals.', cta: 'View Programs', ctaSecondary: 'Book a Free Consultation' } },
+    { id: 3, type: 'features', content: {
+        title: 'My Programs',
+        features: [
+            { title: '1-on-1 Personal Training', description: 'Tailored workouts and direct coaching.' },
+            { title: 'Online Group Coaching', description: 'Join a community and get fit together.' },
+            { title: 'Nutritional Planning', description: 'Custom meal plans to complement your training.' },
+        ]
+    }},
+    { id: 4, type: 'testimonials', content: { title: 'Success Stories', testimonials: [
+        { quote: 'I lost 50 lbs and have never felt better! The best investment I made in myself.', author: 'Client A' },
+        { quote: 'The personalized plan was easy to follow and incredibly effective. I have so much more energy now.', author: 'Client B' },
+    ]}},
+    { id: 5, type: 'pricing', content: {
+      title: 'Choose Your Plan',
+      tiers: [
+        { title: 'Basic', price: '$99', frequency: '/mo', description: 'Online group coaching and community access.', features: ['Group Workouts', 'Community Forum'], cta: 'Get Started' },
+        { title: 'Premium', price: '$299', frequency: '/mo', description: '1-on-1 training and personalized nutrition.', features: ['Personal Workouts', 'Nutrition Plan', 'Weekly Check-ins'], cta: 'Choose Plan', featured: true },
+        { title: 'Ultimate', price: '$499', frequency: '/mo', description: 'All-inclusive plan for maximum results.', features: ['Everything in Premium', '24/7 Support'], cta: 'Contact Us' },
+      ]
+    }},
+    { id: 6, type: 'contact', content: { ...defaultContent.contact, title: 'Start Your Fitness Journey Today', description: 'Book a free consultation to discuss your goals.' } },
+    { id: 7, type: 'footer', content: { ...defaultContent.footer, copyright: '© 2025 FitLife Coaching. All rights reserved.' } }
+];
+
+
 const defaultWebsite: Component[] = [
     { id: 1, type: 'header', content: defaultContent.header },
     { id: 2, type: 'hero', content: defaultContent.hero },
@@ -83,6 +152,36 @@ export const websiteTemplates: WebsiteTemplate[] = [
       stats: { visitors: '840', leads: 12, conversion: '1.4%' },
       aiInsight: 'Your testimonials are strong. Make the "Contact" call-to-action more visible higher up the page.',
       components: portfolio,
+  },
+  {
+      id: 'local-restaurant',
+      title: 'Local Restaurant',
+      description: 'A delicious-looking template perfect for any restaurant, cafe, or bar.',
+      image: 'https://placehold.co/600x400.png',
+      hint: 'cozy italian restaurant interior',
+      stats: { visitors: '2.5k', leads: 90, conversion: '3.6%' },
+      aiInsight: 'The menu is easy to navigate. Adding online ordering could significantly boost revenue.',
+      components: localRestaurant,
+  },
+  {
+      id: 'real-estate-agent',
+      title: 'Real Estate Agent',
+      description: 'A professional template for real estate agents to showcase listings and generate leads.',
+      image: 'https://placehold.co/600x400.png',
+      hint: 'modern suburban house exterior',
+      stats: { visitors: '3.1k', leads: 120, conversion: '3.9%' },
+      aiInsight: 'Featured listings are prominent. A mortgage calculator tool could be a useful addition.',
+      components: realEstateAgent,
+  },
+  {
+      id: 'fitness-coach',
+      title: 'Fitness Coach',
+      description: 'An energetic template for fitness professionals to attract clients and display programs.',
+      image: 'https://placehold.co/600x400.png',
+      hint: 'energetic fitness class',
+      stats: { visitors: '1.8k', leads: 70, conversion: '3.8%' },
+      aiInsight: 'Success stories are powerful. Embedding short video testimonials could enhance credibility.',
+      components: fitnessCoach,
   }
 ];
 
