@@ -1,7 +1,7 @@
 
 'use client';
 
-import { Suspense, useEffect } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { User, Building, Mail, Globe, Key, CreditCard, Users, Share2, Facebook, Instagram, Twitter, Linkedin } from 'lucide-react';
+import { User, Building, Mail, Globe, Key, CreditCard, Users, Share2, Facebook, Instagram, Twitter, Linkedin, Loader2 } from 'lucide-react';
 import { BillingForm } from '@/components/dashboard/billing-form';
 import { useAuth } from '@/contexts/auth-context';
 import { doc, setDoc } from 'firebase/firestore';
@@ -31,6 +31,7 @@ function SettingsPageComponent() {
     const { toast } = useToast();
     const { user, db } = useAuth();
     const defaultTab = searchParams.get('tab') || 'profile';
+    const [isConnecting, setIsConnecting] = useState(false);
 
     useEffect(() => {
         const error = searchParams.get('error');
@@ -69,35 +70,59 @@ function SettingsPageComponent() {
         }
 
         if (platform.realAuth) {
-            // Redirect to our own API route to start the OAuth flow
-            window.location.href = `/api/oauth/${platform.name.toLowerCase()}/connect`;
-            return;
-        }
-        
-        // This simulates a profile connection for non-implemented platforms
-        const profileId = `${platform.name.toLowerCase()}_${user.uid}`;
-        const profileRef = doc(db, 'users', user.uid, 'social_profiles', profileId);
+            setIsConnecting(true);
+            try {
+                const token = await user.getIdToken();
+                const response = await fetch(`/api/oauth/${platform.name.toLowerCase()}/connect`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ token })
+                });
 
-        const newProfile = {
-            id: profileId,
-            platform: platform.name,
-            platformIcon: platform.icon,
-            name: `${platform.name} Profile (${user.email?.split('@')[0]})`,
-        };
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Failed to start connection process.');
+                }
+                
+                const { authUrl } = await response.json();
+                window.location.href = authUrl;
 
-        try {
-            await setDoc(profileRef, newProfile, { merge: true });
-            toast({
-                title: `Connected to ${platform.name}`,
-                description: 'This is a simulation. A real OAuth flow would happen here.',
-            });
-        } catch (error) {
-            console.error("Failed to connect profile:", error);
-            toast({
-                variant: 'destructive',
-                title: `Failed to connect ${platform.name}`,
-                description: 'Could not save profile information.'
-            });
+            } catch (error) {
+                 toast({
+                    variant: 'destructive',
+                    title: `Failed to connect ${platform.name}`,
+                    description: error instanceof Error ? error.message : 'An unknown error occurred.'
+                });
+                setIsConnecting(false);
+            }
+        } else {
+            // This simulates a profile connection for non-implemented platforms
+            const profileId = `${platform.name.toLowerCase()}_${user.uid}`;
+            const profileRef = doc(db, 'users', user.uid, 'social_profiles', profileId);
+
+            const newProfile = {
+                id: profileId,
+                platform: platform.name,
+                platformIcon: platform.icon,
+                name: `${platform.name} Profile (${user.email?.split('@')[0]})`,
+            };
+
+            try {
+                await setDoc(profileRef, newProfile, { merge: true });
+                toast({
+                    title: `Connected to ${platform.name}`,
+                    description: 'This is a simulation. A real OAuth flow would happen here.',
+                });
+            } catch (error) {
+                console.error("Failed to connect profile:", error);
+                toast({
+                    variant: 'destructive',
+                    title: `Failed to connect ${platform.name}`,
+                    description: 'Could not save profile information.'
+                });
+            }
         }
     };
 
@@ -226,7 +251,10 @@ function SettingsPageComponent() {
                                                 <Icon className={cn("h-6 w-6", platform.color)} />
                                                 <span className="font-medium">{platform.name}</span>
                                             </div>
-                                            <Button variant="outline" onClick={() => handleConnect(platform)}>Connect</Button>
+                                            <Button variant="outline" onClick={() => handleConnect(platform)} disabled={isConnecting}>
+                                                {isConnecting && platform.realAuth && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                                Connect
+                                            </Button>
                                         </div>
                                     )
                                 })}
