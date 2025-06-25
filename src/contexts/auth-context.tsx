@@ -1,3 +1,4 @@
+
 'use client';
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
@@ -18,18 +19,16 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// TEMPORARY WORKAROUND: Using hardcoded config to bypass environment loading issue.
-// The root cause is likely the Next.js server needing a restart to load .env variables.
+// This configuration now reads from environment variables, removing the hardcoded values.
 const firebaseConfig = {
-  apiKey: "AIzaSyDefxmW4h76fC8-R3sKMIW8ngr4iCt-FNM",
-  authDomain: "fir-veilnet.firebaseapp.com",
-  projectId: "firebase-veilnet",
-  storageBucket: "firebase-veilnet.firebasestorage.app",
-  messagingSenderId: "785697647146",
-  appId: "1:785697647146:web:ab4c9d90c2e0cd6becb153",
-  measurementId: "G-FNJ36PCZFN"
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
 };
-
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -40,11 +39,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [configError, setConfigError] = useState<string | null>(null);
 
   useEffect(() => {
-    // This check is now somewhat redundant but safe to keep.
+    // Check if the essential Firebase config variables are present.
     const isFirebaseConfigured = firebaseConfig.apiKey && firebaseConfig.projectId;
 
     if (!isFirebaseConfigured) {
-      setConfigError('Firebase configuration is missing or incomplete in the hardcoded config object.');
+      setConfigError('Firebase configuration is missing or incomplete. Please check your .env.local file and ensure all NEXT_PUBLIC_FIREBASE_* variables are set correctly.');
       setLoading(false);
       return;
     }
@@ -94,7 +93,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   if (configError) {
     return (
       <div className="flex h-screen w-full items-center justify-center p-4 text-center">
-        <p className="text-destructive">{configError}</p>
+        <div className="max-w-md rounded-lg border border-destructive bg-destructive/10 p-6 text-destructive">
+          <h1 className="font-bold">Configuration Error</h1>
+          <p className="mt-2 text-sm">{configError}</p>
+        </div>
       </div>
     );
   }

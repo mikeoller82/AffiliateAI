@@ -8,6 +8,14 @@ import { nanoid } from 'nanoid';
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
+    // Environment variable validation
+    const { TWITTER_CLIENT_ID, TWITTER_CLIENT_SECRET, NEXT_PUBLIC_BASE_URL, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY } = process.env;
+    if (!TWITTER_CLIENT_ID || !TWITTER_CLIENT_SECRET || !NEXT_PUBLIC_BASE_URL || !FIREBASE_CLIENT_EMAIL || !FIREBASE_PRIVATE_KEY) {
+        console.error("Missing required environment variables for Twitter OAuth or Firebase Admin.");
+        // Redirect with a more specific error for the user to understand
+        return NextResponse.redirect(new URL('/dashboard/settings?tab=social&error=server_configuration_error', request.url));
+    }
+
     const db = getFirestore(adminApp);
     const auth = getAuth(adminApp);
     const { searchParams } = new URL(request.url);
@@ -31,18 +39,19 @@ export async function GET(request: NextRequest) {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
-                'Authorization': `Basic ${Buffer.from(`${process.env.TWITTER_CLIENT_ID}:${process.env.TWITTER_CLIENT_SECRET}`).toString('base64')}`
+                'Authorization': `Basic ${Buffer.from(`${TWITTER_CLIENT_ID}:${TWITTER_CLIENT_SECRET}`).toString('base64')}`
             },
             body: new URLSearchParams({
                 code: code,
                 grant_type: 'authorization_code',
-                redirect_uri: `${process.env.NEXT_PUBLIC_BASE_URL}/api/oauth/twitter/callback`,
+                redirect_uri: `${NEXT_PUBLIC_BASE_URL}/api/oauth/twitter/callback`,
                 code_verifier: codeVerifier,
             }),
         });
 
         const tokens = await tokenResponse.json();
         if (!tokens.access_token) {
+            console.error('Failed to get access token from Twitter:', tokens);
             throw new Error('Failed to get access token from Twitter.');
         }
         
