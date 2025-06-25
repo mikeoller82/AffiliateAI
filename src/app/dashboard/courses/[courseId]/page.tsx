@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import {
-    PlusCircle, BookOpen, FileText, Loader2, ArrowLeft, RefreshCw, Edit3, Trash2, X, Save, Video, Type
+    PlusCircle, BookOpen, FileText, Loader2, ArrowLeft, RefreshCw, Edit3, Trash2, X, Save, Video, Type, AlertTriangle
 } from 'lucide-react';
 import {
     AlertDialog,
@@ -135,7 +135,8 @@ export default function CourseEditorPage() {
     const [course, setCourse] = useState<Course | null>(null);
     const [modules, setModules] = useState<Module[]>([]);
     const [lessonsByModule, setLessonsByModule] = useState<{ [moduleId: string]: Lesson[] }>({});
-
+    
+    const [loadingError, setLoadingError] = useState<string | null>(null);
     const [isLoadingCourse, setIsLoadingCourse] = useState(true);
     const [isLoadingModules, setIsLoadingModules] = useState(false);
     const [isLoadingLessons, setIsLoadingLessons] = useState<{ [moduleId: string]: boolean }>({});
@@ -164,7 +165,8 @@ export default function CourseEditorPage() {
     const fetchCourseData = useCallback(async () => {
         if (!courseId) return;
         setIsLoadingCourse(true);
-        setIsLoadingModules(true); // Start loading modules at the same time
+        setIsLoadingModules(true);
+        setLoadingError(null);
         try {
             const courseData = await getCourse(courseId);
             setCourse(courseData);
@@ -172,7 +174,6 @@ export default function CourseEditorPage() {
                 const modulesData = await getModules(courseData.id, courseData.modulesOrder);
                 setModules(modulesData);
                 
-                // Fetch lessons for all modules
                 const lessonPromises = modulesData.map(module => getLessons(courseData.id, module.id, module.lessonsOrder));
                 const allLessons = await Promise.all(lessonPromises);
                 
@@ -181,9 +182,12 @@ export default function CourseEditorPage() {
                     lessonsMap[module.id] = allLessons[index];
                 });
                 setLessonsByModule(lessonsMap);
+            } else {
+                 setLoadingError(`The course with ID ${courseId} could not be found. It may have been deleted.`);
             }
         } catch (error) {
             console.error("Failed to fetch course data:", error);
+            setLoadingError("Could not load course data. Please ensure your Firebase project has Firestore enabled and is configured correctly.");
         } finally {
             setIsLoadingCourse(false);
             setIsLoadingModules(false);
@@ -203,7 +207,6 @@ export default function CourseEditorPage() {
             setCourse(prev => prev ? { ...prev, ...updates } : null);
         } catch (error) {
             console.error("Failed to update course details:", error);
-            // Potentially revert UI optimistically
         } finally {
             setIsSaving(prev => ({ ...prev, [key]: false }));
         }
@@ -377,7 +380,7 @@ export default function CourseEditorPage() {
         });
     }, [lessonsByModule, modules]);
 
-    if (isLoadingCourse && !course) {
+    if (isLoadingCourse) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[calc(100vh-8rem)] p-4">
                 <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -385,14 +388,13 @@ export default function CourseEditorPage() {
             </div>
         );
     }
-    if (!course && !isLoadingCourse) {
+    
+    if (loadingError) {
          return (
             <div className="flex flex-col items-center justify-center min-h-[calc(100vh-8rem)] p-4 text-center">
-                 <FileText className="h-12 w-12 text-destructive mb-4" />
-                <p className="text-xl font-semibold">Course Not Found</p>
-                <p className="mt-2 text-muted-foreground max-w-md">
-                    The course with ID <span className="font-mono text-primary bg-muted px-1 py-0.5 rounded">{courseId}</span> could not be loaded. It may have been deleted or the ID is incorrect.
-                </p>
+                 <AlertTriangle className="h-12 w-12 text-destructive mb-4" />
+                <p className="text-xl font-semibold">Error Loading Course</p>
+                <p className="mt-2 text-muted-foreground max-w-md">{loadingError}</p>
                 <Button asChild variant="outline" className="mt-6">
                     <Link href="/dashboard/courses">
                         <ArrowLeft className="mr-2 h-4 w-4" /> Back to Courses
@@ -401,7 +403,8 @@ export default function CourseEditorPage() {
             </div>
         );
     }
-    if (!course) return null;
+    
+    if (!course) return null; // Should be covered by loadingError case now
 
 
     return (
