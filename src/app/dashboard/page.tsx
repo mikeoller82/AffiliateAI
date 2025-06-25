@@ -1,12 +1,18 @@
 
 "use client"
 
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Activity, ArrowRight, BarChart, BrainCircuit, DollarSign, Lightbulb, Users } from 'lucide-react';
+import { Activity, ArrowRight, BarChart, BrainCircuit, DollarSign, Lightbulb, Loader2, Users } from 'lucide-react';
+import * as Icons from 'lucide-react';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { Area, AreaChart, CartesianGrid, Tooltip as RechartsTooltip, XAxis, YAxis } from 'recharts';
 import Link from 'next/link';
+import { useAIKey } from '@/contexts/ai-key-context';
+import { generateDashboardInsights, type GenerateDashboardInsightsOutput } from '@/ai/flows/generate-dashboard-insights';
+import { funnelTemplates } from '@/lib/funnel-templates';
+import { useToast } from '@/hooks/use-toast';
 
 const chartData = [
   { month: "Jan", clicks: 0, conversions: 0 },
@@ -23,6 +29,48 @@ const chartConfig = {
 };
 
 export default function DashboardPage() {
+  const { apiKey, promptApiKey } = useAIKey();
+  const { toast } = useToast();
+  const [insights, setInsights] = useState<GenerateDashboardInsightsOutput | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchInsights = async () => {
+      if (!apiKey) {
+        // Silently fail if no API key is present, the user can generate insights later.
+        return;
+      }
+      setIsLoading(true);
+      try {
+        // In a real app, this data would come from the database.
+        // For this demo, we use a mix of zero-data and template data to get interesting insights.
+        const mockMetrics = { clicks: 1250, conversions: 150, commission: 4500 };
+        const mockFunnels = funnelTemplates.map(f => ({
+          name: f.title,
+          ctr: f.stats.ctr,
+          optInRate: f.stats.optInRate,
+        }));
+        
+        const response = await generateDashboardInsights({ 
+          metrics: mockMetrics, 
+          funnels: mockFunnels,
+          apiKey 
+        });
+        setInsights(response);
+      } catch (error) {
+        console.error("Failed to fetch AI insights:", error);
+        toast({
+          variant: 'destructive',
+          title: 'AI Insight Error',
+          description: 'Could not fetch AI-powered recommendations.',
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchInsights();
+  }, [apiKey, toast]);
+
   return (
     <div className="space-y-6">
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
@@ -122,18 +170,64 @@ export default function DashboardPage() {
             <CardHeader>
                 <CardTitle className="flex items-center"><BrainCircuit className="mr-2 h-5 w-5 text-primary" /> AI Assistant</CardTitle>
                 <CardDescription>
-                    Your AI assistant will analyze your performance and provide actionable recommendations here.
+                    Your AI assistant analyzes your performance and provides actionable recommendations.
                 </CardDescription>
             </CardHeader>
             <CardContent>
-                <div className="flex flex-col items-center justify-center h-full text-center py-12 border-2 border-dashed rounded-lg">
-                    <Lightbulb className="h-10 w-10 text-muted-foreground mb-4" />
-                    <h3 className="text-lg font-semibold">No Recommendations Yet</h3>
-                    <p className="text-muted-foreground text-sm">Start a campaign to get AI-powered insights.</p>
-                    <Button asChild className="mt-4">
-                        <Link href="/dashboard/funnels">Create a Funnel <ArrowRight className="ml-2 h-4 w-4"/></Link>
-                    </Button>
-                </div>
+                {isLoading ? (
+                    <div className="flex flex-col items-center justify-center h-full text-center py-12 border-2 border-dashed rounded-lg">
+                      <Loader2 className="h-10 w-10 text-muted-foreground animate-spin mb-4" />
+                      <h3 className="text-lg font-semibold">Analyzing your data...</h3>
+                      <p className="text-muted-foreground text-sm">Our AI is generating personalized insights for you.</p>
+                    </div>
+                ) : !apiKey ? (
+                    <div className="flex flex-col items-center justify-center h-full text-center py-12 border-2 border-dashed rounded-lg">
+                        <Lightbulb className="h-10 w-10 text-muted-foreground mb-4" />
+                        <h3 className="text-lg font-semibold">Unlock AI Insights</h3>
+                        <p className="text-muted-foreground text-sm max-w-md mx-auto">Provide your Google AI API Key to get personalized recommendations and analysis of your marketing performance.</p>
+                        <Button className="mt-4" onClick={promptApiKey}>
+                           Enter API Key
+                        </Button>
+                    </div>
+                ) : insights ? (
+                    <div className="grid gap-6 md:grid-cols-2">
+                        <div className="space-y-4">
+                            <h3 className="font-semibold">Key Insights</h3>
+                            <ul className="space-y-2 list-disc list-inside text-muted-foreground">
+                                {insights.insights.map((insight, index) => <li key={index}>{insight}</li>)}
+                            </ul>
+                        </div>
+                        <div className="space-y-4">
+                             <h3 className="font-semibold">Recommendations</h3>
+                             <div className="space-y-3">
+                                {insights.recommendations.map((rec, index) => {
+                                    const Icon = Icons[rec.icon as keyof typeof Icons] || Lightbulb;
+                                    return (
+                                        <div key={index} className="flex items-start gap-4 rounded-lg border p-4">
+                                            <Icon className="h-8 w-8 text-primary mt-1 flex-shrink-0" />
+                                            <div>
+                                                <h4 className="font-semibold">{rec.title}</h4>
+                                                <p className="text-sm text-muted-foreground mb-3">{rec.description}</p>
+                                                <Button asChild size="sm">
+                                                    <Link href={rec.ctaLink}>{rec.ctaText} <ArrowRight className="ml-2 h-4 w-4"/></Link>
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    )
+                                })}
+                             </div>
+                        </div>
+                    </div>
+                ) : (
+                   <div className="flex flex-col items-center justify-center h-full text-center py-12 border-2 border-dashed rounded-lg">
+                      <Lightbulb className="h-10 w-10 text-muted-foreground mb-4" />
+                      <h3 className="text-lg font-semibold">No Recommendations Yet</h3>
+                      <p className="text-muted-foreground text-sm">Start a campaign to get AI-powered insights.</p>
+                      <Button asChild className="mt-4">
+                          <Link href="/dashboard/funnels">Create a Funnel <ArrowRight className="ml-2 h-4 w-4"/></Link>
+                      </Button>
+                  </div>
+                )}
             </CardContent>
         </Card>
     </div>

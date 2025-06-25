@@ -10,3 +10,4 @@ import '@/ai/flows/generate-product-hook.ts';
 import '@/ai/flows/generate-funnel-copy.ts';
 import '@/ai/flows/edit-text.ts';
 import '@/ai/flows/generate-image.ts';
+import '@/ai/flows/generate-dashboard-insights.ts';
