@@ -66,8 +66,8 @@ const generateDashboardInsightsFlow = ai.defineFlow(
       ${funnelData}
 
       Based on this data, your task is to provide:
-      1.  A list of 2-3 `insights`. These should be concise observations about the data. Frame them as an expert analyst speaking to the user. For example: 'Your Lead Magnet funnel has a high click-through rate, but a low opt-in rate. This suggests the landing page copy might not be converting well.'
-      2.  A list of 1-2 actionable `recommendations`. Each recommendation should have a title, a description of what to do, a call-to-action button text ('ctaText'), a Next.js link for that button ('ctaLink'), and a relevant 'icon' name from the lucide-react library.
+      - A list of 2-3 \`insights\`. These should be concise observations about the data. Frame them as an expert analyst speaking to the user. For example: 'Your Lead Magnet funnel has a high click-through rate, but a low opt-in rate. This suggests the landing page copy might not be converting well.'
+      - A list of 1-2 actionable \`recommendations\`. Each recommendation should have a title, a description of what to do, a call-to-action button text ('ctaText'), a Next.js link for that button ('ctaLink'), and a relevant 'icon' name from the lucide-react library.
       
       IMPORTANT:
       - If all metrics are zero or very low, provide encouraging and motivating recommendations for getting started, such as creating the first funnel or generating affiliate links.
