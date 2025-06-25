@@ -46,6 +46,7 @@ import {
   Loader2,
   Share2,
   MessagesSquare,
+  GraduationCap,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
@@ -56,6 +57,7 @@ const navItems = [
     { href: '/dashboard/links', icon: LinkIcon, label: 'Affiliate Links' },
     { href: '/dashboard/funnels', icon: Filter, label: 'Funnels' },
     { href: '/dashboard/websites', icon: Globe, label: 'Websites' },
+    { href: '/dashboard/courses', icon: GraduationCap, label: 'Courses' },
     { href: '/dashboard/blog', icon: Newspaper, label: 'Blog' },
     { href: '/dashboard/newsletter', icon: Mails, label: 'Newsletters' },
     { href: '/dashboard/social-scheduler', icon: Share2, label: 'Social Scheduler' },
@@ -84,7 +86,7 @@ function MainContent({ children }: { children: React.ReactNode }) {
     
     const pageTitle = getPageTitle();
     
-    const isBuilderPage = /^\/dashboard\/(funnels|websites|automations|forms|blog|newsletter|docs|notion-pad)\/(\w|\d)/.test(pathname) || pathname === '/dashboard/notion-pad';
+    const isBuilderPage = /^\/dashboard\/(funnels|websites|automations|forms|blog|newsletter|docs|notion-pad|courses)\/(\w|\d)/.test(pathname) || pathname === '/dashboard/notion-pad';
 
 
     return (

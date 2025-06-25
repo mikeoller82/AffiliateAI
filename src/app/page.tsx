@@ -49,7 +49,7 @@ const allInOneFeatures = [
     description: 'Track and manage all your affiliate campaigns.'
   },
   {
-    icon: Video,
+    icon: GraduationCap,
     title: 'Courses & Memberships',
     description: 'Build and sell your own online courses and communities.'
   },
@@ -491,7 +491,7 @@ export default function LandingPage() {
                             <p className="flex items-center gap-2"><Check className="h-4 w-4 text-green-500" /> Website Builder</p>
                             <p className="flex items-center gap-2"><Check className="h-4 w-4 text-green-500" /> Funnel Builder</p>
                             <p className="flex items-center gap-2"><Check className="h-4 w-4 text-green-500" /> Email Marketing</p>
-                            <p className="flex items-center gap-2"><Check className="h-4 w-4 text-green-500" /> CRM & Pipelines</p>
+                            <p className="flex items-center gap-2"><Check className="h-4 w-4 text-green-500" /> CRM &amp; Pipelines</p>
                             <p className="flex items-center gap-2"><Check className="h-4 w-4 text-green-500" /> And so much more...</p>
                             <p className="font-bold text-lg mt-4 pt-4 border-t">Total: <span className="text-primary">Free for 30 Days, then $29/mo</span></p>
                         </CardContent>
