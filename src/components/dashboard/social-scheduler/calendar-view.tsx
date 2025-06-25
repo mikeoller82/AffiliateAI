@@ -2,37 +2,38 @@
 'use client';
 
 import React, { useState } from 'react';
-import { DayPicker, type DateRange } from 'react-day-picker';
+import { DayPicker } from 'react-day-picker';
 import 'react-day-picker/dist/style.css';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ChevronLeft, ChevronRight, PlusCircle } from 'lucide-react';
 import { PostCard } from './post-card';
-import { type Post } from '@/lib/social-scheduler-data';
+import { type Post, type SocialProfile } from '@/lib/social-types';
 import { format } from 'date-fns';
 
 interface CalendarViewProps {
   posts: Post[];
+  profiles: SocialProfile[];
   onSelectPost: (post: Post) => void;
   onAddNewPost: () => void;
 }
 
-function CustomDay({ date, displayMonth, posts, onSelectPost }: { date: Date; displayMonth: Date, posts: Post[], onSelectPost: (post: Post) => void }) {
-  const postsForDay = posts.filter(p => format(p.scheduledTime, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd'));
+function CustomDay({ date, displayMonth, posts, profiles, onSelectPost }: { date: Date; displayMonth: Date, posts: Post[], profiles: SocialProfile[], onSelectPost: (post: Post) => void }) {
+  const postsForDay = posts.filter(p => format(new Date(p.scheduledTime), 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd'));
 
   return (
     <Card className="h-40 flex flex-col rounded-md overflow-hidden">
       <div className="p-1 text-right text-sm">{format(date, 'd')}</div>
       <CardContent className="p-1 flex-1 overflow-y-auto space-y-1">
         {postsForDay.map(post => (
-          <PostCard key={post.id} post={post} onClick={() => onSelectPost(post)} />
+          <PostCard key={post.id} post={post} profiles={profiles} onClick={() => onSelectPost(post)} />
         ))}
       </CardContent>
     </Card>
   );
 }
 
-export function CalendarView({ posts, onSelectPost, onAddNewPost }: CalendarViewProps) {
+export function CalendarView({ posts, profiles, onSelectPost, onAddNewPost }: CalendarViewProps) {
   const [month, setMonth] = useState<Date>(new Date());
   
   return (
@@ -70,7 +71,7 @@ export function CalendarView({ posts, onSelectPost, onAddNewPost }: CalendarView
             day: 'h-full w-full',
           }}
           components={{
-            Day: (props) => <CustomDay {...props} posts={posts} onSelectPost={onSelectPost} />,
+            Day: (props) => <CustomDay {...props} posts={posts} profiles={profiles} onSelectPost={onSelectPost} />,
             IconLeft: () => null,
             IconRight: () => null,
             Caption: () => null,
