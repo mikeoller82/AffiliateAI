@@ -13,17 +13,22 @@ import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { User, Building, Mail, Globe, Key, CreditCard, Users, Share2, Facebook, Instagram, Twitter, Linkedin } from 'lucide-react';
 import { BillingForm } from '@/components/dashboard/billing-form';
+import { useAuth } from '@/contexts/auth-context';
+import { doc, setDoc } from 'firebase/firestore';
+import * as Icons from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-const socialPlatforms = [
-    { name: 'Facebook', icon: Facebook, color: 'text-[#1877F2]' },
-    { name: 'Instagram', icon: Instagram, color: 'text-[#E4405F]' },
-    { name: 'Twitter', icon: Twitter, color: 'text-[#1DA1F2]' },
-    { name: 'LinkedIn', icon: Linkedin, color: 'text-[#0A66C2]' },
+const socialPlatforms: { name: 'Facebook' | 'Instagram' | 'Twitter' | 'LinkedIn'; icon: keyof typeof Icons; color: string }[] = [
+    { name: 'Facebook', icon: 'Facebook', color: 'text-[#1877F2]' },
+    { name: 'Instagram', icon: 'Instagram', color: 'text-[#E4405F]' },
+    { name: 'Twitter', icon: 'Twitter', color: 'text-[#1DA1F2]' },
+    { name: 'LinkedIn', icon: 'Linkedin', color: 'text-[#0A66C2]' },
 ];
 
 function SettingsPageComponent() {
     const searchParams = useSearchParams();
     const { toast } = useToast();
+    const { user, db } = useAuth();
     const defaultTab = searchParams.get('tab') || 'profile';
 
     const handleSave = () => {
@@ -33,11 +38,38 @@ function SettingsPageComponent() {
         });
     };
     
-    const handleConnect = (platformName: string) => {
-        toast({
-            title: `Connecting to ${platformName}`,
-            description: 'This functionality is not yet implemented. This is where the OAuth flow would begin.',
-        });
+    const handleConnect = async (platform: typeof socialPlatforms[0]) => {
+        if (!user || !db) {
+            toast({ title: "Error", description: "You must be logged in to connect accounts."});
+            return;
+        }
+        
+        // This simulates a profile connection by creating a document in Firestore.
+        // A real implementation would involve an OAuth flow.
+        const profileId = `${platform.name.toLowerCase()}_${user.uid}`;
+        const profileRef = doc(db, 'users', user.uid, 'social_profiles', profileId);
+
+        const newProfile = {
+            id: profileId,
+            platform: platform.name,
+            platformIcon: platform.icon,
+            name: `${platform.name} Profile (${user.email?.split('@')[0]})`,
+        };
+
+        try {
+            await setDoc(profileRef, newProfile, { merge: true });
+            toast({
+                title: `Connected to ${platform.name}`,
+                description: 'This is a simulation. A real OAuth flow would happen here.',
+            });
+        } catch (error) {
+            console.error("Failed to connect profile:", error);
+            toast({
+                variant: 'destructive',
+                title: `Failed to connect ${platform.name}`,
+                description: 'Could not save profile information.'
+            });
+        }
     };
 
     return (
@@ -158,14 +190,14 @@ function SettingsPageComponent() {
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 {socialPlatforms.map((platform) => {
-                                    const Icon = platform.icon;
+                                    const Icon = Icons[platform.icon];
                                     return (
                                         <div key={platform.name} className="flex items-center justify-between rounded-lg border p-4">
                                             <div className="flex items-center gap-3">
                                                 <Icon className={cn("h-6 w-6", platform.color)} />
                                                 <span className="font-medium">{platform.name}</span>
                                             </div>
-                                            <Button variant="outline" onClick={() => handleConnect(platform.name)}>Connect</Button>
+                                            <Button variant="outline" onClick={() => handleConnect(platform)}>Connect</Button>
                                         </div>
                                     )
                                 })}
@@ -211,5 +243,3 @@ export default function SettingsPage() {
         </Suspense>
     )
 }
-
-    

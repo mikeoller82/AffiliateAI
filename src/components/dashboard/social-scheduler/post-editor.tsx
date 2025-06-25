@@ -10,19 +10,20 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { type Post, mockProfiles } from '@/lib/social-scheduler-data';
+import { type Post, type SocialProfile } from '@/lib/social-types';
 import { Calendar as CalendarIcon, Smile, Image as ImageIcon, Video, Trash2, X } from 'lucide-react';
 import * as Icons from 'lucide-react';
 import { format } from 'date-fns';
 
 interface PostEditorProps {
   post: Post | null;
-  onSave: (post: Post) => void;
+  profiles: SocialProfile[];
+  onSave: (post: Omit<Post, 'id' | 'scheduledTime'> & { id?: string; scheduledTime: Date }) => void;
   onDelete: (postId: string) => void;
   onClose: () => void;
 }
 
-export function PostEditor({ post, onSave, onDelete, onClose }: PostEditorProps) {
+export function PostEditor({ post, profiles, onSave, onDelete, onClose }: PostEditorProps) {
   const [caption, setCaption] = useState('');
   const [scheduledTime, setScheduledTime] = useState<Date | undefined>(new Date());
   const [selectedProfiles, setSelectedProfiles] = useState<string[]>([]);
@@ -30,7 +31,7 @@ export function PostEditor({ post, onSave, onDelete, onClose }: PostEditorProps)
   useEffect(() => {
     if (post) {
       setCaption(post.caption);
-      setScheduledTime(post.scheduledTime);
+      setScheduledTime(post.scheduledTime ? new Date(post.scheduledTime) : new Date());
       setSelectedProfiles(post.profileIds);
     } else {
       setCaption('');
@@ -40,12 +41,16 @@ export function PostEditor({ post, onSave, onDelete, onClose }: PostEditorProps)
   }, [post]);
 
   const handleSave = () => {
-    const newPostData: Post = {
-      id: post?.id || '',
+    if (selectedProfiles.length === 0) {
+        alert("Please select at least one profile to publish to.");
+        return;
+    }
+    const newPostData = {
+      id: post?.id,
       profileIds: selectedProfiles,
       caption,
       scheduledTime: scheduledTime || new Date(),
-      status: 'scheduled',
+      status: 'scheduled' as const,
       media: post?.media || [],
     };
     onSave(newPostData);
@@ -55,7 +60,7 @@ export function PostEditor({ post, onSave, onDelete, onClose }: PostEditorProps)
       setSelectedProfiles(prev => 
         prev.includes(profileId) ? prev.filter(id => id !== profileId) : [...prev, profileId]
       );
-  }
+  };
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
@@ -67,23 +72,27 @@ export function PostEditor({ post, onSave, onDelete, onClose }: PostEditorProps)
             
             <div className="space-y-2">
                 <Label>Publish to</Label>
-                <div className="flex flex-wrap gap-2">
-                    {mockProfiles.map(profile => {
-                        const PlatformIcon = Icons[profile.platformIcon as keyof typeof Icons] || Icons.HelpCircle;
-                        return (
-                             <div key={profile.id} className="flex items-center space-x-2">
-                                <Checkbox 
-                                    id={`profile-${profile.id}`} 
-                                    checked={selectedProfiles.includes(profile.id)}
-                                    onCheckedChange={() => handleProfileSelect(profile.id)}
-                                />
-                                <label htmlFor={`profile-${profile.id}`} className="text-sm font-medium leading-none flex items-center gap-2">
-                                    <PlatformIcon className="h-4 w-4"/> {profile.name}
-                                </label>
-                            </div>
-                        )
-                    })}
-                </div>
+                {profiles.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                        {profiles.map(profile => {
+                            const PlatformIcon = Icons[profile.platformIcon as keyof typeof Icons] || Icons.HelpCircle;
+                            return (
+                                <div key={profile.id} className="flex items-center space-x-2">
+                                    <Checkbox 
+                                        id={`profile-${profile.id}`} 
+                                        checked={selectedProfiles.includes(profile.id)}
+                                        onCheckedChange={() => handleProfileSelect(profile.id)}
+                                    />
+                                    <label htmlFor={`profile-${profile.id}`} className="text-sm font-medium leading-none flex items-center gap-2">
+                                        <PlatformIcon className="h-4 w-4"/> {profile.name}
+                                    </label>
+                                </div>
+                            )
+                        })}
+                    </div>
+                ) : (
+                    <p className="text-sm text-muted-foreground">No social profiles connected. Please connect one in Settings.</p>
+                )}
             </div>
 
             <div className="space-y-2">
@@ -128,6 +137,7 @@ export function PostEditor({ post, onSave, onDelete, onClose }: PostEditorProps)
                 {post && (
                     <Button variant="destructive" onClick={() => onDelete(post.id)}><Trash2 className="mr-2 h-4 w-4"/> Delete</Button>
                 )}
+                {!post && <div />}
                 <div className="flex gap-2">
                     <Button variant="outline" onClick={onClose}>Cancel</Button>
                     <Button onClick={handleSave}>Schedule</Button>

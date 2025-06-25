@@ -1,12 +1,13 @@
 
 'use client';
 import { Button } from '@/components/ui/button';
-import { type Post, mockProfiles } from '@/lib/social-scheduler-data';
+import { type Post, type SocialProfile } from '@/lib/social-types';
 import { cn } from '@/lib/utils';
 import * as Icons from 'lucide-react';
 
 interface PostCardProps {
   post: Post;
+  profiles: SocialProfile[];
   onClick: () => void;
 }
 
@@ -18,8 +19,8 @@ const statusColors = {
   error: 'bg-red-500',
 };
 
-export function PostCard({ post, onClick }: PostCardProps) {
-  const profile = mockProfiles.find(p => p.id === post.profileIds[0]);
+export function PostCard({ post, profiles, onClick }: PostCardProps) {
+  const profile = profiles.find(p => p.id === post.profileIds[0]);
   const PlatformIcon = profile ? Icons[profile.platformIcon as keyof typeof Icons] : Icons.HelpCircle;
 
   return (
@@ -30,7 +31,7 @@ export function PostCard({ post, onClick }: PostCardProps) {
     >
       <div className={cn("w-2 h-2 rounded-full flex-shrink-0", statusColors[post.status])} />
       <PlatformIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-      <p className="text-xs truncate flex-1">{post.caption}</p>
+      <p className="text-xs truncate flex-1">{post.caption || 'No caption'}</p>
     </Button>
   );
 }
