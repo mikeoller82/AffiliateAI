@@ -5,30 +5,32 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { PlusCircle, Edit, BookOpen, Clock, GraduationCap, Loader2 } from "lucide-react";
+import { PlusCircle, Edit, BookOpen, Clock, GraduationCap, Loader2, AlertTriangle } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { courseTemplates, defaultCourseTemplate, type CourseTemplate } from '@/lib/course-templates';
 import { getUserCourses, createCourse as apiCreateCourse } from '@/lib/firebase-course-api';
 import type { Course } from '@/lib/course-types';
+import { useToast } from '@/hooks/use-toast';
 
 export default function CoursesPage() {
     const router = useRouter();
+    const { toast } = useToast();
     const [userCourses, setUserCourses] = useState<Course[]>([]);
     const [isLoadingCourses, setIsLoadingCourses] = useState(true);
     const [isCreatingCourse, setIsCreatingCourse] = useState(false);
+    const [coursesError, setCoursesError] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchCourses = async () => {
             setIsLoadingCourses(true);
+            setCoursesError(null);
             try {
-                // console.log("Fetching user courses...");
                 const courses = await getUserCourses();
-                // console.log("Fetched courses:", courses);
                 setUserCourses(courses);
             } catch (error) {
                 console.error("Failed to fetch user courses:", error);
-                // Add user-facing error handling here, e.g., toast notification
+                setCoursesError("Could not load courses. Please ensure your Firebase project has Firestore enabled and is configured correctly.");
             } finally {
                 setIsLoadingCourses(false);
             }
@@ -44,11 +46,10 @@ export default function CoursesPage() {
                 const courseDetailsFromTemplate: Partial<Course> = {
                     title: template.title,
                     description: template.description,
-                    thumbnailUrl: template.image, // Using template image as thumbnail
+                    thumbnailUrl: template.image,
                 };
                 newCourseId = await apiCreateCourse(template.title, template.description, courseDetailsFromTemplate);
             } else {
-                // Start from scratch
                 newCourseId = await apiCreateCourse(defaultCourseTemplate.title, defaultCourseTemplate.description, {
                     title: defaultCourseTemplate.title,
                     description: defaultCourseTemplate.description,
@@ -58,10 +59,78 @@ export default function CoursesPage() {
             router.push(`/dashboard/courses/${newCourseId}`);
         } catch (error) {
             console.error("Failed to create course:", error);
-            // Add user-facing error handling
-            setIsCreatingCourse(false); // Only set to false on error, otherwise navigation occurs
+            toast({
+                variant: "destructive",
+                title: "Course Creation Failed",
+                description: "Could not create the course in the database. Please check your connection and Firestore setup.",
+            });
+            setIsCreatingCourse(false);
         }
     };
+
+    const renderContent = () => {
+        if (isLoadingCourses) {
+             return (
+                <div className="flex items-center justify-center h-32 border border-dashed rounded-lg">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    <p className="ml-3 text-muted-foreground">Loading your courses...</p>
+                </div>
+            );
+        }
+        if (coursesError) {
+             return (
+                <div className="flex flex-col items-center justify-center h-32 border border-dashed rounded-lg bg-destructive/10 text-destructive">
+                    <AlertTriangle className="h-8 w-8 mb-2" />
+                    <p className="font-semibold">Error Loading Courses</p>
+                    <p className="text-sm text-center max-w-md">{coursesError}</p>
+                </div>
+            );
+        }
+        if (userCourses.length > 0) {
+            return (
+                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                    {userCourses.map(course => (
+                        <Card key={course.id} className="overflow-hidden flex flex-col">
+                             <div className="relative h-40 w-full bg-muted flex items-center justify-center">
+                                {course.thumbnailUrl ? (
+                                    <Image src={course.thumbnailUrl} alt={course.title} fill className="object-cover" />
+                                ) : (
+                                    <GraduationCap className="h-16 w-16 text-gray-300" />
+                                )}
+                            </div>
+                            <CardHeader>
+                                <CardTitle className="text-lg truncate" title={course.title}>{course.title}</CardTitle>
+                                {course.description && (
+                                    <CardDescription className="h-10 pt-1 text-sm overflow-hidden text-ellipsis whitespace-nowrap">
+                                        {course.description}
+                                    </CardDescription>
+                                )}
+                            </CardHeader>
+                            <CardContent className="text-xs text-muted-foreground">
+                                <p className={course.isPublished ? "font-semibold text-green-600" : "font-semibold text-yellow-700"}>
+                                    {course.isPublished ? "Published" : "Draft"}
+                                </p>
+                            </CardContent>
+                            <CardFooter className="mt-auto">
+                                <Button asChild className="w-full" variant="outline">
+                                    <Link href={`/dashboard/courses/${course.id}`}>
+                                        <Edit className="mr-2 h-4 w-4" /> Edit Course
+                                    </Link>
+                                </Button>
+                            </CardFooter>
+                        </Card>
+                    ))}
+                </div>
+            );
+        }
+        return (
+             <div className="flex flex-col items-center justify-center h-32 border border-dashed rounded-lg">
+                <GraduationCap className="h-12 w-12 text-gray-400 mb-2" />
+                <p className="text-muted-foreground font-medium">You haven&apos;t created any courses yet.</p>
+                <p className="text-sm text-muted-foreground">Get started with a template below or from scratch!</p>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-8">
@@ -77,53 +146,7 @@ export default function CoursesPage() {
             {/* Existing Courses Section */}
             <div>
                 <h3 className="text-xl font-semibold tracking-tight mb-4">My Created Courses</h3>
-                {isLoadingCourses ? (
-                    <div className="flex items-center justify-center h-32 border border-dashed rounded-lg">
-                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                        <p className="ml-3 text-muted-foreground">Loading your courses...</p>
-                    </div>
-                ) : userCourses.length > 0 ? (
-                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                        {userCourses.map(course => (
-                            <Card key={course.id} className="overflow-hidden flex flex-col">
-                                 <div className="relative h-40 w-full bg-muted flex items-center justify-center">
-                                    {course.thumbnailUrl ? (
-                                        <Image src={course.thumbnailUrl} alt={course.title} fill className="object-cover" />
-                                    ) : (
-                                        <GraduationCap className="h-16 w-16 text-gray-300" />
-                                    )}
-                                </div>
-                                <CardHeader>
-                                    <CardTitle className="text-lg truncate" title={course.title}>{course.title}</CardTitle>
-                                    {course.description && (
-                                        <CardDescription className="h-10 pt-1 text-sm overflow-hidden text-ellipsis whitespace-nowrap">
-                                            {course.description}
-                                        </CardDescription>
-                                    )}
-                                </CardHeader>
-                                <CardContent className="text-xs text-muted-foreground">
-                                    <p className={course.isPublished ? "font-semibold text-green-600" : "font-semibold text-yellow-700"}>
-                                        {course.isPublished ? "Published" : "Draft"}
-                                    </p>
-                                    {/* <p>Modules: {course.modulesOrder?.length || 0}</p> */}
-                                </CardContent>
-                                <CardFooter className="mt-auto">
-                                    <Button asChild className="w-full" variant="outline">
-                                        <Link href={`/dashboard/courses/${course.id}`}>
-                                            <Edit className="mr-2 h-4 w-4" /> Edit Course
-                                        </Link>
-                                    </Button>
-                                </CardFooter>
-                            </Card>
-                        ))}
-                    </div>
-                ) : (
-                     <div className="flex flex-col items-center justify-center h-32 border border-dashed rounded-lg">
-                        <GraduationCap className="h-12 w-12 text-gray-400 mb-2" />
-                        <p className="text-muted-foreground font-medium">You haven&apos;t created any courses yet.</p>
-                        <p className="text-sm text-muted-foreground">Get started with a template below or from scratch!</p>
-                    </div>
-                )}
+                {renderContent()}
             </div>
             
             {/* Start from Template Section */}
