@@ -45,6 +45,7 @@ import {
   LogOut,
   Loader2,
   Share2,
+  MessagesSquare,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
@@ -61,6 +62,7 @@ const navItems = [
     { href: '/dashboard/docs', icon: BookText, label: 'Docs' },
     { href: '/dashboard/forms', icon: ClipboardList, label: 'Forms' },
     { href: '/dashboard/crm', icon: Users, label: 'CRM' },
+    { href: '/dashboard/conversations', icon: MessagesSquare, label: 'Conversations' },
     { href: '/dashboard/email', icon: Mail, label: 'Email Marketing' },
     { href: '/dashboard/automations', icon: Workflow, label: 'Automations' },
     { href: '/dashboard/ai-tools', icon: BrainCircuit, label: 'AI Tools' },
