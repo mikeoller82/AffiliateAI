@@ -5,22 +5,94 @@ import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { PlusCircle, MoreHorizontal, Copy, Edit, Trash2, Link as LinkIcon, BarChart, Users, DollarSign, Activity } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from '@/hooks/use-toast';
+import { nanoid } from 'nanoid';
 
 interface AffiliateLink {
     id: number;
     name: string;
     targetUrl: string;
-    trackingId: string;
+    slug: string;
     clicks: number;
     conversions: number;
     commission: number;
     status: 'Active' | 'Archived';
 }
 
+const initialLinks: AffiliateLink[] = [
+    {
+        id: 1,
+        name: "Product Hunt Launch",
+        targetUrl: "https://www.producthunt.com/posts/your-product",
+        slug: "product-hunt",
+        clicks: 1254,
+        conversions: 132,
+        commission: 450.50,
+        status: "Active"
+    },
+    {
+        id: 2,
+        name: "Google Ads - Main Campaign",
+        targetUrl: "https://google.com?q=your-product",
+        slug: "google",
+        clicks: 876,
+        conversions: 88,
+        commission: 299.00,
+        status: "Active"
+    }
+]
+
 export default function LinksPage() {
-    const [links, setLinks] = useState<AffiliateLink[]>([]);
+    const { toast } = useToast();
+    const [links, setLinks] = useState<AffiliateLink[]>(initialLinks);
+    const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+    const [newLinkName, setNewLinkName] = useState('');
+    const [newLinkTargetUrl, setNewLinkTargetUrl] = useState('');
+    
+    const handleCopy = (slug: string) => {
+        const shortUrl = `https://highlaunchpad.com/go/${slug}`;
+        navigator.clipboard.writeText(shortUrl);
+        toast({
+          title: "Copied!",
+          description: "Short link copied to clipboard.",
+        });
+    }
+
+    const handleCreateLink = () => {
+        if (!newLinkName || !newLinkTargetUrl) {
+            toast({
+                variant: 'destructive',
+                title: 'Error',
+                description: 'Please provide both a name and a target URL.',
+            });
+            return;
+        }
+
+        const newLink: AffiliateLink = {
+            id: Date.now(),
+            name: newLinkName,
+            targetUrl: newLinkTargetUrl,
+            slug: nanoid(8),
+            clicks: 0,
+            conversions: 0,
+            commission: 0,
+            status: 'Active',
+        };
+
+        setLinks(prev => [newLink, ...prev]);
+        setIsCreateDialogOpen(false);
+        setNewLinkName('');
+        setNewLinkTargetUrl('');
+        toast({
+            title: 'Link Created',
+            description: `Successfully created short link for ${newLinkName}.`,
+        });
+    };
 
     return (
         <div className="space-y-6">
@@ -31,10 +103,36 @@ export default function LinksPage() {
                         Manage and analyze your tracking links and campaigns.
                     </p>
                 </div>
-                <Button>
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Create New Link
-                </Button>
+                <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+                    <DialogTrigger asChild>
+                        <Button>
+                            <PlusCircle className="mr-2 h-4 w-4" />
+                            Create New Link
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>Create New Short Link</DialogTitle>
+                            <DialogDescription>
+                                Create a new shortened affiliate link. The slug will be generated automatically.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-4 py-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="link-name">Name</Label>
+                                <Input id="link-name" placeholder="e.g., My Awesome Product" value={newLinkName} onChange={(e) => setNewLinkName(e.target.value)} />
+                            </div>
+                             <div className="space-y-2">
+                                <Label htmlFor="link-target-url">Target URL</Label>
+                                <Input id="link-target-url" placeholder="https://youraffiliatelink.com/..." value={newLinkTargetUrl} onChange={(e) => setNewLinkTargetUrl(e.target.value)} />
+                            </div>
+                        </div>
+                        <DialogFooter>
+                            <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>Cancel</Button>
+                            <Button onClick={handleCreateLink}>Create Link</Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
             </div>
             
             {links.length === 0 ? (
@@ -43,7 +141,7 @@ export default function LinksPage() {
                         <LinkIcon className="h-12 w-12 mx-auto text-muted-foreground" />
                         <h3 className="mt-4 text-lg font-semibold">No Links Found</h3>
                         <p className="mt-1 text-sm text-muted-foreground">Get started by creating your first affiliate link.</p>
-                        <Button className="mt-4">
+                        <Button className="mt-4" onClick={() => setIsCreateDialogOpen(true)}>
                             <PlusCircle className="mr-2 h-4 w-4" />
                             Create New Link
                         </Button>
@@ -60,7 +158,7 @@ export default function LinksPage() {
                                         <CardTitle>{link.name}</CardTitle>
                                         <CardDescription className="flex items-center gap-2 pt-1 text-xs">
                                             <LinkIcon className="h-3 w-3" />
-                                            {`https://yourdomain.com/track/${link.trackingId}`}
+                                            {`highlaunchpad.com/go/${link.slug}`}
                                         </CardDescription>
                                     </div>
                                     <div className="flex items-center gap-2">
@@ -76,7 +174,7 @@ export default function LinksPage() {
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end">
                                                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                                <DropdownMenuItem><Copy className="mr-2 h-4 w-4" /> Copy Link</DropdownMenuItem>
+                                                <DropdownMenuItem onSelect={() => handleCopy(link.slug)}><Copy className="mr-2 h-4 w-4" /> Copy Link</DropdownMenuItem>
                                                 <DropdownMenuItem><Edit className="mr-2 h-4 w-4" /> Edit</DropdownMenuItem>
                                                 <DropdownMenuItem><BarChart className="mr-2 h-4 w-4" /> View Analytics</DropdownMenuItem>
                                                 <DropdownMenuSeparator />

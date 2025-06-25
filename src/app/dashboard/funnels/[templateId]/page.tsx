@@ -171,7 +171,7 @@ export default function FunnelEditorPage() {
   const params = useParams<{ templateId: string }>();
   const { toast } = useToast();
   const { apiKey, promptApiKey } = useAIKey();
-  const { subscription } = useAuth();
+  const { user, subscription } = useAuth();
   
   const initialComponents = getFunnelComponentsById(params.templateId);
   const isPro = subscription?.status === 'active';
@@ -202,6 +202,8 @@ export default function FunnelEditorPage() {
   const [aiIsLoading, setAiIsLoading] = useState(false);
   const [aiResult, setAiResult] = useState('');
 
+  const workspaceSubdomain = user?.email?.split('@')[0].replace(/[^a-zA-Z0-9]/g, '') || 'your-workspace';
+  const generatedUrl = domain ? `${domain}/${slug}` : `${workspaceSubdomain}.highlaunchpad.com/${slug}`;
 
   const addComponent = (type: ComponentType) => {
     const newComponent: Component = {
@@ -442,8 +444,19 @@ export default function FunnelEditorPage() {
             </TabsContent>
             <TabsContent value="settings" className="space-y-4 pt-4">
               <h3 className="font-semibold text-sm text-muted-foreground">Page Settings</h3>
+               <div className="space-y-2">
+                  <Label>Generated URL</Label>
+                  <Input
+                      readOnly
+                      value={generatedUrl}
+                      className="bg-muted text-muted-foreground"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                      This is the URL where your funnel will be live.
+                  </p>
+              </div>
               <div className="space-y-2">
-                  <Label htmlFor="domain">Custom Domain</Label>
+                  <Label htmlFor="domain">Custom Domain (Optional)</Label>
                   <Input
                       id="domain"
                       name="domain"
@@ -451,9 +464,6 @@ export default function FunnelEditorPage() {
                       value={domain}
                       onChange={(e) => setDomain(e.target.value)}
                   />
-                  <p className="text-xs text-muted-foreground">
-                      Leave empty to use the default domain.
-                  </p>
               </div>
               <div className="space-y-2">
                   <Label htmlFor="slug">Slug</Label>
