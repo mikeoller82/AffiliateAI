@@ -12,6 +12,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { type Post, mockProfiles } from '@/lib/social-scheduler-data';
 import { Calendar as CalendarIcon, Smile, Image as ImageIcon, Video, Trash2, X } from 'lucide-react';
+import * as Icons from 'lucide-react';
 import { format } from 'date-fns';
 
 interface PostEditorProps {
@@ -67,18 +68,21 @@ export function PostEditor({ post, onSave, onDelete, onClose }: PostEditorProps)
             <div className="space-y-2">
                 <Label>Publish to</Label>
                 <div className="flex flex-wrap gap-2">
-                    {mockProfiles.map(profile => (
-                        <div key={profile.id} className="flex items-center space-x-2">
-                            <Checkbox 
-                                id={`profile-${profile.id}`} 
-                                checked={selectedProfiles.includes(profile.id)}
-                                onCheckedChange={() => handleProfileSelect(profile.id)}
-                            />
-                            <label htmlFor={`profile-${profile.id}`} className="text-sm font-medium leading-none flex items-center gap-2">
-                                <profile.platformIcon className="h-4 w-4"/> {profile.name}
-                            </label>
-                        </div>
-                    ))}
+                    {mockProfiles.map(profile => {
+                        const PlatformIcon = Icons[profile.platformIcon as keyof typeof Icons] || Icons.HelpCircle;
+                        return (
+                             <div key={profile.id} className="flex items-center space-x-2">
+                                <Checkbox 
+                                    id={`profile-${profile.id}`} 
+                                    checked={selectedProfiles.includes(profile.id)}
+                                    onCheckedChange={() => handleProfileSelect(profile.id)}
+                                />
+                                <label htmlFor={`profile-${profile.id}`} className="text-sm font-medium leading-none flex items-center gap-2">
+                                    <PlatformIcon className="h-4 w-4"/> {profile.name}
+                                </label>
+                            </div>
+                        )
+                    })}
                 </div>
             </div>
 
