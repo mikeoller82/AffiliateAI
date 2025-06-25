@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
@@ -159,69 +160,39 @@ export default function CourseEditorPage() {
         }
         return undefined;
     }, [modules]);
-
-    const fetchCourseData = useCallback(async (showLoading = true) => {
+    
+    const fetchCourseData = useCallback(async () => {
         if (!courseId) return;
-        if(showLoading) setIsLoadingCourse(true);
-        // Do not clear modules/lessons here to avoid UI flicker if only course title changes
+        setIsLoadingCourse(true);
+        setIsLoadingModules(true); // Start loading modules at the same time
         try {
-            const fetchedCourse = await getCourse(courseId as string);
-            setCourse(fetchedCourse); // This will trigger module/lesson fetches if IDs changed
-            if (fetchedCourse) {
-                // Only fetch modules if course ID is valid or modulesOrder changed
-                 if (!modules.length || JSON.stringify(course?.modulesOrder) !== JSON.stringify(fetchedCourse.modulesOrder)) {
-                    await fetchModulesData(fetchedCourse, showLoading);
-                 }
+            const courseData = await getCourse(courseId);
+            setCourse(courseData);
+            if (courseData) {
+                const modulesData = await getModules(courseData.id, courseData.modulesOrder);
+                setModules(modulesData);
+                
+                // Fetch lessons for all modules
+                const lessonPromises = modulesData.map(module => getLessons(courseData.id, module.id, module.lessonsOrder));
+                const allLessons = await Promise.all(lessonPromises);
+                
+                const lessonsMap: { [moduleId: string]: Lesson[] } = {};
+                modulesData.forEach((module, index) => {
+                    lessonsMap[module.id] = allLessons[index];
+                });
+                setLessonsByModule(lessonsMap);
             }
         } catch (error) {
-            console.error("Failed to fetch course:", error);
+            console.error("Failed to fetch course data:", error);
         } finally {
-            if(showLoading) setIsLoadingCourse(false);
+            setIsLoadingCourse(false);
+            setIsLoadingModules(false);
         }
-    }, [courseId, modules, course?.modulesOrder]); // Added modules and course.modulesOrder
-
-    const fetchModulesData = useCallback(async (currentCourse: Course, showLoading = true) => {
-        if (!currentCourse) return;
-        if(showLoading) setIsLoadingModules(true);
-        try {
-            const fetchedModules = await getModules(currentCourse.id, currentCourse.modulesOrder);
-            setModules(fetchedModules);
-
-            const newIsLoadingLessonsState: { [moduleId: string]: boolean } = {};
-            fetchedModules.forEach(module => {
-                newIsLoadingLessonsState[module.id] = showLoading;
-                 // Fetch lessons if not present or order changed
-                if (!lessonsByModule[module.id] || JSON.stringify(lessonsByModule[module.id]?.map(l => l.id)) !== JSON.stringify(module.lessonsOrder)) {
-                    fetchLessonsData(currentCourse.id, module.id, module.lessonsOrder, showLoading);
-                } else {
-                    setIsLoadingLessons(prev => ({ ...prev, [module.id]: false })); // Already loaded
-                }
-            });
-            //setIsLoadingLessons(newIsLoadingLessonsState); // This might be too aggressive, let fetchLessonsData handle its own state
-
-        } catch (error) {
-            console.error("Failed to fetch modules:", error);
-        } finally {
-            if(showLoading) setIsLoadingModules(false);
-        }
-    }, [lessonsByModule]); // Added lessonsByModule
-
-    const fetchLessonsData = useCallback(async (cId: string, moduleId: string, lessonsOrderFromModule?: string[], showLoading = true) => {
-        if(showLoading) setIsLoadingLessons(prev => ({ ...prev, [moduleId]: true }));
-        try {
-            const fetchedLessons = await getLessons(cId, moduleId, lessonsOrderFromModule);
-            setLessonsByModule(prev => ({ ...prev, [moduleId]: fetchedLessons }));
-        } catch (error) {
-            console.error(`Failed to fetch lessons for module ${moduleId}:`, error);
-            setLessonsByModule(prev => ({ ...prev, [moduleId]: prev[moduleId] || [] })); // Keep existing if error
-        } finally {
-            if(showLoading) setIsLoadingLessons(prev => ({ ...prev, [moduleId]: false }));
-        }
-    }, []);
+    }, [courseId]);
 
     useEffect(() => {
         fetchCourseData();
-    }, [courseId]); // Removed fetchCourseData from deps to avoid loop, let courseId trigger it.
+    }, [courseId, fetchCourseData]);
 
     const handleUpdateCourseDetails = async (updates: Partial<Course>) => {
         if (!course) return;
@@ -444,7 +415,7 @@ export default function CourseEditorPage() {
                         Editing: {course.title}
                     </h1>
                 </div>
-                <Button variant="ghost" size="sm" onClick={() => fetchCourseData(true)} disabled={isLoadingCourse || isLoadingModules || Object.values(isSaving).some(s => s)} className="text-muted-foreground hover:text-primary">
+                <Button variant="ghost" size="sm" onClick={() => fetchCourseData()} disabled={isLoadingCourse || isLoadingModules || Object.values(isSaving).some(s => s)} className="text-muted-foreground hover:text-primary">
                     <RefreshCw className={`mr-2 h-4 w-4 ${isLoadingCourse || isLoadingModules || Object.values(isLoadingLessons).some(l=>l) ? 'animate-spin' : ''}`} />
                     Refresh
                 </Button>
