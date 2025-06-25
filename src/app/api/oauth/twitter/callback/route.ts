@@ -2,13 +2,16 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
-import { adminApp } from '@/lib/firebase-admin';
+import { getAdminApp } from '@/lib/firebase-admin';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
-    if (!adminApp) {
-        console.error("Firebase Admin not initialized. Check server environment variables.");
+    let adminApp;
+    try {
+        adminApp = getAdminApp();
+    } catch (error) {
+        console.error("Firebase Admin initialization error:", error);
         return NextResponse.redirect(new URL('/dashboard/settings?tab=social&error=server_configuration_error', request.url));
     }
 
@@ -38,10 +41,8 @@ export async function GET(request: NextRequest) {
 
         const { uid: userId, codeVerifier } = stateDoc.data() as { uid: string, codeVerifier: string };
         
-        // State has been used, delete it to prevent reuse
         await stateRef.delete();
 
-        // Exchange authorization code for access token
         const tokenResponse = await fetch('https://api.twitter.com/2/oauth2/token', {
             method: 'POST',
             headers: {
@@ -63,7 +64,6 @@ export async function GET(request: NextRequest) {
             throw new Error('Failed to get access token from Twitter.');
         }
         
-        // Fetch user info from Twitter
         const userResponse = await fetch('https://api.twitter.com/2/users/me', {
             headers: {
                 Authorization: `Bearer ${tokens.access_token}`,
@@ -77,7 +77,6 @@ export async function GET(request: NextRequest) {
 
         const { id: twitterId, name, username } = twitterUser.data;
 
-        // Save profile to Firestore under the correct user's subcollection
         const profileId = `twitter_${twitterId}`;
         const profileRef = db.collection('users').doc(userId).collection('social_profiles').doc(profileId);
 
@@ -95,14 +94,13 @@ export async function GET(request: NextRequest) {
 
         await profileRef.set(newProfile, { merge: true });
 
-        // Redirect user to settings page with success message
         return NextResponse.redirect(new URL('/dashboard/settings?tab=social&success=true', request.url));
 
     } catch (error) {
         console.error("Twitter OAuth callback error:", error);
-        // Attempt to clean up state doc on error if it exists
-        const stateDoc = await stateRef.get();
-        if (stateDoc.exists) {
+        
+        const stateDocCheck = await stateRef.get();
+        if (stateDocCheck.exists) {
             await stateRef.delete();
         }
         return NextResponse.redirect(new URL('/dashboard/settings?tab=social&error=oauth_failed', request.url));
