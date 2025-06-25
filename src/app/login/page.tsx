@@ -29,7 +29,7 @@ export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const { auth } = useAuth();
+  const { auth, authError } = useAuth();
 
   const form = useForm<z.infer<typeof loginFormSchema>>({
     resolver: zodResolver(loginFormSchema),
@@ -44,7 +44,7 @@ export default function LoginPage() {
       toast({
         variant: 'destructive',
         title: 'Authentication Not Ready',
-        description: 'The authentication service is not available. Please wait a moment and try again.',
+        description: authError || 'The authentication service is not available. Please wait a moment and try again.',
       });
       return;
     }
@@ -121,11 +121,15 @@ export default function LoginPage() {
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Log In
               </Button>
-               {!auth && (
+               {authError ? (
+                <p className="text-xs text-center text-destructive bg-destructive/20 p-2 rounded-md">
+                  <strong>Configuration Error:</strong> {authError}
+                </p>
+              ) : !auth ? (
                 <p className="text-xs text-center text-muted-foreground">
                     Initializing authentication...
                 </p>
-              )}
+              ) : null}
             </form>
           </Form>
           <div className="mt-4 text-center text-sm">
