@@ -15,6 +15,7 @@ interface AuthContextType {
   loading: boolean;
   auth: Auth | null;
   db: Firestore | null;
+  authError: string | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -35,12 +36,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [firebaseAuth, setFirebaseAuth] = useState<Auth | null>(null);
   const [firebaseDb, setFirebaseDb] = useState<Firestore | null>(null);
+  const [authError, setAuthError] = useState<string | null>(null);
 
   useEffect(() => {
     const isFirebaseConfigured = firebaseConfig.apiKey && firebaseConfig.projectId;
 
     if (!isFirebaseConfigured) {
-      console.error('Firebase configuration is missing or incomplete. Please check your .env.local file and ensure all NEXT_PUBLIC_FIREBASE_* variables are set correctly. The app will continue to run, but authentication and database features will be disabled.');
+      const errorMessage = 'Firebase configuration is missing. Please add NEXT_PUBLIC_FIREBASE_* variables to your .env file.';
+      console.error(errorMessage);
+      setAuthError(errorMessage);
       setLoading(false);
       return;
     }
@@ -51,6 +55,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const db = getFirestore(app);
         setFirebaseAuth(auth);
         setFirebaseDb(db);
+        setAuthError(null);
 
         const unsubscribeAuth = onAuthStateChanged(auth, (userAuth) => {
             setUser(userAuth);
@@ -61,8 +66,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
 
         return () => unsubscribeAuth();
-    } catch(e) {
-        console.error("Firebase initialization error. Please check your configuration.", e);
+    } catch(e: any) {
+        const errorMessage = `Firebase initialization error: ${e.message}`;
+        console.error(errorMessage, e);
+        setAuthError(errorMessage);
         setLoading(false);
     }
   }, []);
@@ -83,7 +90,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [firebaseDb, user]);
 
 
-  const value = { user, subscription, loading, auth: firebaseAuth, db: firebaseDb };
+  const value = { user, subscription, loading, auth: firebaseAuth, db: firebaseDb, authError };
   
   if (loading) {
     return (
