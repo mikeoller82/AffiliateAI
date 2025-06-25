@@ -60,6 +60,7 @@ const navItems = [
     { href: '/dashboard/newsletter', icon: Mails, label: 'Newsletters' },
     { href: '/dashboard/social-scheduler', icon: Share2, label: 'Social Scheduler' },
     { href: '/dashboard/docs', icon: BookText, label: 'Docs' },
+    { href: '/dashboard/notion-pad', icon: FileText, label: 'NotionPad' },
     { href: '/dashboard/forms', icon: ClipboardList, label: 'Forms' },
     { href: '/dashboard/crm', icon: Users, label: 'CRM' },
     { href: '/dashboard/conversations', icon: MessagesSquare, label: 'Conversations' },
@@ -83,7 +84,8 @@ function MainContent({ children }: { children: React.ReactNode }) {
     
     const pageTitle = getPageTitle();
     
-    const isBuilderPage = /^\/dashboard\/(funnels|websites|automations|forms|blog|newsletter|docs)\/(\w|\d)/.test(pathname);
+    const isBuilderPage = /^\/dashboard\/(funnels|websites|automations|forms|blog|newsletter|docs|notion-pad)\/(\w|\d)/.test(pathname) || pathname === '/dashboard/notion-pad';
+
 
     return (
         <div className="flex flex-col h-screen bg-background">
