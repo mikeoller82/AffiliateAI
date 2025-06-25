@@ -1,8 +1,8 @@
 
 'use client';
 
-import { Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { Suspense, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -18,18 +18,42 @@ import { doc, setDoc } from 'firebase/firestore';
 import * as Icons from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-const socialPlatforms: { name: 'Facebook' | 'Instagram' | 'Twitter' | 'LinkedIn'; icon: keyof typeof Icons; color: string }[] = [
-    { name: 'Facebook', icon: 'Facebook', color: 'text-[#1877F2]' },
-    { name: 'Instagram', icon: 'Instagram', color: 'text-[#E4405F]' },
-    { name: 'Twitter', icon: 'Twitter', color: 'text-[#1DA1F2]' },
-    { name: 'LinkedIn', icon: 'Linkedin', color: 'text-[#0A66C2]' },
+const socialPlatforms: { name: 'Facebook' | 'Instagram' | 'Twitter' | 'LinkedIn'; icon: keyof typeof Icons; color: string; realAuth: boolean; }[] = [
+    { name: 'Facebook', icon: 'Facebook', color: 'text-[#1877F2]', realAuth: false },
+    { name: 'Instagram', icon: 'Instagram', color: 'text-[#E4405F]', realAuth: false },
+    { name: 'Twitter', icon: 'Twitter', color: 'text-[#1DA1F2]', realAuth: true },
+    { name: 'LinkedIn', icon: 'Linkedin', color: 'text-[#0A66C2]', realAuth: false },
 ];
 
 function SettingsPageComponent() {
     const searchParams = useSearchParams();
+    const router = useRouter();
     const { toast } = useToast();
     const { user, db } = useAuth();
     const defaultTab = searchParams.get('tab') || 'profile';
+
+    useEffect(() => {
+        const error = searchParams.get('error');
+        const success = searchParams.get('success');
+
+        if (error) {
+            toast({
+                variant: 'destructive',
+                title: 'Connection Failed',
+                description: `Something went wrong while connecting your account. Error: ${error}`,
+            });
+            router.replace('/dashboard/settings?tab=social');
+        }
+
+        if (success) {
+            toast({
+                title: 'Account Connected!',
+                description: 'Your social account has been successfully connected.',
+            });
+            router.replace('/dashboard/settings?tab=social');
+        }
+    }, [searchParams, toast, router]);
+
 
     const handleSave = () => {
         toast({
@@ -43,9 +67,14 @@ function SettingsPageComponent() {
             toast({ title: "Error", description: "You must be logged in to connect accounts."});
             return;
         }
+
+        if (platform.realAuth) {
+            // Redirect to our own API route to start the OAuth flow
+            window.location.href = `/api/oauth/${platform.name.toLowerCase()}/connect`;
+            return;
+        }
         
-        // This simulates a profile connection by creating a document in Firestore.
-        // A real implementation would involve an OAuth flow.
+        // This simulates a profile connection for non-implemented platforms
         const profileId = `${platform.name.toLowerCase()}_${user.uid}`;
         const profileRef = doc(db, 'users', user.uid, 'social_profiles', profileId);
 
