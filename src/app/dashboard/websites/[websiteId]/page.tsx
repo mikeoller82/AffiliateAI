@@ -22,6 +22,7 @@ import { getWebsiteComponentsById } from '@/lib/website-templates';
 import { defaultContent } from '@/lib/default-content';
 import type { Component, ComponentType } from '@/lib/builder-types';
 import { useAIKey } from '@/contexts/ai-key-context';
+import { useAuth } from '@/contexts/auth-context';
 
 
 // region Preview Components
@@ -106,7 +107,7 @@ const TestimonialsPreview = ({ content, styles }: { content: any, styles: any })
     </div>
 );
 
-const FooterPreview = ({ content, styles }: { content: any, styles: any }) => (
+const FooterPreview = ({ content, styles, isPro = false }: { content: any, styles: any, isPro?: boolean }) => (
   <footer className="p-8 mt-10 border-t" style={{ color: styles.textColor, borderColor: styles.textColor + '33' }}>
     <div className="flex flex-col md:flex-row justify-between items-center text-center md:text-left gap-4 max-w-6xl mx-auto">
       <p className="text-sm opacity-80">{content.copyright}</p>
@@ -116,6 +117,13 @@ const FooterPreview = ({ content, styles }: { content: any, styles: any }) => (
         ))}
       </div>
     </div>
+    {!isPro && (
+        <div className="text-center mt-6">
+            <a href="https://highlaunchpad.com" target="_blank" rel="noopener noreferrer" className="text-xs hover:underline opacity-60 hover:opacity-100 transition-opacity">
+                Powered by HighLaunchPad
+            </a>
+        </div>
+    )}
   </footer>
 );
 
@@ -251,8 +259,10 @@ export default function WebsiteEditorPage() {
   const params = useParams<{ websiteId: string }>();
   const { toast } = useToast();
   const { apiKey, promptApiKey } = useAIKey();
+  const { subscription } = useAuth();
   
   const initialComponents = getWebsiteComponentsById(params.websiteId);
+  const isPro = subscription?.status === 'active';
 
   const [components, setComponents] = useState<Component[]>(initialComponents);
   const [styles, setStyles] = useState({
@@ -587,7 +597,7 @@ export default function WebsiteEditorPage() {
                                <Button variant="ghost" size="icon" className="h-7 w-7 cursor-move hover:bg-primary-foreground/20"><Move className="h-4 w-4"/></Button>
                                <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-primary-foreground/20 hover:text-destructive-foreground" onClick={() => removeComponent(component.id)}><Trash2 className="h-4 w-4"/></Button>
                            </div>
-                          <ComponentPreview content={component.content} styles={styles} buttonStyles={buttonStyles} />
+                          <ComponentPreview content={component.content} styles={styles} buttonStyles={buttonStyles} isPro={isPro} />
                       </div>
                   );
               })}

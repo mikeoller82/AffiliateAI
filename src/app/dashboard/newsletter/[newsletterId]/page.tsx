@@ -19,6 +19,7 @@ import { useToast } from '@/hooks/use-toast';
 import { getNewsletterTemplateById } from '@/lib/newsletter-templates';
 import { defaultContent } from '@/lib/default-content';
 import type { Component, ComponentType } from '@/lib/builder-types';
+import { useAuth } from '@/contexts/auth-context';
 
 // region Preview Components
 const HeaderPreview = ({ content, styles }: { content: any, styles: any }) => (
@@ -144,7 +145,18 @@ const componentMap: { [key in ComponentType]?: React.FC<any> } = {
   // Re-using from other builders
   hero: (props) => <div className="p-4"><h2 className="text-3xl font-bold text-center">{props.content.title}</h2><p className="text-lg text-center text-muted-foreground mt-2">{props.content.subtitle}</p></div>,
   video: ({ content }) => <div className="p-4"><div className="aspect-video bg-black rounded-lg mx-auto max-w-3xl"><h3 className="text-white text-center pt-10">Video Preview</h3></div></div>,
-  footer: ({ content }) => <footer className="p-4 text-center text-xs text-muted-foreground border-t mt-4">{content.copyright}</footer>,
+  footer: ({ content, isPro = false }) => (
+    <footer className="p-4 text-center text-xs text-muted-foreground border-t mt-4">
+        <p>{content.copyright}</p>
+        {!isPro && (
+            <div className="text-center mt-2">
+                <a href="https://highlaunchpad.com" target="_blank" rel="noopener noreferrer" className="hover:underline">
+                    Powered by HighLaunchPad
+                </a>
+            </div>
+        )}
+    </footer>
+  ),
   features: ({ content }) => <div className="p-4"><h3 className="text-xl text-center font-bold">{content.title}</h3></div>,
 };
 // endregion
@@ -153,9 +165,11 @@ const componentMap: { [key in ComponentType]?: React.FC<any> } = {
 export default function NewsletterEditorPage() {
   const params = useParams<{ newsletterId: string }>();
   const { toast } = useToast();
+  const { subscription } = useAuth();
   
   const template = getNewsletterTemplateById(params.newsletterId);
   const initialComponents = template.components;
+  const isPro = subscription?.status === 'active';
 
   const [components, setComponents] = useState<Component[]>(initialComponents);
   const [styles, setStyles] = useState({
@@ -312,7 +326,7 @@ export default function NewsletterEditorPage() {
                                <Button variant="ghost" size="icon" className="h-7 w-7 cursor-move hover:bg-primary-foreground/20"><Move className="h-4 w-4"/></Button>
                                <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-primary-foreground/20 hover:text-destructive-foreground" onClick={() => removeComponent(component.id)}><Trash2 className="h-4 w-4"/></Button>
                            </div>
-                          <ComponentPreview content={component.content} styles={styles} />
+                          <ComponentPreview content={component.content} styles={styles} isPro={isPro} />
                       </div>
                   );
               })}
