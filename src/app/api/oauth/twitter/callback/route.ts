@@ -7,6 +7,11 @@ import { adminApp } from '@/lib/firebase-admin';
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
+    if (!adminApp) {
+        console.error("Firebase Admin not initialized. Check server environment variables.");
+        return NextResponse.redirect(new URL('/dashboard/settings?tab=social&error=server_configuration_error', request.url));
+    }
+
     const { TWITTER_CLIENT_ID, TWITTER_CLIENT_SECRET, NEXT_PUBLIC_BASE_URL } = process.env;
     if (!TWITTER_CLIENT_ID || !TWITTER_CLIENT_SECRET || !NEXT_PUBLIC_BASE_URL) {
         console.error("Missing required environment variables for Twitter OAuth.");
@@ -96,7 +101,8 @@ export async function GET(request: NextRequest) {
     } catch (error) {
         console.error("Twitter OAuth callback error:", error);
         // Attempt to clean up state doc on error if it exists
-        if ((await stateRef.get()).exists) {
+        const stateDoc = await stateRef.get();
+        if (stateDoc.exists) {
             await stateRef.delete();
         }
         return NextResponse.redirect(new URL('/dashboard/settings?tab=social&error=oauth_failed', request.url));
