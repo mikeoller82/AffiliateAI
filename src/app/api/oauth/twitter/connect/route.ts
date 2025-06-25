@@ -4,7 +4,7 @@ import { nanoid } from 'nanoid';
 import { createHash } from 'crypto';
 import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
-import { adminApp } from '@/lib/firebase-admin';
+import { getAdminApp } from '@/lib/firebase-admin';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,7 +20,11 @@ function sha256(buffer: string) {
 }
 
 export async function POST(request: NextRequest) {
-    if (!adminApp) {
+    let adminApp;
+    try {
+        adminApp = getAdminApp();
+    } catch (error) {
+        console.error("Firebase Admin initialization error:", error);
         return NextResponse.json({ error: "Server configuration error. Firebase Admin not initialized." }, { status: 500 });
     }
 
@@ -41,9 +45,8 @@ export async function POST(request: NextRequest) {
         const codeVerifier = nanoid(128);
         const codeChallenge = base64URLEncode(sha256(codeVerifier));
 
-        // Store state and code verifier in Firestore with a short TTL
         const expires = new Date();
-        expires.setMinutes(expires.getMinutes() + 15); // 15 minute expiry
+        expires.setMinutes(expires.getMinutes() + 15);
         const stateRef = db.collection('oauth_states').doc(state);
         await stateRef.set({
             uid,
