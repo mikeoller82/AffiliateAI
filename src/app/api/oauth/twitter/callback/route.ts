@@ -3,37 +3,39 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
 import { adminApp } from '@/lib/firebase-admin';
-import { nanoid } from 'nanoid';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
-    // Environment variable validation
-    const { TWITTER_CLIENT_ID, TWITTER_CLIENT_SECRET, NEXT_PUBLIC_BASE_URL, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY } = process.env;
-    if (!TWITTER_CLIENT_ID || !TWITTER_CLIENT_SECRET || !NEXT_PUBLIC_BASE_URL || !FIREBASE_CLIENT_EMAIL || !FIREBASE_PRIVATE_KEY) {
-        console.error("Missing required environment variables for Twitter OAuth or Firebase Admin.");
-        // Redirect with a more specific error for the user to understand
+    const { TWITTER_CLIENT_ID, TWITTER_CLIENT_SECRET, NEXT_PUBLIC_BASE_URL } = process.env;
+    if (!TWITTER_CLIENT_ID || !TWITTER_CLIENT_SECRET || !NEXT_PUBLIC_BASE_URL) {
+        console.error("Missing required environment variables for Twitter OAuth.");
         return NextResponse.redirect(new URL('/dashboard/settings?tab=social&error=server_configuration_error', request.url));
     }
 
     const db = getFirestore(adminApp);
-    const auth = getAuth(adminApp);
     const { searchParams } = new URL(request.url);
     const code = searchParams.get('code');
     const state = searchParams.get('state');
 
-    const oauthState = request.cookies.get('twitter_oauth_state')?.value;
-    const codeVerifier = request.cookies.get('twitter_code_verifier')?.value;
-    
-    if (!oauthState || !codeVerifier || state !== oauthState) {
-        return NextResponse.redirect(new URL('/dashboard/settings?tab=social&error=invalid_state', request.url));
-    }
-    
-    if (!code) {
-        return NextResponse.redirect(new URL('/dashboard/settings?tab=social&error=missing_code', request.url));
+    if (!code || !state) {
+        return NextResponse.redirect(new URL('/dashboard/settings?tab=social&error=missing_code_or_state', request.url));
     }
 
+    const stateRef = db.collection('oauth_states').doc(state);
+
     try {
+        const stateDoc = await stateRef.get();
+        if (!stateDoc.exists) {
+            console.error("Invalid or expired state parameter.");
+            return NextResponse.redirect(new URL('/dashboard/settings?tab=social&error=invalid_state', request.url));
+        }
+
+        const { uid: userId, codeVerifier } = stateDoc.data() as { uid: string, codeVerifier: string };
+        
+        // State has been used, delete it to prevent reuse
+        await stateRef.delete();
+
         // Exchange authorization code for access token
         const tokenResponse = await fetch('https://api.twitter.com/2/oauth2/token', {
             method: 'POST',
@@ -46,6 +48,7 @@ export async function GET(request: NextRequest) {
                 grant_type: 'authorization_code',
                 redirect_uri: `${NEXT_PUBLIC_BASE_URL}/api/oauth/twitter/callback`,
                 code_verifier: codeVerifier,
+                client_id: TWITTER_CLIENT_ID,
             }),
         });
 
@@ -69,14 +72,7 @@ export async function GET(request: NextRequest) {
 
         const { id: twitterId, name, username } = twitterUser.data;
 
-        // This requires a session cookie or another way to get the logged-in user's UID.
-        // For now, this is a placeholder. In a real app, you would get this from a secure session.
-        // NOTE: This part will fail without a proper session management strategy.
-        // This is a complex part of a full-stack app that is outside the scope of simple API routes without auth context.
-        // We will assume a placeholder UID for now.
-        const userId = 'placeholder_user_id'; // IMPORTANT: Replace with real user session logic.
-
-        // Save profile to Firestore
+        // Save profile to Firestore under the correct user's subcollection
         const profileId = `twitter_${twitterId}`;
         const profileRef = db.collection('users').doc(userId).collection('social_profiles').doc(profileId);
 
@@ -94,14 +90,15 @@ export async function GET(request: NextRequest) {
 
         await profileRef.set(newProfile, { merge: true });
 
-        const response = NextResponse.redirect(new URL('/dashboard/settings?tab=social&success=true', request.url));
-        response.cookies.delete('twitter_oauth_state');
-        response.cookies.delete('twitter_code_verifier');
-        
-        return response;
+        // Redirect user to settings page with success message
+        return NextResponse.redirect(new URL('/dashboard/settings?tab=social&success=true', request.url));
 
     } catch (error) {
         console.error("Twitter OAuth callback error:", error);
+        // Attempt to clean up state doc on error if it exists
+        if ((await stateRef.get()).exists) {
+            await stateRef.delete();
+        }
         return NextResponse.redirect(new URL('/dashboard/settings?tab=social&error=oauth_failed', request.url));
     }
 }
