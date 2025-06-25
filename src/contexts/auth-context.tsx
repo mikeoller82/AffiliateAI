@@ -19,7 +19,6 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// This configuration now reads from environment variables, removing the hardcoded values.
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
@@ -36,14 +35,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [firebaseAuth, setFirebaseAuth] = useState<Auth | null>(null);
   const [firebaseDb, setFirebaseDb] = useState<Firestore | null>(null);
-  const [configError, setConfigError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Check if the essential Firebase config variables are present.
     const isFirebaseConfigured = firebaseConfig.apiKey && firebaseConfig.projectId;
 
     if (!isFirebaseConfigured) {
-      setConfigError('Firebase configuration is missing or incomplete. Please check your .env.local file and ensure all NEXT_PUBLIC_FIREBASE_* variables are set correctly.');
+      console.error('Firebase configuration is missing or incomplete. Please check your .env.local file and ensure all NEXT_PUBLIC_FIREBASE_* variables are set correctly. The app will continue to run, but authentication and database features will be disabled.');
       setLoading(false);
       return;
     }
@@ -65,9 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         return () => unsubscribeAuth();
     } catch(e) {
-        console.error("Firebase initialization error:", e);
-        const errorMessage = e instanceof Error ? e.message : "An unknown error occurred.";
-        setConfigError(`Could not initialize Firebase. Please check your configuration. Error: ${errorMessage}`);
+        console.error("Firebase initialization error. Please check your configuration.", e);
         setLoading(false);
     }
   }, []);
@@ -89,18 +84,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 
   const value = { user, subscription, loading, auth: firebaseAuth, db: firebaseDb };
-
-  if (configError) {
-    return (
-      <div className="flex h-screen w-full items-center justify-center p-4 text-center">
-        <div className="max-w-md rounded-lg border border-destructive bg-destructive/10 p-6 text-destructive">
-          <h1 className="font-bold">Configuration Error</h1>
-          <p className="mt-2 text-sm">{configError}</p>
-        </div>
-      </div>
-    );
-  }
-
+  
   if (loading) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
