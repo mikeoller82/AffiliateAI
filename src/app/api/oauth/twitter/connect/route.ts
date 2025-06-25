@@ -20,6 +20,10 @@ function sha256(buffer: string) {
 }
 
 export async function POST(request: NextRequest) {
+    if (!adminApp) {
+        return NextResponse.json({ error: "Server configuration error. Firebase Admin not initialized." }, { status: 500 });
+    }
+
     const { token } = await request.json();
 
     if (!token) {
