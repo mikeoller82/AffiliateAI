@@ -11,8 +11,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { User, Building, Mail, Globe, Key, CreditCard, Users, Trash2, MoreHorizontal } from 'lucide-react';
+import { User, Building, Mail, Globe, Key, CreditCard, Users, Share2, Facebook, Instagram, Twitter, Linkedin } from 'lucide-react';
 import { BillingForm } from '@/components/dashboard/billing-form';
+
+const socialPlatforms = [
+    { name: 'Facebook', icon: Facebook, color: 'text-[#1877F2]' },
+    { name: 'Instagram', icon: Instagram, color: 'text-[#E4405F]' },
+    { name: 'Twitter', icon: Twitter, color: 'text-[#1DA1F2]' },
+    { name: 'LinkedIn', icon: Linkedin, color: 'text-[#0A66C2]' },
+];
 
 function SettingsPageComponent() {
     const searchParams = useSearchParams();
@@ -23,6 +30,13 @@ function SettingsPageComponent() {
         toast({
             title: "Settings Saved",
             description: "Your changes have been successfully saved.",
+        });
+    };
+    
+    const handleConnect = (platformName: string) => {
+        toast({
+            title: `Connecting to ${platformName}`,
+            description: 'This functionality is not yet implemented. This is where the OAuth flow would begin.',
         });
     };
 
@@ -41,6 +55,7 @@ function SettingsPageComponent() {
                     <TabsTrigger value="billing" className="w-full justify-start gap-2"><CreditCard />Billing</TabsTrigger>
                     <TabsTrigger value="email" className="w-full justify-start gap-2"><Mail />Email</TabsTrigger>
                     <TabsTrigger value="domains" className="w-full justify-start gap-2"><Globe />Domains</TabsTrigger>
+                    <TabsTrigger value="social" className="w-full justify-start gap-2"><Share2 />Social Accounts</TabsTrigger>
                     <TabsTrigger value="api" className="w-full justify-start gap-2"><Key />API Keys</TabsTrigger>
                     <TabsTrigger value="team" className="w-full justify-start gap-2"><Users />Team</TabsTrigger>
                 </TabsList>
@@ -52,7 +67,7 @@ function SettingsPageComponent() {
                                 <CardContent className="space-y-4">
                                     <div className="flex items-center gap-4">
                                         <Avatar className="h-20 w-20">
-                                            <AvatarImage src="https://placehold.co/80x80" data-ai-hint="profile picture" />
+                                            <AvatarImage src="https://placehold.co/80x80.png" data-ai-hint="profile picture" />
                                             <AvatarFallback>DU</AvatarFallback>
                                         </Avatar>
                                         <Button variant="outline">Upload Photo</Button>
@@ -135,6 +150,28 @@ function SettingsPageComponent() {
                             </CardContent>
                         </Card>
                     </TabsContent>
+                    <TabsContent value="social" className="mt-0">
+                         <Card>
+                            <CardHeader>
+                                <CardTitle>Connect Social Accounts</CardTitle>
+                                <CardDescription>Connect your social media profiles to start scheduling posts.</CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                {socialPlatforms.map((platform) => {
+                                    const Icon = platform.icon;
+                                    return (
+                                        <div key={platform.name} className="flex items-center justify-between rounded-lg border p-4">
+                                            <div className="flex items-center gap-3">
+                                                <Icon className={cn("h-6 w-6", platform.color)} />
+                                                <span className="font-medium">{platform.name}</span>
+                                            </div>
+                                            <Button variant="outline" onClick={() => handleConnect(platform.name)}>Connect</Button>
+                                        </div>
+                                    )
+                                })}
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
                      <TabsContent value="api" className="mt-0">
                          <Card>
                             <CardHeader><CardTitle>API Keys</CardTitle><CardDescription>Manage API keys to integrate with external services.</CardDescription></CardHeader>
@@ -174,3 +211,5 @@ export default function SettingsPage() {
         </Suspense>
     )
 }
+
+    
