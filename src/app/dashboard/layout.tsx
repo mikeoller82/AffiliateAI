@@ -225,10 +225,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         }
     }, [user, loading, pathname]);
 
-    if (loading || !user) {
-        return null;
-    }
-    
     return (
         <AIKeyProvider>
             <SidebarProvider>
