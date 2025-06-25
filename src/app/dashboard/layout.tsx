@@ -44,6 +44,7 @@ import {
   BookText,
   LogOut,
   Loader2,
+  Share2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
@@ -56,6 +57,7 @@ const navItems = [
     { href: '/dashboard/websites', icon: Globe, label: 'Websites' },
     { href: '/dashboard/blog', icon: Newspaper, label: 'Blog' },
     { href: '/dashboard/newsletter', icon: Mails, label: 'Newsletters' },
+    { href: '/dashboard/social-scheduler', icon: Share2, label: 'Social Scheduler' },
     { href: '/dashboard/docs', icon: BookText, label: 'Docs' },
     { href: '/dashboard/forms', icon: ClipboardList, label: 'Forms' },
     { href: '/dashboard/crm', icon: Users, label: 'CRM' },
@@ -144,7 +146,7 @@ function AppSidebar() {
                 <Link href="/dashboard" className="flex items-center gap-3">
                     <div className="p-1 bg-transparent rounded-lg">
                         <Image
-                            src="https://cdn.leonardo.ai/users/31a55a1b-10c8-4725-a4ad-b72817f069e1/generations/39ccab2d-4951-448b-b285-ccef2b6f670a/segments/1:1:1/Default_A_cuttingedge_HighlaunchPadAIpowered_CRM_logo_exuding__0.jpg"
+                            src="https://cdn.leonardo.ai/users/31a55a1b-10c8-4725-a4ad-b285-ccef2b6f670a/generations/39ccab2d-4951-448b-b285-ccef2b6f670a/segments/1:1:1/Default_A_cuttingedge_HighlaunchPadAIpowered_CRM_logo_exuding__0.jpg"
                             alt="HighLaunchPad Logo"
                             width={32}
                             height={32}
