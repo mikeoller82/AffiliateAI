@@ -9,6 +9,7 @@ import { type Post, type SocialProfile } from '@/lib/social-types';
 import { useAuth } from '@/contexts/auth-context';
 import { collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, Timestamp, query, orderBy } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
+import Link from 'next/link';
 
 export default function SocialSchedulerPage() {
     const { user, db } = useAuth();
@@ -34,7 +35,7 @@ export default function SocialSchedulerPage() {
             setPosts(fetchedPosts);
         });
 
-        const profilesQuery = collection(db, 'users', user.uid, 'connections');
+        const profilesQuery = collection(db, 'users', user.uid, 'social_profiles');
         const unsubscribeProfiles = onSnapshot(profilesQuery, (snapshot) => {
             const fetchedProfiles = snapshot.docs.map(doc => ({
                  id: doc.id, 
@@ -48,21 +49,6 @@ export default function SocialSchedulerPage() {
             unsubscribeProfiles();
         };
     }, [user, db, toast]);
-
-    const handleConnectTwitter = async () => {
-        try {
-            const response = await fetch('/api/oauth/twitter/request-token');
-            const data = await response.json();
-            
-            if (!response.ok) {
-                throw new Error(data.error || 'Failed to get authorization URL.');
-            }
-            
-            window.location.href = data.authorizationUrl;
-        } catch (error) {
-            toast({ variant: 'destructive', title: 'Error', description: error instanceof Error ? error.message : 'Could not connect to Twitter.' });
-        }
-    };
     
     const handleSelectPost = (post: Post) => {
         setSelectedPost(post);
@@ -70,6 +56,14 @@ export default function SocialSchedulerPage() {
     };
 
     const handleCreateNewPost = () => {
+        if (profiles.length === 0) {
+            toast({
+                variant: 'destructive',
+                title: 'No Profiles Connected',
+                description: 'Please connect a social profile in Settings before creating a post.'
+            });
+            return;
+        }
         setSelectedPost(null);
         setIsEditorOpen(true);
     };
@@ -124,14 +118,18 @@ export default function SocialSchedulerPage() {
                 <h1 className="text-2xl font-bold">Social Scheduler</h1>
                 <p className="text-muted-foreground">Plan and automate your social media content.</p>
                 <div className="mt-4">
-                    {profiles.length === 0 && (
-                        <Button onClick={handleConnectTwitter}>Connect Twitter</Button>
+                     {profiles.length === 0 ? (
+                         <p className="text-sm text-muted-foreground">No social profiles connected. <Button variant="link" asChild className="p-0 h-auto"><Link href="/dashboard/settings?tab=social">Connect one in Settings</Link></Button> to get started.</p>
+                    ) : (
+                         <div className="flex flex-wrap gap-2 items-center">
+                            <p className="text-sm font-medium">Connected as:</p>
+                            {profiles.map(profile => (
+                                <div key={profile.id} className="flex items-center gap-2 text-sm bg-muted px-2 py-1 rounded-md">
+                                    <p>{profile.name}</p>
+                                </div>
+                            ))}
+                         </div>
                     )}
-                    {profiles.map(profile => (
-                        <div key={profile.id} className="flex items-center gap-2">
-                            <p>Connected as: {profile.screenName}</p>
-                        </div>
-                    ))}
                 </div>
             </div>
             <CalendarView 
