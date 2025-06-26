@@ -1,15 +1,31 @@
 
 import { NextResponse, type NextRequest } from 'next/server';
-import { auth } from './lib/firebase-admin'; // Using admin SDK for server-side verification
 
-async function verifySessionCookie(cookie: string): Promise<boolean> {
-  if (!cookie) return false;
+async function verifySessionCookie(request: NextRequest): Promise<boolean> {
+  const cookie = request.cookies.get('__session')?.value;
+  if (!cookie) {
+    return false;
+  }
+  
+  // The absolute URL is required for fetch in middleware.
+  const url = new URL('/api/auth/verify-session', request.url);
+
   try {
-    // Use the Firebase Admin SDK to verify the session cookie
-    await auth.verifySessionCookie(cookie, true /** checkRevoked */);
-    return true;
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionCookie: cookie }),
+    });
+
+    if (!response.ok) {
+      console.error('Auth verification API call failed:', response.status);
+      return false;
+    }
+    
+    const { isValid } = await response.json();
+    return isValid;
   } catch (error) {
-    console.error('Session cookie verification failed:', error);
+    console.error('Error calling session verification API:', error);
     return false;
   }
 }
@@ -20,16 +36,20 @@ export async function middleware(request: NextRequest) {
   
   const mainDomain = process.env.NEXT_PUBLIC_MAIN_DOMAIN || 'highlaunchpad.com';
 
+  // Exclude API routes and static files from further processing early.
+  if (
+    url.pathname.startsWith('/api') ||
+    url.pathname.startsWith('/_next') ||
+    url.pathname.startsWith('/go/') ||
+    url.pathname.includes('.') // for files like favicon.ico
+  ) {
+    return NextResponse.next();
+  }
+
   // --- Protected Routes Logic ---
-  const protectedPaths = ['/dashboard', '/sites', '/editor'];
-  const isProtectedRoute = protectedPaths.some(path => url.pathname.startsWith(path));
-
-  if (isProtectedRoute) {
-    const sessionCookie = request.cookies.get('__session')?.value || '';
-    const isValidSession = await verifySessionCookie(sessionCookie);
-
+  if (url.pathname.startsWith('/dashboard')) {
+    const isValidSession = await verifySessionCookie(request);
     if (!isValidSession) {
-      // Redirect to login page if session is not valid
       const loginUrl = new URL('/login', request.url);
       loginUrl.searchParams.set('redirect', url.pathname);
       return NextResponse.redirect(loginUrl);
@@ -37,17 +57,10 @@ export async function middleware(request: NextRequest) {
   }
   // --- End Protected Routes Logic ---
 
-  if (
-    url.pathname.startsWith('/_next') ||
-    url.pathname.startsWith('/api') ||
-    url.pathname.startsWith('/go/')
-  ) {
-    return NextResponse.next();
-  }
-
+  // --- Subdomain routing for user sites ---
   const subdomain = hostname.replace(`.${mainDomain}`, '').replace(`:3000`, '');
 
-  if (hostname.includes(`.${mainDomain}`) && subdomain !== 'www') {
+  if (hostname.includes(`.${mainDomain}`) && subdomain !== 'www' && subdomain !== '') {
     url.pathname = `/render/${subdomain}${url.pathname}`;
     return NextResponse.rewrite(url);
   }
@@ -57,6 +70,14 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - go/ (affiliate link redirection)
+     * This ensures the middleware runs on all pages and API routes needed for auth and routing.
+     */
     '/((?!_next/static|_next/image|favicon.ico|go/).*)',
   ],
 };

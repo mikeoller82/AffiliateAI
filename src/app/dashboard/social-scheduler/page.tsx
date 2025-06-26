@@ -9,6 +9,7 @@ import { type Post, type SocialProfile } from '@/lib/social-types';
 import { useAuth } from '@/contexts/auth-context';
 import { collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, Timestamp, query, orderBy } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
+import { getTwitterRequestToken } from '@/app/api/oauth/twitter/request-token';
 
 export default function SocialSchedulerPage() {
     const { user, db } = useAuth();
@@ -51,15 +52,69 @@ export default function SocialSchedulerPage() {
 
     const handleConnectTwitter = async () => {
         try {
-            const res = await fetch('/api/oauth/twitter/request-token', { method: 'POST' });
-            const { authorizationUrl } = await res.json();
+            const { authorizationUrl, error } = await getTwitterRequestToken();
+            if (error || !authorizationUrl) {
+                throw new Error(error || 'Failed to get authorization URL.');
+            }
             window.location.href = authorizationUrl;
         } catch (error) {
             toast({ variant: 'destructive', title: 'Error', description: 'Could not connect to Twitter.' });
         }
     };
+    
+    const handleSelectPost = (post: Post) => {
+        setSelectedPost(post);
+        setIsEditorOpen(true);
+    };
 
-    // ... (rest of the component is the same)
+    const handleCreateNewPost = () => {
+        setSelectedPost(null);
+        setIsEditorOpen(true);
+    };
+
+    const handleSavePost = async (postData: Omit<Post, 'id' | 'scheduledTime'> & { id?: string; scheduledTime: Date }) => {
+        if (!user || !db) {
+            toast({ variant: 'destructive', title: 'Error', description: 'You must be logged in.' });
+            return;
+        }
+        
+        const dataToSave = {
+            ...postData,
+            scheduledTime: Timestamp.fromDate(postData.scheduledTime)
+        };
+
+        try {
+            if (postData.id) {
+                const postRef = doc(db, 'users', user.uid, 'social_posts', postData.id);
+                await updateDoc(postRef, dataToSave);
+                toast({ title: 'Success', description: 'Post updated successfully.' });
+            } else {
+                await addDoc(collection(db, 'users', user.uid, 'social_posts'), dataToSave);
+                toast({ title: 'Success', description: 'Post scheduled successfully.' });
+            }
+            setIsEditorOpen(false);
+        } catch (error) {
+            console.error("Error saving post:", error);
+            toast({ variant: 'destructive', title: 'Error', description: 'Failed to save post.' });
+        }
+    };
+    
+    const handleDeletePost = async (postId: string) => {
+        if (!user || !db) {
+            toast({ variant: 'destructive', title: 'Error', description: 'You must be logged in.' });
+            return;
+        }
+        
+        try {
+            await deleteDoc(doc(db, 'users', user.uid, 'social_posts', postId));
+            toast({ title: 'Success', description: 'Post deleted.' });
+            setIsEditorOpen(false);
+        } catch (error) {
+            console.error("Error deleting post:", error);
+            toast({ variant: 'destructive', title: 'Error', description: 'Failed to delete post.' });
+        }
+    };
+
 
     return (
         <div className="h-full flex flex-col">

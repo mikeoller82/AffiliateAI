@@ -1,9 +1,10 @@
 
-import { NextRequest, NextResponse } from 'next/server';
+'use server';
+
 import crypto from 'crypto';
 import OAuth from 'oauth-1.0a';
-import { db } from '@/lib/firebase-admin';
-import { auth } from '@/lib/firebase-admin';
+import { db, auth } from '@/lib/firebase-admin';
+import { cookies } from 'next/headers';
 
 const oauth = new OAuth({
     consumer: {
@@ -16,8 +17,8 @@ const oauth = new OAuth({
     },
 });
 
-async function getUserIdFromSession(req: NextRequest): Promise<string | null> {
-    const sessionCookie = req.cookies.get('__session')?.value;
+async function getUserIdFromSession(): Promise<string | null> {
+    const sessionCookie = cookies().get('__session')?.value;
     if (!sessionCookie) return null;
     try {
         const decodedToken = await auth.verifySessionCookie(sessionCookie, true);
@@ -28,12 +29,17 @@ async function getUserIdFromSession(req: NextRequest): Promise<string | null> {
     }
 }
 
-export async function POST(req: NextRequest) {
-    const { oauth_token, oauth_verifier } = await req.json();
-    const userId = await getUserIdFromSession(req);
+interface AccessTokenInput {
+    oauth_token: string;
+    oauth_verifier: string;
+}
+
+export async function getTwitterAccessToken(input: AccessTokenInput) {
+    const { oauth_token, oauth_verifier } = input;
+    const userId = await getUserIdFromSession();
 
     if (!userId) {
-        return NextResponse.json({ error: 'User not authenticated' }, { status: 401 });
+        return { error: 'User not authenticated' };
     }
 
     const accessTokenUrl = 'https://api.twitter.com/oauth/access_token';
@@ -65,7 +71,6 @@ export async function POST(req: NextRequest) {
             throw new Error('Incomplete access token response');
         }
 
-        // Store the tokens in Firestore
         await db.collection('users').doc(userId).collection('connections').doc('twitter').set({
             accessToken,
             accessSecret,
@@ -74,10 +79,10 @@ export async function POST(req: NextRequest) {
             connectedAt: new Date(),
         });
 
-        return NextResponse.json({ success: true, screenName });
+        return { success: true, screenName };
 
     } catch (error) {
         console.error('Error in Twitter OAuth access token:', error);
-        return NextResponse.json({ error: 'Failed to finalize Twitter authentication' }, { status: 500 });
+        return { error: 'Failed to finalize Twitter authentication' };
     }
 }
