@@ -2,21 +2,22 @@
   "name": "highlaunchpad",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
-    "dev": "cross-env NODE_OPTIONS='--inspect' next dev --turbo",
+    "dev": "next dev --turbo",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "cypress:open": "cypress open",
     "genkit:dev": "genkit dev",
     "genkit:watch": "genkit watch",
-    "patch": "patch-package"
+    "cypress:open": "cypress open",
+    "cypress:run": "cypress run"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.1.0",
     "@dnd-kit/sortable": "^8.0.0",
-    "@genkit-ai/googleai": "1.1.0",
-    "@genkit-ai/next": "1.1.0",
+    "@genkit-ai/googleai": "^1.1.0",
+    "@genkit-ai/next": "^1.1.0",
     "@hookform/resolvers": "^3.9.0",
     "@radix-ui/react-accordion": "^1.2.0",
     "@radix-ui/react-alert-dialog": "^1.1.1",
@@ -50,15 +51,15 @@
     "dotenv": "^16.4.5",
     "firebase": "^10.12.3",
     "firebase-admin": "^12.2.0",
-    "framer-motion": "^11.3.17",
-    "genkit": "1.1.0",
-    "lucide-react": "^0.416.0",
+    "genkit": "^1.1.0",
+    "lucide-react": "^0.408.0",
     "nanoid": "^5.0.7",
     "next": "^15.0.0",
+    "pino-pretty": "^11.2.1",
     "process": "^0.11.10",
-    "react": "^18.3.1",
+    "react": "19.0.0-rc-f994737d14-20240522",
     "react-day-picker": "^8.10.1",
-    "react-dom": "^18.3.1",
+    "react-dom": "19.0.0-rc-f994737d14-20240522",
     "react-hook-form": "^7.52.1",
     "reactflow": "^11.11.4",
     "recharts": "^2.12.7",
@@ -68,16 +69,18 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "@types/node": "^20.14.11",
-    "@types/react": "^18.3.3",
-    "@types/react-dom": "^18.3.0",
-    "cross-env": "^7.0.3",
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
     "cypress": "^13.13.1",
-    "eslint": "^8.57.0",
-    "eslint-config-next": "^15.0.0",
-    "patch-package": "^8.0.0",
-    "postcss": "^8.4.39",
-    "tailwindcss": "^3.4.6",
-    "typescript": "^5.5.3"
+    "eslint": "^8",
+    "eslint-config-next": "15.0.0",
+    "postcss": "^8",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5"
+  },
+  "overrides": {
+    "react": "19.0.0-rc-f994737d14-20240522",
+    "react-dom": "19.0.0-rc-f994737d14-20240522"
   }
 }
