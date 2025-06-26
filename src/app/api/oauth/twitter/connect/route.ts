@@ -7,13 +7,6 @@ import { getAdminApp } from '@/lib/firebase-admin';
 
 export const dynamic = 'force-dynamic';
 
-function base64URLEncode(str: Buffer) {
-    return str.toString('base64')
-        .replace(/\+/g, '-')
-        .replace(/\//g, '_')
-        .replace(/=/g, '');
-}
-
 export async function POST(request: NextRequest) {
     let adminApp;
     try {
@@ -29,6 +22,13 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: "Authorization token is missing." }, { status: 400 });
     }
     
+    function base64URLEncode(str: Buffer) {
+        return str.toString('base64')
+            .replace(/\+/g, '-')
+            .replace(/\//g, '_')
+            .replace(/=/g, '');
+    }
+
     const { createHash } = await import('crypto');
     const sha256 = (buffer: string) => createHash('sha256').update(buffer).digest();
 
