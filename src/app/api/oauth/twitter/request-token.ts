@@ -1,21 +1,21 @@
 
 'use server';
 
-import crypto from 'crypto';
-import OAuth from 'oauth-1.0a';
-
-const oauth = new OAuth({
-    consumer: {
-        key: process.env.TWITTER_CONSUMER_KEY!,
-        secret: process.env.TWITTER_CONSUMER_SECRET!,
-    },
-    signature_method: 'HMAC-SHA1',
-    hash_function(base_string, key) {
-        return crypto.createHmac('sha1', key).update(base_string).digest('base64');
-    },
-});
-
 export async function getTwitterRequestToken() {
+    const crypto = await import('crypto');
+    const OAuth = (await import('oauth-1.0a')).default;
+
+    const oauth = new OAuth({
+        consumer: {
+            key: process.env.TWITTER_CONSUMER_KEY!,
+            secret: process.env.TWITTER_CONSUMER_SECRET!,
+        },
+        signature_method: 'HMAC-SHA1',
+        hash_function(base_string, key) {
+            return crypto.createHmac('sha1', key).update(base_string).digest('base64');
+        },
+    });
+    
     const requestTokenUrl = 'https://api.twitter.com/oauth/request_token';
     
     const authHeader = oauth.toHeader(oauth.authorize({ 

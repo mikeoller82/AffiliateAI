@@ -1,22 +1,10 @@
+
 'use server';
 
-import crypto from 'crypto';
-import OAuth from 'oauth-1.0a';
 import { getFirestore } from 'firebase-admin/firestore';
 import { getAuth } from 'firebase-admin/auth';
 import { getAdminApp } from '@/lib/firebase-admin';
 import { cookies } from 'next/headers';
-
-const oauth = new OAuth({
-    consumer: {
-        key: process.env.TWITTER_CONSUMER_KEY!,
-        secret: process.env.TWITTER_CONSUMER_SECRET!,
-    },
-    signature_method: 'HMAC-SHA1',
-    hash_function(base_string, key) {
-        return crypto.createHmac('sha1', key).update(base_string).digest('base64');
-    },
-});
 
 async function getUserIdFromSession(): Promise<string | null> {
     const adminApp = getAdminApp();
@@ -39,6 +27,20 @@ interface AccessTokenInput {
 }
 
 export async function getTwitterAccessToken(input: AccessTokenInput) {
+    const crypto = await import('crypto');
+    const OAuth = (await import('oauth-1.0a')).default;
+    
+    const oauth = new OAuth({
+        consumer: {
+            key: process.env.TWITTER_CONSUMER_KEY!,
+            secret: process.env.TWITTER_CONSUMER_SECRET!,
+        },
+        signature_method: 'HMAC-SHA1',
+        hash_function(base_string, key) {
+            return crypto.createHmac('sha1', key).update(base_string).digest('base64');
+        },
+    });
+
     const adminApp = getAdminApp();
     const db = getFirestore(adminApp);
 
