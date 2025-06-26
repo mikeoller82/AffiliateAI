@@ -217,20 +217,26 @@ function AppSidebar() {
 }
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-    const { loading } = useAuth();
-    
-    // The middleware is the source of truth for route protection.
-    // This component no longer needs to check for a user and redirect.
-    // It only needs to handle the initial loading state while the client-side
-    // auth provider initializes.
-    if (loading) {
-      return (
-        <div className="flex h-screen w-full items-center justify-center bg-background">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      );
-    }
+    const { user, loading } = useAuth();
+    const router = useRouter();
 
+    useEffect(() => {
+        // Only check/redirect when loading is complete
+        if (!loading && !user) {
+            router.push('/login');
+        }
+    }, [user, loading, router]);
+
+    // Show a loading spinner while auth state is resolving or if there's no user yet (and we're about to redirect)
+    if (loading || !user) {
+        return (
+            <div className="flex h-screen w-full items-center justify-center bg-background">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+        );
+    }
+    
+    // If loading is false and a user exists, render the dashboard
     return (
         <AIKeyProvider>
             <SidebarProvider>
