@@ -1,5 +1,4 @@
-'use server';
-
+// src/ai/genkit-config.ts (no "use server")
 import {genkit} from 'genkit';
 import {googleAI} from '@genkit-ai/googleai';
 
