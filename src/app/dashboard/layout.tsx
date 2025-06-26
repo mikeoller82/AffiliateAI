@@ -217,18 +217,13 @@ function AppSidebar() {
 }
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-    const { user, loading } = useAuth();
-    const router = useRouter();
+    const { loading } = useAuth();
     
-    useEffect(() => {
-        if (!loading && !user) {
-            router.push('/login');
-        }
-    }, [user, loading, router]);
-
-    // The AuthProvider already shows a global spinner, so we can just show a minimal loading state here
-    // to prevent rendering children before the auth check completes.
-    if (loading || !user) {
+    // The middleware is the source of truth for route protection.
+    // This component no longer needs to check for a user and redirect.
+    // It only needs to handle the initial loading state while the client-side
+    // auth provider initializes.
+    if (loading) {
       return (
         <div className="flex h-screen w-full items-center justify-center bg-background">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
