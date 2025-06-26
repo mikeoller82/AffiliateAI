@@ -127,6 +127,7 @@ function AppSidebar() {
             return;
         }
         try {
+            await fetch('/api/auth/session-logout', { method: 'POST' });
             await signOut(auth);
             toast({
                 title: "Signed Out",
