@@ -81,7 +81,7 @@ const showcaseFeatures = [
       'Professionally designed templates',
       'Blazing fast hosting included'
     ],
-    imageSrc: 'https://placehold.co/600x400/7c3aed/ffffff?text=Websites',
+    imageSrc: 'https://placehold.co/600x400.png',
     imageHint: 'website builder interface'
   },
   {
@@ -93,7 +93,7 @@ const showcaseFeatures = [
         'Advanced contact segmentation',
         'Detailed analytics & reporting'
     ],
-    imageSrc: 'https://placehold.co/600x400/10b981/ffffff?text=Automations',
+    imageSrc: 'https://placehold.co/600x400.png',
     imageHint: 'email marketing automation'
   },
   {
@@ -105,7 +105,7 @@ const showcaseFeatures = [
         'Contact scoring & tagging',
         'Full conversation history'
     ],
-    imageSrc: 'https://placehold.co/600x400/3b82f6/ffffff?text=CRM',
+    imageSrc: 'https://placehold.co/600x400.png',
     imageHint: 'crm dashboard pipeline'
   },
 ];
