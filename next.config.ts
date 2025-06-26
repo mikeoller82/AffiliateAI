@@ -23,7 +23,7 @@ const nextConfig: NextConfig = {
       config.resolve.fallback = {
         ...config.resolve.fallback,
         'firebase-admin': false,
-        'process': false, 
+        'process': false,
       };
     }
     return config;
