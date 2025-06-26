@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -48,36 +47,102 @@ export default function LoginPage() {
       });
       return;
     }
+    
     setIsLoading(true);
+    
     try {
+      console.log('Starting login process...');
       const userCredential = await signInWithEmailAndPassword(auth, values.email, values.password);
       const idToken = await userCredential.user.getIdToken();
+      console.log('Got ID token, creating session...');
 
-      // Create session cookie
+      // Create session cookie with better error handling
       const response = await fetch('/api/auth/session-login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ idToken }),
       });
 
+      console.log('Session API response status:', response.status);
+      console.log('Session API response headers:', Object.fromEntries(response.headers.entries()));
+
+      // Get response text first to handle potential parsing issues
+      const responseText = await response.text();
+      console.log('Session API response text:', responseText);
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create server session.');
+        let errorMessage = `Server error: ${response.status} ${response.statusText}`;
+        
+        // Try to parse error response as JSON
+        if (responseText) {
+          try {
+            const errorData = JSON.parse(responseText);
+            errorMessage = errorData.error || errorData.details || errorMessage;
+          } catch (parseError) {
+            console.error('Failed to parse error response as JSON:', parseError);
+            // If it's HTML (like a 500 error page), extract useful info
+            if (responseText.includes('<title>')) {
+              errorMessage = 'Server error occurred. Please try again in a moment.';
+            } else {
+              errorMessage = responseText.substring(0, 100) || errorMessage;
+            }
+          }
+        }
+        
+        throw new Error(errorMessage);
       }
 
-      toast({
-        title: 'Success!',
-        description: 'You have been successfully logged in.',
-      });
-      router.push('/dashboard');
+      // Parse successful response
+      let result;
+      try {
+        if (!responseText) {
+          throw new Error('Empty response from server');
+        }
+        result = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error('Failed to parse success response:', parseError);
+        throw new Error('Invalid response format from server');
+      }
+
+      if (result.success) {
+        console.log('Login successful, redirecting...');
+        toast({
+          title: 'Success!',
+          description: 'You have been successfully logged in.',
+        });
+        router.push('/dashboard');
+      } else {
+        throw new Error(result.error || 'Login failed - no success status');
+      }
+
     } catch (error: any) {
       console.error("Login failed:", error);
+      
       let description = 'An unexpected error occurred. Please try again.';
-      if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found' || error.code === 'auth/configuration-not-found' || error.code === 'auth/api-key-not-valid') {
-          description = 'Invalid email or password. Please check your credentials and try again.';
-      } else if (error.message) {
-          description = error.message;
+      
+      // Handle Firebase Auth errors
+      if (error.code === 'auth/invalid-credential' || 
+          error.code === 'auth/wrong-password' || 
+          error.code === 'auth/user-not-found' || 
+          error.code === 'auth/configuration-not-found' || 
+          error.code === 'auth/api-key-not-valid') {
+        description = 'Invalid email or password. Please check your credentials and try again.';
+      } 
+      // Handle network/timeout errors
+      else if (error.message?.includes('timeout') || 
+               error.message?.includes('Network timeout') ||
+               error.message?.includes('ERR_SOCKET_CONNECTION_TIMEOUT')) {
+        description = 'Connection timeout. Please check your internet connection and try again.';
       }
+      // Handle server errors
+      else if (error.message?.includes('Server error: 50')) {
+        description = 'Server is temporarily unavailable. Please try again in a moment.';
+      }
+      // Use the actual error message if available
+      else if (error.message && !error.message.includes('Failed to fetch')) {
+        description = error.message;
+      }
+      
       toast({
         variant: 'destructive',
         title: 'Login Failed',

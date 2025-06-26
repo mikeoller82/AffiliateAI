@@ -1,4 +1,9 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+serviceAccountKey.json
+*.json
+
+serviceAccountKey.json
+.env.local
 
 # dependencies
 /node_modules
