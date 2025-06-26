@@ -1,4 +1,5 @@
 
+import 'server-only';
 import * as admin from 'firebase-admin';
 
 /**
@@ -10,28 +11,22 @@ function getAdminApp() {
     return admin.app();
   }
 
-  const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
-  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-  const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+  const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
 
-  if (!projectId || !clientEmail || !privateKey) {
-    // This error will be caught at runtime by the API route, preventing a build crash.
-    throw new Error('Firebase Admin credentials are not set in environment variables.');
+  if (!serviceAccountJson) {
+    throw new Error('Firebase Admin credentials are not set. Please set the FIREBASE_SERVICE_ACCOUNT_JSON environment variable with the content of your service account file.');
   }
 
   try {
+    const serviceAccount = JSON.parse(serviceAccountJson);
+
     return admin.initializeApp({
-      credential: admin.credential.cert({
-        projectId,
-        clientEmail,
-        privateKey,
-      }),
-      databaseURL: `https://${projectId}.firebaseio.com`,
+      credential: admin.credential.cert(serviceAccount),
+      databaseURL: `https://${serviceAccount.projectId}.firebaseio.com`,
     });
-  } catch (e) {
-    console.error('Firebase admin initialization error', e);
-    // This will also be caught at runtime.
-    throw new Error('Failed to initialize Firebase Admin SDK.');
+  } catch (e: any) {
+    console.error('Firebase admin initialization error:', e.message);
+    throw new Error(`Failed to initialize Firebase Admin SDK. Check if FIREBASE_SERVICE_ACCOUNT_JSON is a valid JSON. Error: ${e.message}`);
   }
 }
 
