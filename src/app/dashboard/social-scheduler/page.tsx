@@ -9,7 +9,6 @@ import { type Post, type SocialProfile } from '@/lib/social-types';
 import { useAuth } from '@/contexts/auth-context';
 import { collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, Timestamp, query, orderBy } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
-import { getTwitterRequestToken } from '@/app/api/oauth/twitter/request-token';
 
 export default function SocialSchedulerPage() {
     const { user, db } = useAuth();
@@ -52,13 +51,16 @@ export default function SocialSchedulerPage() {
 
     const handleConnectTwitter = async () => {
         try {
-            const { authorizationUrl, error } = await getTwitterRequestToken();
-            if (error || !authorizationUrl) {
-                throw new Error(error || 'Failed to get authorization URL.');
+            const response = await fetch('/api/oauth/twitter/request-token');
+            const data = await response.json();
+            
+            if (!response.ok) {
+                throw new Error(data.error || 'Failed to get authorization URL.');
             }
-            window.location.href = authorizationUrl;
+            
+            window.location.href = data.authorizationUrl;
         } catch (error) {
-            toast({ variant: 'destructive', title: 'Error', description: 'Could not connect to Twitter.' });
+            toast({ variant: 'destructive', title: 'Error', description: error instanceof Error ? error.message : 'Could not connect to Twitter.' });
         }
     };
     

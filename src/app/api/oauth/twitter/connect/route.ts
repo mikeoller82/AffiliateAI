@@ -1,7 +1,6 @@
 
 import { NextResponse, type NextRequest } from 'next/server';
 import { nanoid } from 'nanoid';
-import { createHash } from 'crypto';
 import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
 import { getAdminApp } from '@/lib/firebase-admin';
@@ -13,10 +12,6 @@ function base64URLEncode(str: Buffer) {
         .replace(/\+/g, '-')
         .replace(/\//g, '_')
         .replace(/=/g, '');
-}
-
-function sha256(buffer: string) {
-    return createHash('sha256').update(buffer).digest();
 }
 
 export async function POST(request: NextRequest) {
@@ -33,6 +28,9 @@ export async function POST(request: NextRequest) {
     if (!token) {
         return NextResponse.json({ error: "Authorization token is missing." }, { status: 400 });
     }
+    
+    const { createHash } = await import('crypto');
+    const sha256 = (buffer: string) => createHash('sha256').update(buffer).digest();
 
     const auth = getAuth(adminApp);
     const db = getFirestore(adminApp);
