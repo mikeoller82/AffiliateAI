@@ -61,6 +61,7 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  serverComponentsExternalPackages: ['firebase-admin', 'genkit', '@genkit-ai/googleai'],
   webpack(config, { isServer }) {
     config.experiments = { ...config.experiments, asyncWebAssembly: true };
 
