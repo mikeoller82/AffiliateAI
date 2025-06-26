@@ -382,8 +382,15 @@ export default function LandingPage() {
                                 ))}
                             </ul>
                         </div>
-                        <div className="relative aspect-video bg-card p-4 rounded-xl border shadow-lg">
-                             <Image src={feature.imageSrc} alt={feature.title} fill className="object-cover rounded-lg" data-ai-hint={feature.imageHint} />
+                        <div className="bg-card p-4 rounded-xl border shadow-lg">
+                            <Image 
+                                src={feature.imageSrc} 
+                                alt={feature.title} 
+                                width={600} 
+                                height={400} 
+                                className="w-full h-auto rounded-lg"
+                                data-ai-hint={feature.imageHint} 
+                            />
                         </div>
                     </div>
                 ))}
