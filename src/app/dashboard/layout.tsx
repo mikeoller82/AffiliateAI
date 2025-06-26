@@ -5,7 +5,7 @@ import type React from 'react';
 import { useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { usePathname, redirect } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/auth-context';
 import { signOut } from 'firebase/auth';
 import {
@@ -217,13 +217,23 @@ function AppSidebar() {
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     const { user, loading } = useAuth();
-    const pathname = usePathname();
+    const router = useRouter();
     
     useEffect(() => {
         if (!loading && !user) {
-            redirect('/login');
+            router.push('/login');
         }
-    }, [user, loading, pathname]);
+    }, [user, loading, router]);
+
+    // The AuthProvider already shows a global spinner, so we can just show a minimal loading state here
+    // to prevent rendering children before the auth check completes.
+    if (loading || !user) {
+      return (
+        <div className="flex h-screen w-full items-center justify-center bg-background">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      );
+    }
 
     return (
         <AIKeyProvider>

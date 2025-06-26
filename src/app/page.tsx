@@ -81,7 +81,7 @@ const showcaseFeatures = [
       'Professionally designed templates',
       'Blazing fast hosting included'
     ],
-    imageSrc: 'https://placehold.co/600x400.png',
+    imageSrc: 'https://firebasestorage.googleapis.com/v0/b/firebase-veilnet.appspot.com/o/Resized_CRM_Ad_600x400.png?alt=media',
     imageHint: 'website builder'
   },
   {
@@ -93,7 +93,7 @@ const showcaseFeatures = [
         'Advanced contact segmentation',
         'Detailed analytics & reporting'
     ],
-    imageSrc: 'https://placehold.co/600x400.png',
+    imageSrc: 'https://firebasestorage.googleapis.com/v0/b/firebase-veilnet.appspot.com/o/Untitled%20design%20(1).png?alt=media',
     imageHint: 'email marketing automation'
   },
   {
@@ -105,7 +105,7 @@ const showcaseFeatures = [
         'Contact scoring & tagging',
         'Full conversation history'
     ],
-    imageSrc: 'https://placehold.co/600x400.png',
+    imageSrc: 'https://firebasestorage.googleapis.com/v0/b/firebase-veilnet.appspot.com/o/Untitled%20design.png?alt=media',
     imageHint: 'crm dashboard pipeline'
   },
 ];
