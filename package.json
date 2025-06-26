@@ -10,7 +10,9 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "postinstall": "patch-package"
+    "postinstall": "patch-package",
+    "cy:open": "cypress open",
+    "cy:run": "cypress run"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.1.0",
@@ -71,6 +73,7 @@
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "cross-env": "^7.0.3",
+    "cypress": "^13.13.1",
     "genkit-cli": "^1.8.0",
     "node-loader": "^2.1.0",
     "postcss": "^8",
