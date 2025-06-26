@@ -81,8 +81,8 @@ const showcaseFeatures = [
       'Professionally designed templates',
       'Blazing fast hosting included'
     ],
-    imageSrc: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR6f9y1f_2mG3wH5kX3s6kC0jZ8qJ_pB8nZg&s',
-    imageHint: 'website builder illustration'
+    imageSrc: 'https://placehold.co/600x400.png',
+    imageHint: 'website builder'
   },
   {
     icon: Workflow,
