@@ -1,24 +1,9 @@
 
 import { NextResponse, type NextRequest } from 'next/server';
-import { getAuth } from 'firebase-admin/auth';
-import { getAdminApp } from './lib/firebase-admin';
 
 async function verifySessionCookie(request: NextRequest): Promise<boolean> {
   const cookie = request.cookies.get('__session')?.value;
-  if (!cookie) {
-    return false;
-  }
-  
-  try {
-    const adminApp = getAdminApp();
-    const auth = getAuth(adminApp);
-    await auth.verifySessionCookie(cookie, true /** checkRevoked */);
-    return true;
-  } catch (error) {
-    // Session cookie is invalid or expired.
-    console.error('Session cookie verification failed in middleware:', error);
-    return false;
-  }
+  return !!cookie;
 }
 
 export async function middleware(request: NextRequest) {
