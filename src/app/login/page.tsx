@@ -130,15 +130,11 @@ export default function LoginPage() {
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Log In
               </Button>
-               {authError ? (
+               {authError && (
                 <p className="text-xs text-center text-destructive bg-destructive/20 p-2 rounded-md">
                   <strong>Configuration Error:</strong> {authError}
                 </p>
-              ) : !auth ? (
-                <p className="text-xs text-center text-muted-foreground">
-                    Initializing authentication...
-                </p>
-              ) : null}
+              )}
             </form>
           </Form>
           <div className="mt-4 text-center text-sm">

@@ -221,13 +221,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const router = useRouter();
 
     useEffect(() => {
-        // Only check/redirect when loading is complete
         if (!loading && !user) {
             router.push('/login');
         }
     }, [user, loading, router]);
 
-    // Show a loading spinner while auth state is resolving or if there's no user yet (and we're about to redirect)
     if (loading || !user) {
         return (
             <div className="flex h-screen w-full items-center justify-center bg-background">
@@ -236,7 +234,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         );
     }
     
-    // If loading is false and a user exists, render the dashboard
     return (
         <AIKeyProvider>
             <SidebarProvider>
