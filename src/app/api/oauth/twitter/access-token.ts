@@ -1,9 +1,10 @@
-
 'use server';
 
 import crypto from 'crypto';
 import OAuth from 'oauth-1.0a';
-import { db, auth } from '@/lib/firebase-admin';
+import { getFirestore } from 'firebase-admin/firestore';
+import { getAuth } from 'firebase-admin/auth';
+import { getAdminApp } from '@/lib/firebase-admin';
 import { cookies } from 'next/headers';
 
 const oauth = new OAuth({
@@ -18,6 +19,9 @@ const oauth = new OAuth({
 });
 
 async function getUserIdFromSession(): Promise<string | null> {
+    const adminApp = getAdminApp();
+    const auth = getAuth(adminApp);
+
     const sessionCookie = cookies().get('__session')?.value;
     if (!sessionCookie) return null;
     try {
@@ -35,6 +39,9 @@ interface AccessTokenInput {
 }
 
 export async function getTwitterAccessToken(input: AccessTokenInput) {
+    const adminApp = getAdminApp();
+    const db = getFirestore(adminApp);
+
     const { oauth_token, oauth_verifier } = input;
     const userId = await getUserIdFromSession();
 
