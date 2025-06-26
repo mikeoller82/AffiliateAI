@@ -8,8 +8,7 @@
  * - GenerateProductHookOutput - The return type for the generateProductHook function.
  */
 
-import { genkit, z } from 'genkit';
-import { googleAI } from '@genkit-ai/googleai';
+import { z } from 'genkit';
 import { ai } from '@/ai/genkit';
 
 const GenerateProductHookInputSchema = z.object({
@@ -17,7 +16,6 @@ const GenerateProductHookInputSchema = z.object({
   emotion: z
     .string()
     .describe('The target emotion for the hook, e.g., Urgency, Curiosity, Transformation.'),
-  apiKey: z.string().describe('A Google AI API key for authentication.'),
 });
 export type GenerateProductHookInput = z.infer<typeof GenerateProductHookInputSchema>;
 
@@ -40,11 +38,7 @@ const generateProductHookFlow = ai.defineFlow(
     inputSchema: GenerateProductHookInputSchema,
     outputSchema: GenerateProductHookOutputSchema,
   },
-  async ({ productDescription, emotion, apiKey }) => {
-    const authAi = genkit({
-      plugins: [googleAI({ apiKey })],
-    });
-
+  async ({ productDescription, emotion }) => {
     const prompt = `You are a master copywriter specializing in creating viral marketing hooks for social media, landing pages, and ads.
 
       Generate 3-5 short, punchy hook ideas for the following product.
@@ -55,7 +49,7 @@ const generateProductHookFlow = ai.defineFlow(
       The hooks should be designed to grab attention and evoke the specified emotion.
       `;
 
-    const {output} = await authAi.generate({
+    const {output} = await ai.generate({
         model: 'googleai/gemini-2.0-flash',
         prompt: prompt,
         output: { 

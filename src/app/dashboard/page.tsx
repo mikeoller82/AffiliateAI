@@ -54,7 +54,6 @@ export default function DashboardPage() {
         const response = await generateDashboardInsights({ 
           metrics: mockMetrics, 
           funnels: mockFunnels,
-          apiKey 
         });
         setInsights(response);
       } catch (error) {

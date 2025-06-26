@@ -8,19 +8,17 @@
  * - SuggestCTAsOutput - The return type for the suggestCTAs function.
  */
 
-import { genkit, z } from 'genkit';
-import { googleAI } from '@genkit-ai/googleai';
+import { z } from 'genkit';
 import { ai } from '@/ai/genkit';
 
 
 const SuggestCTAsInputSchema = z.object({
   context: z.string().describe('The context of the landing page or ad, e.g., "Landing page for a free webinar on real estate".'),
-  apiKey: z.string().describe('A Google AI API key for authentication.'),
 });
 export type SuggestCTAsInput = z.infer<typeof SuggestCTAsInputSchema>;
 
 const SuggestCTAsOutputSchema = z.array(z.string()).describe('A list of suggested CTAs.');
-export type SuggestCTAsOutput = z.infer<typeof SuggestCTAsOutputSchema>;
+export type SuggestCTAsOutput = z.infer<typeof SuggestCTAsOutput>;
 
 export async function suggestCTAs(input: SuggestCTAsInput): Promise<SuggestCTAsOutput> {
   return suggestCTAsFlow(input);
@@ -32,18 +30,14 @@ const suggestCTAsFlow = ai.defineFlow(
     inputSchema: SuggestCTAsInputSchema,
     outputSchema: SuggestCTAsOutputSchema,
   },
-  async ({ context, apiKey }) => {
-     const authAi = genkit({
-      plugins: [googleAI({ apiKey })],
-    });
-
+  async ({ context }) => {
     const prompt = `You are an expert marketing assistant. You will suggest compelling CTAs for the given context.
 
       Context: ${context}
 
       Suggest 3-5 CTAs.`;
 
-    const {output} = await authAi.generate({
+    const {output} = await ai.generate({
         model: 'googleai/gemini-2.0-flash',
         prompt: prompt,
         output: { 

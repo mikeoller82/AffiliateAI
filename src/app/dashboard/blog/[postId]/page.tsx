@@ -295,7 +295,6 @@ export default function BlogEditorPage() {
         productDescription: blogContext,
         copyType: aiTargetField.label,
         userPrompt: aiPrompt || `Generate a standard ${aiTargetField.label}`,
-        apiKey,
       };
       const result = await generateFunnelCopy(input);
       setAiResult(result.generatedCopy);

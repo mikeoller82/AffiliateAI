@@ -9,8 +9,7 @@
  * - GenerateProductReviewOutput - The return type for the generateProductReview function.
  */
 
-import { genkit, z } from 'genkit';
-import { googleAI } from '@genkit-ai/googleai';
+import { z } from 'genkit';
 import { ai } from '@/ai/genkit';
 
 
@@ -21,7 +20,6 @@ const GenerateProductReviewInputSchema = z.object({
     .describe(
       'Key features, benefits, or talking points about the product.'
     ),
-  apiKey: z.string().describe('A Google AI API key for authentication.'),
 });
 export type GenerateProductReviewInput = z.infer<typeof GenerateProductReviewInputSchema>;
 
@@ -46,11 +44,7 @@ const generateProductReviewFlow = ai.defineFlow(
     inputSchema: GenerateProductReviewInputSchema,
     outputSchema: GenerateProductReviewOutputSchema,
   },
-  async ({ productName, features, apiKey }) => {
-    const authAi = genkit({
-      plugins: [googleAI({ apiKey })],
-    });
-
+  async ({ productName, features }) => {
     const prompt = `You are an expert SEO copywriter and affiliate marketer specializing in writing compelling product reviews.
 
       Generate a product review for the following product. The review should be well-structured, engaging, and optimized for search engines.
@@ -66,7 +60,7 @@ const generateProductReviewFlow = ai.defineFlow(
       `;
 
 
-    const {output} = await authAi.generate({
+    const {output} = await ai.generate({
         model: 'googleai/gemini-2.0-flash',
         prompt: prompt,
         output: { 
