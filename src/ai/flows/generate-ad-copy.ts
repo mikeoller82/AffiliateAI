@@ -9,8 +9,7 @@
  * - GenerateAdCopyOutput - The return type for the generateAdCopy function.
  */
 
-import { genkit, z } from 'genkit';
-import { googleAI } from '@genkit-ai/googleai';
+import { z } from 'genkit';
 import { ai } from '@/ai/genkit';
 
 
@@ -18,7 +17,6 @@ const GenerateAdCopyInputSchema = z.object({
   product: z.string().describe('The product being advertised.'),
   audience: z.string().describe('The target audience for the ad.'),
   platform: z.string().describe('The platform where the ad will be displayed (e.g., Facebook, Google Ads).'),
-  apiKey: z.string().describe('A Google AI API key for authentication.'),
 });
 
 export type GenerateAdCopyInput = z.infer<typeof GenerateAdCopyInputSchema>;
@@ -41,11 +39,7 @@ const generateAdCopyFlow = ai.defineFlow(
     inputSchema: GenerateAdCopyInputSchema,
     outputSchema: GenerateAdCopyOutputSchema,
   },
-  async ({ product, audience, platform, apiKey }) => {
-    const authAi = genkit({
-        plugins: [googleAI({ apiKey })],
-    });
-
+  async ({ product, audience, platform }) => {
     const prompt = `You are an expert direct-response copywriter specializing in digital advertising.
 
       Based on the product, audience, and platform, generate compelling ad copy variations.
@@ -65,7 +59,7 @@ const generateAdCopyFlow = ai.defineFlow(
       }`;
 
 
-    const {output} = await authAi.generate({
+    const {output} = await ai.generate({
         model: 'googleai/gemini-2.0-flash',
         prompt: prompt,
         output: {

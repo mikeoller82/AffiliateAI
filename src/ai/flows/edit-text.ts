@@ -8,14 +8,12 @@
  * - EditTextOutput - The return type for the editText function.
  */
 
-import { genkit, z } from 'genkit';
-import { googleAI } from '@genkit-ai/googleai';
+import { z } from 'genkit';
 import { ai } from '@/ai/genkit';
 
 const EditTextInputSchema = z.object({
   text: z.string().describe('The original text to be edited.'),
   instruction: z.string().describe('The instruction for how to edit the text (e.g., "summarize", "fix grammar", "make it more punchy").'),
-  apiKey: z.string().describe('A Google AI API key for authentication.'),
 });
 export type EditTextInput = z.infer<typeof EditTextInputSchema>;
 
@@ -34,11 +32,7 @@ const editTextFlow = ai.defineFlow(
     inputSchema: EditTextInputSchema,
     outputSchema: EditTextOutputSchema,
   },
-  async ({ text, instruction, apiKey }) => {
-    const authAi = genkit({
-      plugins: [googleAI({ apiKey })],
-    });
-    
+  async ({ text, instruction }) => {
     const prompt = `You are an expert copy editor. Your task is to edit the provided text based on the given instruction.
 
 Instruction: ${instruction}
@@ -50,7 +44,7 @@ ${text}
 
 Return only the edited text in the 'editedText' field of the JSON output. Do not include any preamble or explanation.`;
 
-    const {output} = await authAi.generate({
+    const {output} = await ai.generate({
       model: 'googleai/gemini-2.0-flash',
       prompt: prompt,
       output: { 

@@ -8,8 +8,7 @@
  * - GenerateEmailContentInput - The input type for the generateEmailContent function.
  * - GenerateEmailContentOutput - The return type for the generateEmailContent function.
  */
-import { genkit, z } from 'genkit';
-import { googleAI } from '@genkit-ai/googleai';
+import { z } from 'genkit';
 import { ai } from '@/ai/genkit';
 
 
@@ -19,7 +18,6 @@ const GenerateEmailContentInputSchema = z.object({
     .describe('The objective of the email, e.g., Promote new product X'),
   tone: z.string().describe('The tone of the email, e.g., enthusiastic'),
   productDetails: z.string().describe('Details about the product or service.'),
-  apiKey: z.string().describe('A Google AI API key for authentication.'),
 });
 export type GenerateEmailContentInput = z.infer<typeof GenerateEmailContentInputSchema>;
 
@@ -42,11 +40,7 @@ const generateEmailContentFlow = ai.defineFlow(
     inputSchema: GenerateEmailContentInputSchema,
     outputSchema: GenerateEmailContentOutputSchema,
   },
-  async ({ objective, tone, productDetails, apiKey }) => {
-    const authAi = genkit({
-        plugins: [googleAI({ apiKey })],
-    });
-
+  async ({ objective, tone, productDetails }) => {
     const prompt = `You are an expert email copywriter. Generate email subject lines and body copy based on the following information.
 
       Objective: ${objective}
@@ -60,7 +54,7 @@ const generateEmailContentFlow = ai.defineFlow(
       }
       `;
 
-    const {output} = await authAi.generate({
+    const {output} = await ai.generate({
         model: 'googleai/gemini-2.0-flash',
         prompt: prompt,
         output: {

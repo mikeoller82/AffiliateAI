@@ -8,15 +8,13 @@
  * - GenerateImageOutput - The return type for the generateImage function.
  */
 
-import { genkit, z } from 'genkit';
-import { googleAI } from '@genkit-ai/googleai';
+import { z } from 'genkit';
 import { ai } from '@/ai/genkit';
 
 
 const GenerateImageInputSchema = z.object({
   prompt: z.string().describe('A detailed text description of the image to generate.'),
   aspectRatio: z.enum(['1:1', '16:9', '9:16']).describe('The desired aspect ratio for the generated image.'),
-  apiKey: z.string().describe('A Google AI API key for authentication.'),
 });
 export type GenerateImageInput = z.infer<typeof GenerateImageInputSchema>;
 
@@ -35,12 +33,8 @@ const generateImageFlow = ai.defineFlow(
     inputSchema: GenerateImageInputSchema,
     outputSchema: GenerateImageOutputSchema,
   },
-  async ({ prompt, aspectRatio, apiKey }) => {
-    const authAi = genkit({
-      plugins: [googleAI({ apiKey })],
-    });
-
-    const { media } = await authAi.generate({
+  async ({ prompt, aspectRatio }) => {
+    const { media } = await ai.generate({
       model: 'googleai/gemini-2.0-flash-preview-image-generation',
       prompt: `(Aspect Ratio: ${aspectRatio}) ${prompt}`,
       config: {

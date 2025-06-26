@@ -8,8 +8,7 @@
  * - GenerateDashboardInsightsOutput - The return type for the function.
  */
 
-import { genkit, z } from 'genkit';
-import { googleAI } from '@genkit-ai/googleai';
+import { z } from 'genkit';
 import { ai } from '@/ai/genkit';
 
 const GenerateDashboardInsightsInputSchema = z.object({
@@ -23,7 +22,6 @@ const GenerateDashboardInsightsInputSchema = z.object({
       ctr: z.number(),
       optInRate: z.number(),
   })).optional(),
-  apiKey: z.string().describe('A Google AI API key for authentication.'),
 });
 export type GenerateDashboardInsightsInput = z.infer<typeof GenerateDashboardInsightsInputSchema>;
 
@@ -49,11 +47,7 @@ const generateDashboardInsightsFlow = ai.defineFlow(
     inputSchema: GenerateDashboardInsightsInputSchema,
     outputSchema: GenerateDashboardInsightsOutputSchema,
   },
-  async ({ metrics, funnels, apiKey }) => {
-    const authAi = genkit({
-      plugins: [googleAI({ apiKey })],
-    });
-    
+  async ({ metrics, funnels }) => {
     const funnelData = funnels && funnels.length > 0
         ? `Funnels Data: ${JSON.stringify(funnels)}`
         : "No funnel data available.";
@@ -75,7 +69,7 @@ const generateDashboardInsightsFlow = ai.defineFlow(
       - Make the insights and recommendations specific and directly related to the data provided.
     `;
 
-    const {output} = await authAi.generate({
+    const {output} = await ai.generate({
       model: 'googleai/gemini-2.0-flash',
       prompt: prompt,
       output: { 

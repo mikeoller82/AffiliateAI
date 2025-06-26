@@ -12,12 +12,12 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Wand2, Copy, Download } from "lucide-react";
-import { generateAdCopy, type GenerateAdCopyInput, type GenerateAdCopyOutput } from '@/ai/flows/generate-ad-copy';
-import { suggestCTAs, type SuggestCTAsInput, type SuggestCTAsOutput } from '@/ai/flows/suggest-ctas';
-import { generateEmailContent, type GenerateEmailContentInput, type GenerateEmailContentOutput } from '@/ai/flows/generate-email-content';
-import { generateProductReview, type GenerateProductReviewInput, type GenerateProductReviewOutput } from '@/ai/flows/generate-product-review';
-import { generateProductHook, type GenerateProductHookInput, type GenerateProductHookOutput } from '@/ai/flows/generate-product-hook';
-import { generateImage, type GenerateImageInput, type GenerateImageOutput } from '@/ai/flows/generate-image';
+import { generateAdCopy, type GenerateAdCopyOutput } from '@/ai/flows/generate-ad-copy';
+import { suggestCTAs, type SuggestCTAsOutput } from '@/ai/flows/suggest-ctas';
+import { generateEmailContent, type GenerateEmailContentOutput } from '@/ai/flows/generate-email-content';
+import { generateProductReview, type GenerateProductReviewOutput } from '@/ai/flows/generate-product-review';
+import { generateProductHook, type GenerateProductHookOutput } from '@/ai/flows/generate-product-hook';
+import { generateImage, type GenerateImageOutput } from '@/ai/flows/generate-image';
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { useAIKey } from '@/contexts/ai-key-context';
@@ -56,7 +56,7 @@ export function AdCopyGenerator() {
     setIsLoading(true);
     setResult(null);
     try {
-      const response = await generateAdCopy({ ...values, apiKey });
+      const response = await generateAdCopy(values);
       setResult(response);
     } catch (error) {
       console.error(error);
@@ -165,7 +165,7 @@ export function CtaSuggestor() {
     setIsLoading(true);
     setResult(null);
     try {
-      const response = await suggestCTAs({ ...values, apiKey });
+      const response = await suggestCTAs(values);
       setResult(response);
     } catch (error) {
       console.error(error);
@@ -238,7 +238,7 @@ export function ProductReviewWriter() {
     setIsLoading(true);
     setResult(null);
     try {
-      const response = await generateProductReview({ ...values, apiKey });
+      const response = await generateProductReview(values);
       setResult(response);
     } catch (error) {
       console.error(error);
@@ -315,7 +315,7 @@ export function ProductHookGenerator() {
     setIsLoading(true);
     setResult(null);
     try {
-      const response = await generateProductHook({ ...values, apiKey });
+      const response = await generateProductHook(values);
       setResult(response);
     } catch (error) {
       console.error(error);
@@ -409,7 +409,7 @@ export function EmailGenerator({ defaultValues }: EmailGeneratorProps) {
     setIsLoading(true);
     setResult(null);
     try {
-      const response = await generateEmailContent({ ...values, apiKey });
+      const response = await generateEmailContent(values);
       setResult(response);
     } catch (error) {
       console.error(error);
@@ -538,7 +538,7 @@ export function ImageGenerator() {
     setIsLoading(true);
     setResult(null);
     try {
-      const response = await generateImage({ ...values, apiKey });
+      const response = await generateImage(values);
       setResult(response);
     } catch (error) {
       console.error(error);
