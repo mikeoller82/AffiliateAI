@@ -1,6 +1,8 @@
 
 import { NextResponse, type NextRequest } from 'next/server';
 
+export const runtime = 'nodejs';
+
 async function verifySessionCookie(request: NextRequest): Promise<boolean> {
   const cookie = request.cookies.get('__session')?.value;
   return !!cookie;
