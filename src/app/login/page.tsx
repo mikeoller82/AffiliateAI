@@ -71,6 +71,7 @@ export default function LoginPage() {
       console.log('Session API response text:', responseText);
 
       if (!response.ok) {
+<<<<<<< HEAD
         let errorMessage = `Server error: ${response.status} ${response.statusText}`;
         
         // Try to parse error response as JSON
@@ -113,6 +114,10 @@ export default function LoginPage() {
         router.push('/dashboard');
       } else {
         throw new Error(result.error || 'Login failed - no success status');
+=======
+        const errorData = await response.json();
+        throw new Error(errorData.details || errorData.error || 'Failed to create server session.');
+>>>>>>> 69ed3b157b9be397f38124cd21b9c0bb93353a44
       }
 
     } catch (error: any) {

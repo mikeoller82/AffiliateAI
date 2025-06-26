@@ -7,6 +7,7 @@ if (!admin.apps.length) {
   try {
     const serviceAccount = require('../../../../../serviceAccountKey.json');
     
+<<<<<<< HEAD
     // Alternative initialization with explicit configuration
     admin.initializeApp({
       credential: admin.credential.cert({
@@ -152,5 +153,23 @@ export async function POST(request: NextRequest) {
       details: error.message || 'An unexpected error occurred',
       type: error.constructor.name
     }, { status: 500 });
+=======
+    return response;
+  } catch (error: any) {
+    console.error('Error creating session cookie:', error);
+    if(error.code) {
+        console.error('Firebase Auth Error Code:', error.code);
+    }
+    
+    if (error instanceof Error && error.message.includes('Firebase Admin credentials')) {
+        return NextResponse.json({ error: 'Server configuration error: Firebase Admin credentials are not set in environment variables.' }, { status: 500 });
+    }
+    
+    const detailedError = error.code === 'auth/invalid-id-token'
+        ? 'The ID token is invalid. This can happen if the client and server Firebase projects do not match.'
+        : 'An unexpected error occurred while creating the session.';
+
+    return NextResponse.json({ error: 'Failed to create session', details: detailedError }, { status: 401 });
+>>>>>>> 69ed3b157b9be397f38124cd21b9c0bb93353a44
   }
 }
