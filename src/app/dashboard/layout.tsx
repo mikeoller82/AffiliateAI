@@ -221,12 +221,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const router = useRouter();
 
     useEffect(() => {
+        // This effect runs whenever the loading or user state changes.
+        // If loading is finished and there's still no user, it means they
+        // are not authenticated and should be sent to the login page.
         if (!loading && !user) {
             router.push('/login');
         }
     }, [user, loading, router]);
 
-    if (loading || !user) {
+    // While the initial authentication check is running, show a loading screen.
+    // This also prevents rendering child components that might try to access
+    // user data before the user object is available.
+    if (loading) {
         return (
             <div className="flex h-screen w-full items-center justify-center bg-background">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -234,6 +240,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         );
     }
     
+    // Only render the full dashboard layout if we're done loading AND we have a user.
+    // If there's no user, the useEffect above will have already started the redirect.
+    // Returning null here prevents a flash of un-authenticated content.
+    if (!user) {
+        return null;
+    }
+
     return (
         <AIKeyProvider>
             <SidebarProvider>

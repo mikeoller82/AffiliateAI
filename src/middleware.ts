@@ -1,5 +1,7 @@
 
 import { NextResponse, type NextRequest } from 'next/server';
+import { getAuth } from 'firebase-admin/auth';
+import { getAdminApp } from './lib/firebase-admin';
 
 async function verifySessionCookie(request: NextRequest): Promise<boolean> {
   const cookie = request.cookies.get('__session')?.value;
@@ -7,25 +9,14 @@ async function verifySessionCookie(request: NextRequest): Promise<boolean> {
     return false;
   }
   
-  // The absolute URL is required for fetch in middleware.
-  const url = new URL('/api/auth/verify-session', request.url);
-
   try {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ sessionCookie: cookie }),
-    });
-
-    if (!response.ok) {
-      console.error('Auth verification API call failed:', response.status);
-      return false;
-    }
-    
-    const { isValid } = await response.json();
-    return isValid;
+    const adminApp = getAdminApp();
+    const auth = getAuth(adminApp);
+    await auth.verifySessionCookie(cookie, true /** checkRevoked */);
+    return true;
   } catch (error) {
-    console.error('Error calling session verification API:', error);
+    // Session cookie is invalid or expired.
+    console.error('Session cookie verification failed in middleware:', error);
     return false;
   }
 }
