@@ -81,7 +81,7 @@ const showcaseFeatures = [
       'Professionally designed templates',
       'Blazing fast hosting included'
     ],
-    imageSrc: 'https://firebasestorage.googleapis.com/v0/b/firebase-veilnet.appspot.com/o/Resized_CRM_Ad_600x400.png?alt=media',
+    imageSrc: 'https://firebasestorage.googleapis.com/v0/b/firebase-veilnet.firebasestorage.app/o/Resized_CRM_Ad_600x400.png?alt=media&token=656890c8-75c6-4890-9e6f-bee527e641e3',
     imageHint: 'website builder'
   },
   {
@@ -93,7 +93,7 @@ const showcaseFeatures = [
         'Advanced contact segmentation',
         'Detailed analytics & reporting'
     ],
-    imageSrc: 'https://firebasestorage.googleapis.com/v0/b/firebase-veilnet.appspot.com/o/Untitled%20design%20(1).png?alt=media',
+    imageSrc: 'https://firebasestorage.googleapis.com/v0/b/firebase-veilnet.firebasestorage.app/o/Untitled%20design%20(1).png?alt=media&token=e203e1a0-b3e7-43a3-b237-4ca850389931',
     imageHint: 'email marketing automation'
   },
   {
@@ -105,7 +105,7 @@ const showcaseFeatures = [
         'Contact scoring & tagging',
         'Full conversation history'
     ],
-    imageSrc: 'https://firebasestorage.googleapis.com/v0/b/firebase-veilnet.appspot.com/o/Untitled%20design.png?alt=media',
+    imageSrc: 'https://firebasestorage.googleapis.com/v0/b/firebase-veilnet.firebasestorage.app/o/Untitled%20design.png?alt=media&token=380af117-7264-496f-a475-546048e5d132',
     imageHint: 'crm dashboard pipeline'
   },
 ];
