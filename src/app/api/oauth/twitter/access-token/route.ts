@@ -5,21 +5,21 @@ import { getAuth } from 'firebase-admin/auth';
 import { getAdminApp } from '@/lib/firebase-admin';
 import { cookies } from 'next/headers';
 
-async function getUserIdFromSession(): Promise<string | null> {
-    const adminApp = getAdminApp();
-    const auth = getAuth(adminApp);
-    const sessionCookie = cookies().get('__session')?.value;
-    if (!sessionCookie) return null;
-    try {
-        const decodedToken = await auth.verifySessionCookie(sessionCookie, true);
-        return decodedToken.uid;
-    } catch (error) {
-        console.error('Failed to verify session cookie', error);
-        return null;
-    }
-}
-
 export async function POST(request: NextRequest) {
+    async function getUserIdFromSession(): Promise<string | null> {
+        const adminApp = getAdminApp();
+        const auth = getAuth(adminApp);
+        const sessionCookie = cookies().get('__session')?.value;
+        if (!sessionCookie) return null;
+        try {
+            const decodedToken = await auth.verifySessionCookie(sessionCookie, true);
+            return decodedToken.uid;
+        } catch (error) {
+            console.error('Failed to verify session cookie', error);
+            return null;
+        }
+    }
+
     const { oauth_token, oauth_verifier } = await request.json();
 
     if (!oauth_token || !oauth_verifier) {
