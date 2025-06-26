@@ -49,3 +49,6 @@ next-env.d.ts
 firebase-debug.log
 firestore-debug.log
 node_modules
+.env
+.env.local
+.env.production
