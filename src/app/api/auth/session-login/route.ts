@@ -24,6 +24,9 @@ export async function POST(request: NextRequest) {
     return response;
   } catch (error) {
     console.error('Error creating session cookie:', error);
+    if (error instanceof Error && error.message.includes('Firebase Admin credentials')) {
+        return NextResponse.json({ error: 'Server configuration error: Firebase Admin credentials are not set in environment variables.' }, { status: 500 });
+    }
     return NextResponse.json({ error: 'Failed to create session' }, { status: 401 });
   }
 }
