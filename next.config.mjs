@@ -59,6 +59,7 @@ const nextConfig = {
       },
     ],
   },
+  allowedDevOrigins: ['https://3003-firebase-studio-1750492820777.cluster-ux5mmlia3zhhask7riihruxydo.cloudworkstations.dev'],
   webpack(config, { isServer }) {
     config.experiments = { ...config.experiments, asyncWebAssembly: true };
 

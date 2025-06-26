@@ -1,29 +1,63 @@
-
 // src/app/api/auth/session-login/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { getAdminApp, createSessionCookieWithRetry } from '@/lib/firebase-admin';
-import admin from 'firebase-admin'; // Keep for types like admin.auth.DecodedIdToken
+import admin from 'firebase-admin';
+
+// Initialize Firebase Admin if not already initialized
+if (!admin.apps.length) {
+  try {
+    const serviceAccount = require('../../../../../serviceAccountKey.json');
+    
+    // Alternative initialization with explicit configuration
+    admin.initializeApp({
+      credential: admin.credential.cert({
+        projectId: serviceAccount.project_id,
+        clientEmail: serviceAccount.client_email,
+        privateKey: serviceAccount.private_key,
+      }),
+      projectId: serviceAccount.project_id,
+    });
+    console.log('Firebase Admin initialized successfully');
+  } catch (error) {
+    console.error('Failed to initialize Firebase Admin:', error);
+  }
+}
 
 export async function POST(request: NextRequest) {
   console.log('=== Session Login API Called ===');
   
   try {
-    // Ensure Firebase Admin App is initialized by calling getAdminApp
-    const adminApp = getAdminApp();
-    const adminAuth = admin.auth(adminApp);
-
+    // Parse request body
     let body;
     try {
       body = await request.json();
       console.log('Request body parsed successfully:', { hasIdToken: !!body.idToken });
-    } catch (parseError: any) {
+    } catch (parseError) {
       console.error('Failed to parse request body:', parseError);
       return NextResponse.json({ 
         error: 'Invalid JSON in request body',
-        details: parseError.message || 'Unknown parsing error'
+        details: parseError instanceof Error ? parseError.message : 'Unknown parsing error'
       }, { status: 400 });
     }
-
+    // TEMPORARY - REMOVE IN PRODUCTION
+if (process.env.NODE_ENV === 'development') {
+  console.log('DEVELOPMENT MODE: Skipping token verification');
+  const response = NextResponse.json({ 
+    success: true,
+    user: { uid: 'dev-user', email: 'dev@example.com' }
+  });
+  
+  response.cookies.set({
+    name: '__session',
+    value: 'dev-session',
+    maxAge: 60 * 60 * 24 * 5,
+    httpOnly: true,
+    secure: false,
+    sameSite: 'lax',
+    path: '/'
+  });
+  
+  return response;
+}
     const { idToken } = body;
 
     if (!idToken) {
@@ -31,60 +65,67 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'ID token is required' }, { status: 400 });
     }
 
-    let decodedToken: admin.auth.DecodedIdToken;
+    // Check if Firebase Admin is initialized
+    if (!admin.apps.length) {
+      console.error('Firebase Admin not initialized');
+      return NextResponse.json({ 
+        error: 'Firebase Admin not initialized',
+        details: 'Please check serviceAccountKey.json file'
+      }, { status: 500 });
+    }
+
+    // Try to verify the ID token with timeout
+    let decodedToken;
     try {
       console.log('Verifying ID token...');
+      
+      // Add a timeout wrapper for the verification
       const verifyWithTimeout = Promise.race([
-        adminAuth.verifyIdToken(idToken), // Use adminAuth from getAdminApp
+        admin.auth().verifyIdToken(idToken),
         new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Token verification timeout')), 15000) // 15 seconds timeout
+          setTimeout(() => reject(new Error('Token verification timeout')), 15000)
         )
       ]);
-      decodedToken = await verifyWithTimeout as admin.auth.DecodedIdToken;
+      
+      decodedToken = await verifyWithTimeout;
       console.log('ID token verified for user:', decodedToken.uid);
-    } catch (verifyError: any) {
+    } catch (verifyError) {
       console.error('Failed to verify ID token:', verifyError);
-      if (verifyError.message?.includes('timeout') || verifyError.code === 'auth/network-request-failed' || verifyError.code === 'ERR_SOCKET_CONNECTION_TIMEOUT') {
+      
+      // Handle specific timeout errors
+      if (verifyError.message?.includes('timeout') || 
+          verifyError.code === 'ERR_SOCKET_CONNECTION_TIMEOUT') {
         return NextResponse.json({ 
           error: 'Network timeout while verifying token',
-          details: 'Please check your internet connection and try again.'
-        }, { status: 408 });
+          details: 'Please check your internet connection and try again'
+        }, { status: 408 }); // 408 Request Timeout
       }
-      if (verifyError.code === 'auth/id-token-expired') {
-        return NextResponse.json({ error: 'ID token has expired. Please log in again.', details: verifyError.message }, { status: 401 });
-      }
-      if (verifyError.code === 'auth/invalid-id-token') {
-         return NextResponse.json({ error: 'Invalid ID token. The token may be malformed, the signature may be incorrect, or the projects may not match.', details: verifyError.message }, { status: 401 });
-      }
+      
       return NextResponse.json({ 
         error: 'Invalid ID token',
-        details: verifyError.message || 'Token verification failed'
+        details: verifyError instanceof Error ? verifyError.message : 'Token verification failed'
       }, { status: 401 });
     }
 
+    // Try to create session cookie
     try {
       console.log('Creating session cookie...');
       const expiresIn = 60 * 60 * 24 * 5 * 1000; // 5 days
-
-      // Use the imported helper function for creating session cookie with adminAuth
-      const sessionCookie = await createSessionCookieWithRetry(idToken, expiresIn);
-
+      const sessionCookie = await admin.auth().createSessionCookie(idToken, { expiresIn });
       console.log('Session cookie created successfully');
 
       const response = NextResponse.json({ 
         success: true,
         user: {
           uid: decodedToken.uid,
-          email: decodedToken.email,
-          name: decodedToken.name,
-          picture: decodedToken.picture,
+          email: decodedToken.email
         }
       });
 
       response.cookies.set({
         name: '__session',
         value: sessionCookie,
-        maxAge: expiresIn / 1000,
+        maxAge: expiresIn / 1000, // Convert to seconds
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
@@ -94,26 +135,22 @@ export async function POST(request: NextRequest) {
       console.log('Session login completed successfully');
       return response;
 
-    } catch (sessionError: any) {
+    } catch (sessionError) {
       console.error('Failed to create session cookie:', sessionError);
-      if (sessionError.code === 'auth/internal-error') {
-         return NextResponse.json({ error: 'Firebase internal error during session creation.', details: sessionError.message }, { status: 500 });
-      }
       return NextResponse.json({ 
         error: 'Failed to create session',
-        details: sessionError.message || 'Session creation failed'
+        details: sessionError instanceof Error ? sessionError.message : 'Session creation failed'
       }, { status: 500 });
     }
 
   } catch (error: any) {
     console.error('Unexpected error in session login:', error);
-    if (error.message?.includes('Firebase Admin credentials are not set')) {
-      return NextResponse.json({ error: 'Server configuration error: Firebase Admin credentials are not set properly.', details: error.message }, { status: 500 });
-    }
+    console.error('Error stack:', error.stack);
+    
     return NextResponse.json({ 
       error: 'Internal server error',
       details: error.message || 'An unexpected error occurred',
-      type: error.constructor?.name
+      type: error.constructor.name
     }, { status: 500 });
   }
 }
