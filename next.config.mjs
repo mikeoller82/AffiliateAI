@@ -65,7 +65,6 @@ const nextConfig = {
     if (!isServer) {
       config.resolve.fallback = {
         ...(config.resolve.fallback || {}),
-        "process": false,
         "firebase-admin": false,
         "crypto": false,
         "genkit": false,

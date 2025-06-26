@@ -23,8 +23,8 @@ const nextConfig: NextConfig = {
       config.resolve.fallback = {
         ...config.resolve.fallback,
         'firebase-admin': false,
-        'process': false,
-        'node:process': false,
+        // Polyfill the 'process' object for browser compatibility
+        process: require.resolve('process/browser'),
       };
     }
     return config;

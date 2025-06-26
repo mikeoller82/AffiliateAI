@@ -1,3 +1,4 @@
+
 // src/lib/firebase-admin.ts
 import 'server-only';
 import * as admin from 'firebase-admin';
@@ -39,10 +40,14 @@ function getAdminApp() {
     console.log('Client email:', serviceAccount.client_email);
     console.log('Has private key:', !!serviceAccount.private_key);
 
+    // Set network timeout environment variables before initialization
+    process.env.GOOGLE_APPLICATION_CREDENTIALS_TIMEOUT = '30000'; // 30 seconds
+    process.env.GCLOUD_PROJECT = serviceAccount.project_id;
+
     const app = admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
-      // Remove databaseURL as it's not needed for authentication
-      // databaseURL: `https://${serviceAccount.project_id}.firebaseio.com`,
+      // You can add these optional timeout settings
+      httpTimeout: 30000, // 30 seconds
     });
 
     console.log('Firebase Admin app initialized successfully');
@@ -63,4 +68,38 @@ function getAdminApp() {
   }
 }
 
-export { getAdminApp };
+/**
+ * Helper function to create session cookie with retry logic
+ */
+async function createSessionCookieWithRetry(idToken: string, expiresIn: number, maxRetries = 3) {
+  const auth = admin.auth(getAdminApp());
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      console.log(`Attempting to create session cookie (attempt ${attempt}/${maxRetries})`);
+      
+      const sessionCookie = await auth.createSessionCookie(idToken, { 
+        expiresIn,
+        // Add explicit timeout for this operation
+      });
+      
+      console.log('Session cookie created successfully');
+      return sessionCookie;
+      
+    } catch (error: any) {
+      console.error(`Attempt ${attempt} failed:`, error.message);
+      
+      if (attempt === maxRetries) {
+        console.error('All retry attempts failed');
+        throw error;
+      }
+      
+      // Exponential backoff: wait longer between retries
+      const waitTime = Math.min(1000 * Math.pow(2, attempt - 1), 10000); // Max 10 seconds
+      console.log(`Waiting ${waitTime}ms before retry...`);
+      await new Promise(resolve => setTimeout(resolve, waitTime));
+    }
+  }
+}
+
+export { getAdminApp, createSessionCookieWithRetry };
