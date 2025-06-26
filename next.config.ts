@@ -65,12 +65,15 @@ const nextConfig: NextConfig = {
     config.experiments = { ...config.experiments, asyncWebAssembly: true };
 
     if (!isServer) {
-        config.resolve.fallback = {
-            ...(config.resolve.fallback || {}),
-            'firebase-admin': false,
-            'crypto': false,
-            'oauth-1.0a': false,
-        };
+      config.resolve.fallback = {
+        ...(config.resolve.fallback || {}),
+        "firebase-admin": false,
+        "crypto": false,
+        "oauth-1.0a": false,
+        "genkit": false,
+        "@genkit-ai/googleai": false,
+        "@genkit-ai/next": false,
+      };
     }
     
     return config;
