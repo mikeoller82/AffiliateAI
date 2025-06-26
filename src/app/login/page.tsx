@@ -54,11 +54,16 @@ export default function LoginPage() {
       const idToken = await userCredential.user.getIdToken();
 
       // Create session cookie
-      await fetch('/api/auth/session-login', {
+      const response = await fetch('/api/auth/session-login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ idToken }),
       });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create server session.');
+      }
 
       toast({
         title: 'Success!',
