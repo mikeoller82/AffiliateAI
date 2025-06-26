@@ -62,7 +62,7 @@ export default function LoginPage() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create server session.');
+        throw new Error(errorData.details || errorData.error || 'Failed to create server session.');
       }
 
       toast({
