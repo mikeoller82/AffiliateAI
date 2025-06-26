@@ -1,5 +1,6 @@
 
-import { NextRequest, NextResponse } from 'next/server';
+'use server';
+
 import crypto from 'crypto';
 import OAuth from 'oauth-1.0a';
 
@@ -14,7 +15,7 @@ const oauth = new OAuth({
     },
 });
 
-export async function POST(req: NextRequest) {
+export async function getTwitterRequestToken() {
     const requestTokenUrl = 'https://api.twitter.com/oauth/request_token';
     
     const authHeader = oauth.toHeader(oauth.authorize({ 
@@ -43,10 +44,11 @@ export async function POST(req: NextRequest) {
         }
 
         const authorizationUrl = `https://api.twitter.com/oauth/authenticate?oauth_token=${oauth_token}`;
-        return NextResponse.json({ authorizationUrl });
+        return { authorizationUrl };
 
     } catch (error) {
         console.error('Error in Twitter OAuth request token:', error);
-        return NextResponse.json({ error: 'Failed to initiate Twitter authentication' }, { status: 500 });
+        const message = error instanceof Error ? error.message : 'Failed to initiate Twitter authentication';
+        return { error: message };
     }
 }
