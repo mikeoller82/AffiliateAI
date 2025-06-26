@@ -65,9 +65,9 @@ const nextConfig = {
     if (!isServer) {
       config.resolve.fallback = {
         ...(config.resolve.fallback || {}),
+        "process": false,
         "firebase-admin": false,
         "crypto": false,
-        "oauth-1.0a": false,
         "genkit": false,
         "@genkit-ai/googleai": false,
         "@genkit-ai/next": false,
