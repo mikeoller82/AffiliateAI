@@ -59,7 +59,7 @@
     "pino-pretty": "^11.2.1",
     "process": "^0.11.10",
     "react": "^19.1.0",
-    "react-day-picker": "^8.10.1",
+    "react-day-picker": "^9.7.0",
     "react-dom": "^19.1.0",
     "react-hook-form": "^7.52.1",
     "reactflow": "^11.11.4",
@@ -80,23 +80,22 @@
     "tailwindcss": "^3.4.1",
     "typescript": "^5"
   },
-    "overrides": {
-      "@hello-pangea/dnd": {
-        "react": "$react",
-        "react-dom": "$react-dom"
-      },
-      "@dnd-kit/core": {
-        "react": "$react",
-        "react-dom": "$react-dom"
-      },
-      "@dnd-kit/sortable": {
-        "react": "$react",
-        "react-dom": "$react-dom"
-      },
-      "@dnd-kit/accessibility": {
-        "react": "$react",
-        "react-dom": "$react-dom"
-      }
+  "overrides": {
+    "@hello-pangea/dnd": {
+      "react": "$react",
+      "react-dom": "$react-dom"
+    },
+    "@dnd-kit/core": {
+      "react": "$react",
+      "react-dom": "$react-dom"
+    },
+    "@dnd-kit/sortable": {
+      "react": "$react",
+      "react-dom": "$react-dom"
+    },
+    "@dnd-kit/accessibility": {
+      "react": "$react",
+      "react-dom": "$react-dom"
     }
   }
-
+}
