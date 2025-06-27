@@ -5,7 +5,7 @@ import admin from 'firebase-admin';
 // Initialize Firebase Admin if not already initialized
 if (!admin.apps.length) {
   try {
-    const serviceAccount = require('../../../../../serviceAccountKey.json');
+    const serviceAccount = require('./serviceAccountKey.json');
     
     // Alternative initialization with explicit configuration
     admin.initializeApp({
