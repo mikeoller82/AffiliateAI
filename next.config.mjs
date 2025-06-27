@@ -7,6 +7,7 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  
   images: {
     remotePatterns: [
       {
@@ -59,7 +60,28 @@ const nextConfig = {
       },
     ],
   },
+  
   allowedDevOrigins: ['https://3003-firebase-studio-1750492820777.cluster-ux5mmlia3zhhask7riihruxydo.cloudworkstations.dev'],
+  
+  // Add headers to prevent timeout issues
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'Keep-Alive',
+            value: 'timeout=30, max=1000'
+          },
+          {
+            key: 'Connection',
+            value: 'keep-alive'
+          },
+        ],
+      },
+    ];
+  },
+  
   webpack(config, { isServer }) {
     config.experiments = { ...config.experiments, asyncWebAssembly: true };
 
@@ -71,6 +93,10 @@ const nextConfig = {
         "genkit": false,
         "@genkit-ai/googleai": false,
         "@genkit-ai/next": false,
+        // Add network-related fallbacks for timeout issues
+        "net": false,
+        "tls": false,
+        "fs": false,
       };
     }
     

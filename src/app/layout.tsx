@@ -3,10 +3,7 @@ import './globals.css';
 import './editor.css';
 import './automations.css';
 import { Toaster } from "@/components/ui/toaster";
-import { Inter } from 'next/font/google';
 import { AuthProvider } from '@/contexts/auth-context';
-
-const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
 export const metadata: Metadata = {
   title: 'HighLaunchPad',
@@ -19,7 +16,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} dark`}>
+    <html lang="en" className="dark">
       <head />
       <body className="font-sans antialiased">
         <AuthProvider>
