@@ -6,7 +6,7 @@ steps:
       - '-c'
       - |
         gcloud secrets versions access latest --secret="firebase-service-key" > /workspace/firebase-key.json
-        export GOOGLE_APPLICATION_CREDENTIALS=/workspace/firebase-key.json
+        chmod 644 /workspace/firebase-key.json
 
   # Build the Docker image
   - name: 'gcr.io/cloud-builders/docker'
@@ -35,12 +35,15 @@ steps:
       - '--platform=managed'
       - '--allow-unauthenticated'
       - '--port=3000'
-    env:
-      - 'GOOGLE_APPLICATION_CREDENTIALS=/workspace/firebase-key.json'
+      - '--set-env-vars=GOOGLE_APPLICATION_CREDENTIALS=/app/firebase-key.json'
+      - '--update-secrets=FIREBASE_SERVICE_ACCOUNT=firebase-service-key:latest'
 
 # Grant Cloud Build access to Secret Manager
 options:
   logging: CLOUD_LOGGING_ONLY
+
+images:
+  - 'gcr.io/$PROJECT_ID/highlaunchpad:$COMMIT_SHA'
 
 # Required IAM permissions for Cloud Build service account:
 # - Secret Manager Secret Accessor
