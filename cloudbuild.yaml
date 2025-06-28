@@ -1,50 +1,25 @@
 steps:
-  # Build the Docker image
+  # ---------- Build ----------
   - name: 'gcr.io/cloud-builders/docker'
-    args: 
-      - 'build'
-      - '-t'
-      - 'gcr.io/$PROJECT_ID/highlaunchpad:$COMMIT_SHA'
-      - '.'
-    timeout: '1200s'
-
-  # Push the Docker image
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/highlaunchpad:$COMMIT_SHA', '.']
+  
+  # ---------- Push ----------
   - name: 'gcr.io/cloud-builders/docker'
-    args: 
-      - 'push'
-      - 'gcr.io/$PROJECT_ID/highlaunchpad:$COMMIT_SHA'
-    timeout: '600s'
-
-  # Deploy to Cloud Run (without secrets first)
+    args: ['push', 'gcr.io/$PROJECT_ID/highlaunchpad:$COMMIT_SHA']
+  
+  # ---------- Deploy ----------
   - name: 'gcr.io/cloud-builders/gcloud'
     args:
-      - 'run'
-      - 'deploy'
-      - 'highlaunchpad'
-      - '--image=gcr.io/$PROJECT_ID/highlaunchpad:$COMMIT_SHA'
-      - '--region=us-central1'
-      - '--platform=managed'
-      - '--allow-unauthenticated'
-      - '--port=3000'
-      - '--memory=1Gi'
-      - '--cpu=1'
-      - '--max-instances=10'
-      - '--set-env-vars=NODE_ENV=production'
-    timeout: '600s'
-
-  # Update the service to add secrets
-  - name: 'gcr.io/cloud-builders/gcloud'
-    args:
-      - 'run'
-      - 'services'
-      - 'update'
-      - 'highlaunchpad'
-      - '--region=us-central1'
-      - '--set-secrets=FIREBASE_CONFIG=firebase-service-key:latest'
-    timeout: '300s'
-
-options:
-  logging: CLOUD_LOGGING_ONLY
+      - run
+      - deploy
+      - highlaunchpad  # Cloud Run service name
+      - --image=gcr.io/$PROJECT_ID/highlaunchpad:$COMMIT_SHA
+      - --region=us-central1
+      - --platform=managed
+      - --allow-unauthenticated
+      - --port=3000
+      # expose secret as env var FIREBASE_SERVICE_ACCOUNT
+      - --update-secrets=FIREBASE_SERVICE_ACCOUNT=firebase-service-key:latest
 
 images:
-  - 'gcr.io/$PROJECT_ID/highlaunchpad:$COMMIT_SHA'
+  - gcr.io/$PROJECT_ID/highlaunchpad:$COMMIT_SHA
