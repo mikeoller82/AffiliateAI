@@ -1,7 +1,9 @@
-# Settings to manage and configure a Firebase App Hosting backend.
-# https://firebase.google.com/docs/app-hosting/configure
+# apphosting.yaml
+build:
+  dockerfile: Dockerfile        # or delete this block to let Buildpacks build it
 
 runConfig:
-  # Increase this value if you'd like to automatically spin up
-  # more instances in response to increased traffic.
-  maxInstances: 0
+  maxInstances: 1               # must be 1-100
+  # env var from Secret Manager
+  secretEnv:
+    FIREBASE_SERVICE_ACCOUNT: projects/<PROJECT_NUMBER>/secrets/firebase-service-key/versions/latest
