@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import {
   getFirebaseAuth,
   createSessionCookieWithRetry,
-} from 'HighLaunchpad/src/lib/firebaseAdmin';
+} from '@/lib/firebase-admin';
 
 /**
  * POST /api/auth/session-login
