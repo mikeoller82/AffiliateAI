@@ -7,10 +7,32 @@ if (!admin.apps.length) {
   try {
     let serviceAccount;
     
+    // Debug: Log available environment variables (remove in production)
+    console.log('=== FIREBASE CONFIG DEBUG ===');
+    console.log('NODE_ENV:', process.env.NODE_ENV);
+    console.log('FIREBASE_CONFIG exists:', !!process.env.FIREBASE_CONFIG);
+    console.log('FIREBASE_CONFIG length:', process.env.FIREBASE_CONFIG?.length || 0);
+    console.log('FIREBASE_PROJECT_ID exists:', !!process.env.FIREBASE_PROJECT_ID);
+    console.log('FIREBASE_CLIENT_EMAIL exists:', !!process.env.FIREBASE_CLIENT_EMAIL);
+    console.log('FIREBASE_PRIVATE_KEY exists:', !!process.env.FIREBASE_PRIVATE_KEY);
+    
+    // Log first few characters of FIREBASE_CONFIG to verify it's JSON
+    if (process.env.FIREBASE_CONFIG) {
+      console.log('FIREBASE_CONFIG starts with:', process.env.FIREBASE_CONFIG.substring(0, 50) + '...');
+    }
+    
     if (process.env.FIREBASE_CONFIG) {
       // Use JSON from environment variable (from Cloud Build secret)
-      serviceAccount = JSON.parse(process.env.FIREBASE_CONFIG);
-      console.log('Using Firebase config from FIREBASE_CONFIG environment variable');
+      try {
+        serviceAccount = JSON.parse(process.env.FIREBASE_CONFIG);
+        console.log('Using Firebase config from FIREBASE_CONFIG environment variable');
+        console.log('Parsed config has project_id:', !!serviceAccount.project_id);
+        console.log('Parsed config has client_email:', !!serviceAccount.client_email);
+        console.log('Parsed config has private_key:', !!serviceAccount.private_key);
+      } catch (parseError) {
+        console.error('Failed to parse FIREBASE_CONFIG JSON:', parseError);
+        throw new Error('Invalid FIREBASE_CONFIG JSON format');
+      }
     } else {
       // Fallback to individual environment variables
       serviceAccount = {
@@ -22,6 +44,11 @@ if (!admin.apps.length) {
     }
 
     if (!serviceAccount.project_id || !serviceAccount.client_email || !serviceAccount.private_key) {
+      console.error('Missing Firebase config fields:', {
+        hasProjectId: !!serviceAccount.project_id,
+        hasClientEmail: !!serviceAccount.client_email,
+        hasPrivateKey: !!serviceAccount.private_key
+      });
       throw new Error('Missing required Firebase configuration');
     }
     
@@ -34,8 +61,10 @@ if (!admin.apps.length) {
       projectId: serviceAccount.project_id,
     });
     console.log('Firebase Admin initialized successfully');
+    console.log('=== END FIREBASE CONFIG DEBUG ===');
   } catch (error) {
     console.error('Failed to initialize Firebase Admin:', error);
+    console.error('=== END FIREBASE CONFIG DEBUG (ERROR) ===');
   }
 }
 
