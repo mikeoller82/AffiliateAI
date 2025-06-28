@@ -1,13 +1,4 @@
 steps:
-  # Access Firebase service account from Secret Manager
-  - name: 'gcr.io/cloud-builders/gcloud'
-    entrypoint: 'bash'
-    args:
-      - '-c'
-      - |
-        gcloud secrets versions access latest --secret="firebase-service-key" > /workspace/firebase-key.json
-        chmod 644 /workspace/firebase-key.json
-
   # Build the Docker image
   - name: 'gcr.io/cloud-builders/docker'
     args: 
@@ -15,8 +6,6 @@ steps:
       - '-t'
       - 'gcr.io/$PROJECT_ID/highlaunchpad:$COMMIT_SHA'
       - '.'
-    env:
-      - 'GOOGLE_APPLICATION_CREDENTIALS=/workspace/firebase-key.json'
 
   # Push the Docker image
   - name: 'gcr.io/cloud-builders/docker'
@@ -24,7 +13,7 @@ steps:
       - 'push'
       - 'gcr.io/$PROJECT_ID/highlaunchpad:$COMMIT_SHA'
 
-  # Deploy to Cloud Run
+  # Deploy to Cloud Run with secret as environment variable
   - name: 'gcr.io/cloud-builders/gcloud'
     args:
       - 'run'
@@ -35,17 +24,17 @@ steps:
       - '--platform=managed'
       - '--allow-unauthenticated'
       - '--port=3000'
-      - '--set-env-vars=GOOGLE_APPLICATION_CREDENTIALS=/app/firebase-key.json'
-      - '--update-secrets=FIREBASE_SERVICE_ACCOUNT=firebase-service-key:latest'
+      - '--set-env-vars=NODE_ENV=production,FIREBASE_CONFIG=$$FIREBASE_SERVICE_ACCOUNT'
+    secretEnv: ['FIREBASE_SERVICE_ACCOUNT']
 
-# Grant Cloud Build access to Secret Manager
+# Use availableSecrets to access your existing secret
+availableSecrets:
+  secretManager:
+    - versionName: 'projects/$PROJECT_ID/secrets/firebase-service-key/versions/latest'
+      env: 'FIREBASE_SERVICE_ACCOUNT'
+
 options:
   logging: CLOUD_LOGGING_ONLY
 
 images:
   - 'gcr.io/$PROJECT_ID/highlaunchpad:$COMMIT_SHA'
-
-# Required IAM permissions for Cloud Build service account:
-# - Secret Manager Secret Accessor
-# - Cloud Run Developer  
-# - Service Account User

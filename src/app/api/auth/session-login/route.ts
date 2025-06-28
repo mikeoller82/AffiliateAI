@@ -5,9 +5,26 @@ import admin from 'firebase-admin';
 // Initialize Firebase Admin if not already initialized
 if (!admin.apps.length) {
   try {
-    const serviceAccount = require('./serviceAccountKey.json');
+    let serviceAccount;
     
-    // Alternative initialization with explicit configuration
+    if (process.env.FIREBASE_CONFIG) {
+      // Use JSON from environment variable (from Cloud Build secret)
+      serviceAccount = JSON.parse(process.env.FIREBASE_CONFIG);
+      console.log('Using Firebase config from FIREBASE_CONFIG environment variable');
+    } else {
+      // Fallback to individual environment variables
+      serviceAccount = {
+        project_id: process.env.FIREBASE_PROJECT_ID,
+        client_email: process.env.FIREBASE_CLIENT_EMAIL,
+        private_key: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+      };
+      console.log('Using individual Firebase environment variables');
+    }
+
+    if (!serviceAccount.project_id || !serviceAccount.client_email || !serviceAccount.private_key) {
+      throw new Error('Missing required Firebase configuration');
+    }
+    
     admin.initializeApp({
       credential: admin.credential.cert({
         projectId: serviceAccount.project_id,
@@ -38,26 +55,28 @@ export async function POST(request: NextRequest) {
         details: parseError instanceof Error ? parseError.message : 'Unknown parsing error'
       }, { status: 400 });
     }
+
     // TEMPORARY - REMOVE IN PRODUCTION
-if (process.env.NODE_ENV === 'development') {
-  console.log('DEVELOPMENT MODE: Skipping token verification');
-  const response = NextResponse.json({ 
-    success: true,
-    user: { uid: 'dev-user', email: 'dev@example.com' }
-  });
-  
-  response.cookies.set({
-    name: '__session',
-    value: 'dev-session',
-    maxAge: 60 * 60 * 24 * 5,
-    httpOnly: true,
-    secure: false,
-    sameSite: 'lax',
-    path: '/'
-  });
-  
-  return response;
-}
+    if (process.env.NODE_ENV === 'development') {
+      console.log('DEVELOPMENT MODE: Skipping token verification');
+      const response = NextResponse.json({ 
+        success: true,
+        user: { uid: 'dev-user', email: 'dev@example.com' }
+      });
+      
+      response.cookies.set({
+        name: '__session',
+        value: 'dev-session',
+        maxAge: 60 * 60 * 24 * 5,
+        httpOnly: true,
+        secure: false,
+        sameSite: 'lax',
+        path: '/'
+      });
+      
+      return response;
+    }
+
     const { idToken } = body;
 
     if (!idToken) {
@@ -70,7 +89,7 @@ if (process.env.NODE_ENV === 'development') {
       console.error('Firebase Admin not initialized');
       return NextResponse.json({ 
         error: 'Firebase Admin not initialized',
-        details: 'Please check serviceAccountKey.json file'
+        details: 'Please check Firebase environment variables'
       }, { status: 500 });
     }
 
