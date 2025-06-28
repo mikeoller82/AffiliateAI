@@ -74,6 +74,11 @@ export async function POST(request: NextRequest) {
         default:
           errorMessage = error.message || errorMessage;
       }
+    } else if (error.message?.includes('invalid_grant')) {
+        errorMessage = 'Firebase credential error: The service account key is likely invalid or expired, or the server time is out of sync. Please generate a new private key from your Firebase project settings and update the FIREBASE_SERVICE_ACCOUNT_JSON environment variable.';
+        statusCode = 401;
+    } else if (error.message) {
+      errorMessage = error.message;
     }
 
     return NextResponse.json({ error: errorMessage }, { status: statusCode });
