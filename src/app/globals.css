@@ -10,9 +10,9 @@
     --card-foreground: 224 71% 4%;
     --popover: 0 0% 100%;
     --popover-foreground: 224 71% 4%;
-    --primary: 221 83% 53%; /* Vibrant Blue */
+    --primary: 221 83% 53%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 38 92% 50%; /* Vibrant Orange */
+    --secondary: 38 92% 50%;
     --secondary-foreground: 0 0% 100%;
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
@@ -38,9 +38,9 @@
     --card-foreground: 210 40% 98%;
     --popover: 222 47% 11%;
     --popover-foreground: 210 40% 98%;
-    --primary: 221 83% 63%; /* Brighter Blue */
+    --primary: 221 83% 63%;
     --primary-foreground: 210 40% 98%;
-    --secondary: 38 92% 60%; /* Brighter Orange */
+    --secondary: 38 92% 60%;
     --secondary-foreground: 210 40% 98%;
     --muted: 217 33% 17%;
     --muted-foreground: 215 20% 65%;
@@ -56,5 +56,11 @@
     --chart-3: 160 80% 45%;
     --chart-4: 43 74% 66%;
     --chart-5: 320 100% 65%;
+  }
+}
+
+@layer base {
+  body {
+    @apply bg-background text-foreground;
   }
 }
