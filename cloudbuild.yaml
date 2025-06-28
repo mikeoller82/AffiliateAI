@@ -15,7 +15,7 @@ steps:
       - 'gcr.io/$PROJECT_ID/highlaunchpad:$COMMIT_SHA'
     timeout: '600s'
 
-  # Deploy to Cloud Run (without secrets first)
+  # Deploy to Cloud Run with secrets
   - name: 'gcr.io/cloud-builders/gcloud'
     args:
       - 'run'
@@ -30,18 +30,8 @@ steps:
       - '--cpu=1'
       - '--max-instances=10'
       - '--set-env-vars=NODE_ENV=production'
+      - '--set-secrets=FIREBASE_CONFIG=firebase-service-key:latest'
     timeout: '600s'
-
-  # Update the service to add secrets
-  - name: 'gcr.io/cloud-builders/gcloud'
-    args:
-      - 'run'
-      - 'services'
-      - 'update'
-      - 'highlaunchpad'
-      - '--region=us-central1'
-      - '--set-secrets=FIREBASE_CONFIG=firebase-service-key'
-    timeout: '300s'
 
 options:
   logging: CLOUD_LOGGING_ONLY
