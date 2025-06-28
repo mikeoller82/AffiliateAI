@@ -1,3 +1,4 @@
+
 // src/lib/firebase-admin.ts
 import 'server-only';
 import * as admin from 'firebase-admin';
@@ -30,8 +31,14 @@ function getAdminApp() {
     if (!serviceAccount.project_id || !serviceAccount.client_email || !serviceAccount.private_key) {
       throw new Error('The FIREBASE_SERVICE_ACCOUNT_JSON is missing required fields (project_id, client_email, private_key). Please ensure you are using a valid service account key file from the Google Cloud Console, not the client-side web configuration object.');
     }
+    
+    // FIX: The private key in environment variables can have its newlines escaped.
+    // This replaces the escaped newlines with actual newline characters.
+    if (serviceAccount.private_key) {
+      serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
+    }
 
-    console.log('Successfully parsed service account JSON for project:', serviceAccount.project_id);
+    console.log('Successfully parsed and formatted service account JSON for project:', serviceAccount.project_id);
 
     // Set network timeout environment variables before initialization
     process.env.GOOGLE_APPLICATION_CREDENTIALS_TIMEOUT = '30000'; // 30 seconds
@@ -48,7 +55,9 @@ function getAdminApp() {
   } catch (e: any) {
     console.error('Firebase admin initialization error:', e);
     let errorMessage = `Failed to initialize Firebase Admin SDK. Error: ${e.message}`;
-    if (e instanceof SyntaxError) {
+    if (e.message?.includes('Invalid PEM formatted message')) {
+        errorMessage = 'Failed to initialize Firebase Admin SDK. The private_key in your FIREBASE_SERVICE_ACCOUNT_JSON is invalid. Please ensure it is copied correctly, including the -----BEGIN PRIVATE KEY----- and -----END PRIVATE KEY----- lines.'
+    } else if (e instanceof SyntaxError) {
       errorMessage = 'The value of FIREBASE_SERVICE_ACCOUNT_JSON is not a valid JSON object. Please ensure the entire service account key file content is correctly copied into the environment variable.';
     }
     throw new Error(errorMessage);

@@ -121,8 +121,12 @@ export default function LoginPage() {
       
       let description = 'An unexpected error occurred. Please try again.';
       
+      // Handle specific configuration errors
+      if (error.message?.includes('Invalid PEM formatted') || error.message?.includes('private_key')) {
+        description = "Server configuration error: The Firebase Admin private key is formatted incorrectly. Please ensure it's copied correctly into your environment variables, preserving the '\\n' characters.";
+      }
       // Handle Firebase Auth errors
-      if (error.code === 'auth/invalid-credential' || 
+      else if (error.code === 'auth/invalid-credential' || 
           error.code === 'auth/wrong-password' || 
           error.code === 'auth/user-not-found' || 
           error.code === 'auth/configuration-not-found' || 
