@@ -1,37 +1,54 @@
-
+import { initializeApp, getApps, App, cert } from 'firebase-admin/app';
+import type { ServiceAccount } from 'firebase-admin/app';
 import 'server-only';
-import { initializeApp, getApps, App } from 'firebase-admin/app';
 
-/**
- * Lazily initializes and returns the Firebase Admin app instance.
- * This version relies on the Firebase Admin SDK's ability to automatically
- * discover credentials from the environment, which is the recommended approach
- * for Google Cloud environments like Cloud Run.
- */
+// This function will handle the initialization and is only called if needed.
+function createAdminApp(): App {
+  const serviceAccountString = process.env.FIREBASE_CONFIG;
+  
+  if (!serviceAccountString) {
+    throw new Error(
+      "The FIREBASE_CONFIG environment variable is not set. This is required for server-side Firebase operations."
+    );
+  }
+
+  try {
+    const serviceAccount: ServiceAccount = JSON.parse(serviceAccountString);
+
+    // This is the crucial part: environment variables often store newlines as "\\n".
+    // We need to replace them with actual newlines for the PEM key parser to work.
+    if (serviceAccount.private_key) {
+        serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
+    }
+
+    return initializeApp({
+      credential: cert(serviceAccount),
+    });
+
+  } catch (error: any) {
+    console.error("Firebase Admin SDK initialization failed:", error);
+    // Provide a more helpful error message for developers.
+    if (error.message.includes('Failed to parse private key')) {
+      throw new Error(
+        "Server configuration error: Failed to parse the Firebase private key. " +
+        "Ensure the private key in your FIREBASE_CONFIG environment variable is formatted correctly, including newlines."
+      );
+    }
+    throw new Error(
+      "Server configuration error: Could not initialize Firebase Admin SDK. " +
+      "Please check your FIREBASE_CONFIG environment variable. " +
+      `Original error: ${error.message}`
+    );
+  }
+}
+
+// This function ensures we only initialize the app once.
 function getAdminApp(): App {
-  // If the app is already initialized, return the existing instance.
   const apps = getApps();
   if (apps.length > 0 && apps[0]) {
     return apps[0];
   }
-
-  // The SDK will automatically look for credentials in the following order:
-  // 1. The FIREBASE_CONFIG environment variable.
-  // 2. The GOOGLE_APPLICATION_CREDENTIALS environment variable.
-  // 3. The default service account of the Google Cloud environment (e.g., Cloud Run).
-  // Since Cloud Build sets FIREBASE_CONFIG from Secret Manager, this will be found automatically.
-  try {
-    const app = initializeApp();
-    return app;
-  } catch (error: any) {
-    console.error("Firebase Admin SDK initialization failed:", error);
-    // Provide a more helpful error message for developers.
-    throw new Error(
-      "Server configuration error: Could not initialize Firebase Admin SDK. " +
-      "Ensure your service account credentials (e.g., FIREBASE_CONFIG) are set up correctly in your server environment. " +
-      `Original error: ${error.message}`
-    );
-  }
+  return createAdminApp();
 }
 
 export { getAdminApp };
