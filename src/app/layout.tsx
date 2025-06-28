@@ -4,6 +4,7 @@ import './editor.css';
 import './automations.css';
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from '@/contexts/auth-context';
+import { cn } from '@/lib/utils';
 
 export const metadata: Metadata = {
   title: 'HighLaunchPad',
@@ -16,9 +17,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" className="dark" suppressHydrationWarning>
       <head />
-      <body className="font-sans antialiased">
+      <body className={cn("font-sans antialiased bg-background text-foreground")}>
         <AuthProvider>
           {children}
         </AuthProvider>

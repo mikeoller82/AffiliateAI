@@ -57,9 +57,4 @@
     --chart-4: 43 74% 66%;
     --chart-5: 320 100% 65%;
   }
-
-  body {
-    background-color: hsl(var(--background));
-    color: hsl(var(--foreground));
-  }
 }
