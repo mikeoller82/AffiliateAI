@@ -29,16 +29,9 @@ steps:
       - '--memory=1Gi'
       - '--cpu=1'
       - '--max-instances=10'
-      - '--set-env-vars=NODE_ENV=production,FIREBASE_CONFIG=$FIREBASE_SERVICE_ACCOUNT'
-    secretEnv: ['FIREBASE_SERVICE_ACCOUNT']
+      - '--set-env-vars=NODE_ENV=production'
+      - '--update-secrets=FIREBASE_CONFIG=firebase-service-key:latest'
     timeout: '600s'
-
-# Use availableSecrets to access your existing secret
-availableSecrets:
-  secretManager:
-    - versionName: 'projects/$PROJECT_ID/secrets/firebase-service-key/versions/latest'
-      env: 'FIREBASE_SERVICE_ACCOUNT'
-
 options:
   logging: CLOUD_LOGGING_ONLY
 
