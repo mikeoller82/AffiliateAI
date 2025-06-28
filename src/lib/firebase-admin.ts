@@ -1,4 +1,3 @@
-
 // src/lib/firebase-admin.ts
 import 'server-only';
 import * as admin from 'firebase-admin';
@@ -18,27 +17,21 @@ function getAdminApp() {
 
   const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
   
-  console.log('Service account JSON exists:', !!serviceAccountJson);
-  console.log('Service account JSON length:', serviceAccountJson?.length);
-
   if (!serviceAccountJson) {
-    const error = 'Firebase Admin credentials are not set. Please set the FIREBASE_SERVICE_ACCOUNT_JSON environment variable with the content of your service account file.';
+    const error = 'Firebase Admin credentials are not set. Please set the FIREBASE_SERVICE_ACCOUNT_JSON environment variable with the content of your service account file. This is a server-side environment variable and should not be prefixed with NEXT_PUBLIC_.';
     console.error(error);
     throw new Error(error);
   }
 
   try {
-    console.log('Attempting to parse service account JSON...');
-    
-    // Log first 100 characters to see the format (without exposing sensitive data)
-    console.log('JSON starts with:', serviceAccountJson.substring(0, 100));
-    
     const serviceAccount = JSON.parse(serviceAccountJson);
     
-    console.log('Successfully parsed service account JSON');
-    console.log('Project ID:', serviceAccount.project_id);
-    console.log('Client email:', serviceAccount.client_email);
-    console.log('Has private key:', !!serviceAccount.private_key);
+    // Add explicit checks for required fields to provide a better error message.
+    if (!serviceAccount.project_id || !serviceAccount.client_email || !serviceAccount.private_key) {
+      throw new Error('The FIREBASE_SERVICE_ACCOUNT_JSON is missing required fields (project_id, client_email, private_key). Please ensure you are using a valid service account key file from the Google Cloud Console, not the client-side web configuration object.');
+    }
+
+    console.log('Successfully parsed service account JSON for project:', serviceAccount.project_id);
 
     // Set network timeout environment variables before initialization
     process.env.GOOGLE_APPLICATION_CREDENTIALS_TIMEOUT = '30000'; // 30 seconds
@@ -46,7 +39,6 @@ function getAdminApp() {
 
     const app = admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
-      // You can add these optional timeout settings
       httpTimeout: 30000, // 30 seconds
     });
 
@@ -55,16 +47,11 @@ function getAdminApp() {
 
   } catch (e: any) {
     console.error('Firebase admin initialization error:', e);
-    console.error('Error message:', e.message);
-    console.error('Error stack:', e.stack);
-    
+    let errorMessage = `Failed to initialize Firebase Admin SDK. Error: ${e.message}`;
     if (e instanceof SyntaxError) {
-      console.error('JSON Parse Error - the service account JSON is malformed');
-      // Show a bit more context for JSON errors
-      console.error('Problematic JSON section:', serviceAccountJson?.substring(0, 200));
+      errorMessage = 'The value of FIREBASE_SERVICE_ACCOUNT_JSON is not a valid JSON object. Please ensure the entire service account key file content is correctly copied into the environment variable.';
     }
-    
-    throw new Error(`Failed to initialize Firebase Admin SDK. Check if FIREBASE_SERVICE_ACCOUNT_JSON is a valid JSON. Error: ${e.message}`);
+    throw new Error(errorMessage);
   }
 }
 
@@ -80,7 +67,6 @@ async function createSessionCookieWithRetry(idToken: string, expiresIn: number, 
       
       const sessionCookie = await auth.createSessionCookie(idToken, { 
         expiresIn,
-        // Add explicit timeout for this operation
       });
       
       console.log('Session cookie created successfully');
@@ -94,12 +80,13 @@ async function createSessionCookieWithRetry(idToken: string, expiresIn: number, 
         throw error;
       }
       
-      // Exponential backoff: wait longer between retries
       const waitTime = Math.min(1000 * Math.pow(2, attempt - 1), 10000); // Max 10 seconds
       console.log(`Waiting ${waitTime}ms before retry...`);
       await new Promise(resolve => setTimeout(resolve, waitTime));
     }
   }
+  // This line should be unreachable if maxRetries > 0, but is needed for type safety
+  throw new Error('Failed to create session cookie after multiple retries.');
 }
 
 export { getAdminApp, createSessionCookieWithRetry };

@@ -1,6 +1,6 @@
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getAdminApp } from '@/lib/firebase-admin';
+import { getAdminApp, createSessionCookieWithRetry } from '@/lib/firebase-admin';
 import { getAuth } from 'firebase-admin/auth';
 
 export async function POST(request: NextRequest) {
@@ -11,9 +11,10 @@ export async function POST(request: NextRequest) {
     adminApp = getAdminApp();
     console.log('✅ Firebase Admin app obtained successfully.');
   } catch (initError: any) {
-    console.error('❌ CRITICAL: Firebase Admin initialization failed via getAdminApp:', initError);
+    console.error('❌ CRITICAL: Firebase Admin initialization failed via getAdminApp:', initError.message);
+    // Pass the specific error from getAdminApp to the client
     return NextResponse.json({ 
-      error: 'Server configuration error',
+      error: `Server Configuration Error: ${initError.message}`,
       details: initError.message,
     }, { status: 500 });
   }
@@ -41,18 +42,25 @@ export async function POST(request: NextRequest) {
       console.log('✅ ID token verified for user:', decodedToken.uid);
     } catch (verifyError: any) {
       console.error('❌ Token verification failed:', verifyError);
-      const errorMap: Record<string, string> = {
-        'auth/id-token-expired': 'Your session has expired. Please sign in again.',
-        'auth/id-token-revoked': 'Your session has been revoked. Please sign in again.',
-        'auth/invalid-id-token': 'Invalid authentication token. Please sign in again.',
-        'auth/project-not-found': 'Firebase project configuration error.',
-      };
-      const userMessage = errorMap[verifyError.code] || 'Authentication failed. Please try again.';
+      
+      let userMessage = 'Authentication failed. Please try again.';
+      // Check if the error code indicates a project mismatch
+      if (verifyError.code === 'auth/argument-error' && verifyError.message.includes('mismatch')) {
+          userMessage = 'Authentication failed: ID token project ID does not match the Admin SDK. Please ensure your client and server Firebase configurations are for the same project.';
+      } else {
+        const errorMap: Record<string, string> = {
+            'auth/id-token-expired': 'Your session has expired. Please sign in again.',
+            'auth/id-token-revoked': 'Your session has been revoked. Please sign in again.',
+            'auth/invalid-id-token': 'Invalid authentication token. Please sign in again.',
+            'auth/project-not-found': 'Firebase project configuration error.',
+          };
+          userMessage = errorMap[verifyError.code] || userMessage;
+      }
       return NextResponse.json({ error: userMessage, code: verifyError.code }, { status: 401 });
     }
 
     const expiresIn = 60 * 60 * 24 * 5 * 1000; // 5 days
-    const sessionCookie = await auth.createSessionCookie(idToken, { expiresIn });
+    const sessionCookie = await createSessionCookieWithRetry(idToken, expiresIn);
       
     const response = NextResponse.json({ 
       success: true,
