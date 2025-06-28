@@ -32,7 +32,7 @@ steps:
       - '--set-env-vars=NODE_ENV=production'
     timeout: '600s'
 
-  # Update the service to add the secret as a file
+  # Update the service to add secrets
   - name: 'gcr.io/cloud-builders/gcloud'
     args:
       - 'run'
@@ -40,7 +40,7 @@ steps:
       - 'update'
       - 'highlaunchpad'
       - '--region=us-central1'
-      - '--set-secrets=/etc/secrets/firebase-service-account=firebase-service-key:latest'
+      - '--set-secrets=FIREBASE_CONFIG=firebase-service-key:latest'
     timeout: '300s'
 
 options:
