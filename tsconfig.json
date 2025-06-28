@@ -1,11 +1,11 @@
 {
   "compilerOptions": {
-    // ---------- add these two lines ----------
-    "baseUrl": ".",               // <-- required for "paths"
-    "paths": {                    // alias "@/*"  →  "./src/*"
-      "@/*": ["./src/*"]
+    "baseUrl": ".",          // ⭐️ REQUIRED
+    "paths": {               // ⭐️ Alias  "@/..." → src/...
+      "@/*": ["src/*"]
     },
-    // ---------- everything you already had ----------
+
+    // -- everything else you already had --
     "target": "es5",
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
