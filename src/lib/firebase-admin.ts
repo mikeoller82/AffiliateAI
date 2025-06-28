@@ -1,44 +1,36 @@
 
 import 'server-only';
-import { initializeApp, getApps, cert, App } from 'firebase-admin/app';
+import { initializeApp, getApps, App } from 'firebase-admin/app';
 
 /**
  * Lazily initializes and returns the Firebase Admin app instance.
- * This function is designed to be simple and throw specific errors if initialization fails.
- * The calling function is responsible for catching and handling these errors.
+ * This version relies on the Firebase Admin SDK's ability to automatically
+ * discover credentials from the environment, which is the recommended approach
+ * for Google Cloud environments like Cloud Run.
  */
 function getAdminApp(): App {
+  // If the app is already initialized, return the existing instance.
   const apps = getApps();
   if (apps.length > 0 && apps[0]) {
     return apps[0];
   }
 
-  // Use FIREBASE_CONFIG, which is set by Cloud Build from Secret Manager.
-  const serviceAccountJson = process.env.FIREBASE_CONFIG;
-  if (!serviceAccountJson) {
-    throw new Error('Server configuration error: The FIREBASE_CONFIG environment variable is not set. This should be configured in your deployment environment (e.g., Cloud Run secrets).');
-  }
-
-  let serviceAccount;
+  // The SDK will automatically look for credentials in the following order:
+  // 1. The FIREBASE_CONFIG environment variable.
+  // 2. The GOOGLE_APPLICATION_CREDENTIALS environment variable.
+  // 3. The default service account of the Google Cloud environment (e.g., Cloud Run).
+  // Since Cloud Build sets FIREBASE_CONFIG from Secret Manager, this will be found automatically.
   try {
-    serviceAccount = JSON.parse(serviceAccountJson);
-  } catch (e) {
-    throw new Error('Server configuration error: Failed to parse FIREBASE_CONFIG. Please ensure it is a valid JSON object.');
-  }
-
-  // Auto-correct the private key newlines, which is a common issue with .env files.
-  if (serviceAccount.private_key) {
-    serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
-  }
-
-  try {
-    const app = initializeApp({
-      credential: cert(serviceAccount),
-    });
+    const app = initializeApp();
     return app;
   } catch (error: any) {
-    // Catch initialization errors from firebase-admin itself
-     throw new Error(`Server configuration error: Failed to initialize Firebase Admin SDK. ${error.message}`);
+    console.error("Firebase Admin SDK initialization failed:", error);
+    // Provide a more helpful error message for developers.
+    throw new Error(
+      "Server configuration error: Could not initialize Firebase Admin SDK. " +
+      "Ensure your service account credentials (e.g., FIREBASE_CONFIG) are set up correctly in your server environment. " +
+      `Original error: ${error.message}`
+    );
   }
 }
 
