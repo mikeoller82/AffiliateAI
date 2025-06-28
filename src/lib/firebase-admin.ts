@@ -13,16 +13,17 @@ function getAdminApp(): App {
     return apps[0];
   }
 
-  const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
+  // Use FIREBASE_CONFIG, which is set by Cloud Build from Secret Manager.
+  const serviceAccountJson = process.env.FIREBASE_CONFIG;
   if (!serviceAccountJson) {
-    throw new Error('Server configuration error: The FIREBASE_SERVICE_ACCOUNT_JSON environment variable is not set.');
+    throw new Error('Server configuration error: The FIREBASE_CONFIG environment variable is not set. This should be configured in your deployment environment (e.g., Cloud Run secrets).');
   }
 
   let serviceAccount;
   try {
     serviceAccount = JSON.parse(serviceAccountJson);
   } catch (e) {
-    throw new Error('Server configuration error: Failed to parse FIREBASE_SERVICE_ACCOUNT_JSON. Please ensure it is a valid JSON object.');
+    throw new Error('Server configuration error: Failed to parse FIREBASE_CONFIG. Please ensure it is a valid JSON object.');
   }
 
   // Auto-correct the private key newlines, which is a common issue with .env files.
