@@ -40,7 +40,7 @@ steps:
       - 'update'
       - 'highlaunchpad'
       - '--region=us-central1'
-      - '--set-secrets=FIREBASE_CONFIG=firebase-service-key:latest'
+      - '--set-secrets=FIREBASE_CONFIG=firebase-service-key'
     timeout: '300s'
 
 options:
