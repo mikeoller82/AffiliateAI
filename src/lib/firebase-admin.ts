@@ -1,58 +1,98 @@
-import { initializeApp, getApps, App, cert } from 'firebase-admin/app';
-import * as fs from 'fs';
-import 'server-only';
+'server-only';
+import fs from 'fs';
+import {
+  getApps,
+  initializeApp,
+  cert,
+  applicationDefault,
+  App,
+} from 'firebase-admin/app';
+import { getAuth } from 'firebase-admin/auth';
 
-// This is the path where Cloud Run will mount the secret file
-const SERVICE_ACCOUNT_PATH = '/etc/secrets/firebase-service-account';
+const ENV_VAR_NAME = 'FIREBASE_SERVICE_ACCOUNT'; // Cloud Run injects the secret here
 
-// This function will handle the initialization and is only called if needed.
-function createAdminApp(): App {
-  // Check if the secret file exists
-  if (!fs.existsSync(SERVICE_ACCOUNT_PATH)) {
-    // Fallback for local development using environment variables
-    const serviceAccountString = process.env.FIREBASE_CONFIG;
-    if (serviceAccountString) {
-      try {
-        const serviceAccount = JSON.parse(serviceAccountString);
-        // Replace escaped newlines for local dev
-        if (serviceAccount.private_key) {
-            serviceAccount.private_key = serviceAccount.private_key.replace(/
-/g, '
-');
-        }
-        return initializeApp({ credential: cert(serviceAccount) });
-      } catch (error: any) {
-        console.error("Firebase Admin SDK initialization from ENV_VAR failed:", error);
-        throw new Error("Failed to initialize Firebase Admin SDK from environment variable.");
-      }
+/**
+ * Initialise Firebase Admin exactly once and return the App instance.
+ * Priority order:
+ * 1. FIREBASE_SERVICE_ACCOUNT – secret JSON content (Cloud Run)
+ * 2. GOOGLE_APPLICATION_CREDENTIALS – path to JSON file (local dev)
+ * 3. Application Default Credentials (gcloud auth / metadata-server)
+ */
+export function getAdminApp(): App {
+  if (getApps().length) {
+    // already initialised
+    return getApps()[0];
+  }
+
+  // ───── 1) Cloud Run: secret injected as env-var string ─────
+  const jsonFromEnv = process.env[ENV_VAR_NAME];
+  if (jsonFromEnv) {
+    console.log('[firebaseAdmin] Initialising from env var', ENV_VAR_NAME);
+    try {
+      const creds = JSON.parse(jsonFromEnv);
+      return initializeApp({
+        credential: cert(creds),
+        projectId: creds.project_id,
+      });
+    } catch (err) {
+      console.error('[firebaseAdmin] Failed to parse JSON in env var', err);
+      throw err;
     }
-    // If neither the file nor the env var is present, throw a clear error.
-    throw new Error(
-      `Firebase Admin SDK initialization failed. Secret file not found at ${SERVICE_ACCOUNT_PATH} and FIREBASE_CONFIG env var is not set.`
-    );
   }
 
-  // Production: Initialize using the secret file
-  try {
+  // ───── 2) Local: GOOGLE_APPLICATION_CREDENTIALS → file path ─────
+  const filePath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+  if (filePath && fs.existsSync(filePath)) {
+    console.log(
+      '[firebaseAdmin] Initialising from file in GOOGLE_APPLICATION_CREDENTIALS',
+    );
+    const creds = JSON.parse(fs.readFileSync(filePath, 'utf8'));
     return initializeApp({
-      credential: cert(SERVICE_ACCOUNT_PATH),
+      credential: cert(creds),
+      projectId: creds.project_id,
     });
-  } catch (error: any) {
-    console.error("Firebase Admin SDK initialization from file failed:", error);
-    throw new Error(
-      `Server configuration error: Could not initialize Firebase Admin SDK from ${SERVICE_ACCOUNT_PATH}. ` +
-      `Original error: ${error.message}`
-    );
   }
+
+  // ───── 3) Fallback: ADC (metadata server, gcloud auth, etc.) ─────
+  console.log('[firebaseAdmin] Initialising from applicationDefault()');
+  return initializeApp({
+    credential: applicationDefault(),
+  });
 }
 
-// This function ensures we only initialize the app once.
-function getAdminApp(): App {
-  const apps = getApps();
-  if (apps.length > 0 && apps[0]) {
-    return apps[0];
-  }
-  return createAdminApp();
+/**
+ * Helper that returns Firebase Auth quickly.
+ */
+export function getFirebaseAuth() {
+  return getAuth(getAdminApp());
 }
 
-export { getAdminApp };
+/**
+ * Create a session cookie with configurable retries + exponential back-off.
+ */
+export async function createSessionCookieWithRetry(
+  idToken: string,
+  expiresIn: number,
+  maxRetries = 3,
+) {
+  const auth = getFirebaseAuth();
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      console.log(
+        `[firebaseAdmin] createSessionCookie attempt ${attempt}/${maxRetries}`,
+      );
+      return await auth.createSessionCookie(idToken, { expiresIn });
+    } catch (err) {
+      console.error(
+        `[firebaseAdmin] attempt ${attempt} failed:`,
+        (err as Error).message,
+      );
+      if (attempt === maxRetries) throw err;
+
+      // simple exponential back-off up to 10 s
+      const wait = Math.min(1000 * 2 ** (attempt - 1), 10_000);
+      await new Promise((r) => setTimeout(r, wait));
+    }
+  }
+}
