@@ -6,12 +6,14 @@ steps:
       - '-t'
       - 'gcr.io/$PROJECT_ID/highlaunchpad:$COMMIT_SHA'
       - '.'
+    timeout: '1200s'
 
   # Push the Docker image
   - name: 'gcr.io/cloud-builders/docker'
     args: 
       - 'push'
       - 'gcr.io/$PROJECT_ID/highlaunchpad:$COMMIT_SHA'
+    timeout: '600s'
 
   # Deploy to Cloud Run with secret as environment variable
   - name: 'gcr.io/cloud-builders/gcloud'
@@ -24,8 +26,12 @@ steps:
       - '--platform=managed'
       - '--allow-unauthenticated'
       - '--port=3000'
-      - '--set-env-vars=NODE_ENV=production,FIREBASE_CONFIG=$$FIREBASE_SERVICE_ACCOUNT'
+      - '--memory=1Gi'
+      - '--cpu=1'
+      - '--max-instances=10'
+      - '--set-env-vars=NODE_ENV=production,FIREBASE_CONFIG=$FIREBASE_SERVICE_ACCOUNT'
     secretEnv: ['FIREBASE_SERVICE_ACCOUNT']
+    timeout: '600s'
 
 # Use availableSecrets to access your existing secret
 availableSecrets:
