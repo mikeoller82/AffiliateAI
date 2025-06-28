@@ -1,18 +1,20 @@
-// src/app/api/auth/session-login/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import admin from 'firebase-admin';
 
-// Initialize Firebase Admin if not already initialized
-function initializeFirebaseAdmin() {
+// Global flag to track initialization status
+let firebaseInitialized = false;
+let firebaseInitError: Error | null = null;
+
+// Initialize Firebase Admin synchronously at module load
+console.log('🚀 Starting Firebase Admin initialization...');
+console.log('NODE_ENV:', process.env.NODE_ENV);
+
+try {
+  // Check if already initialized (in case of module reloading)
   if (admin.apps.length > 0) {
     console.log('✅ Firebase Admin already initialized');
-    return true;
-  }
-
-  try {
-    console.log('🚀 Initializing Firebase Admin...');
-    console.log('NODE_ENV:', process.env.NODE_ENV);
-    
+    firebaseInitialized = true;
+  } else {
     // Always log these in production to debug the issue
     console.log('Environment check:', {
       FIREBASE_CONFIG_exists: !!process.env.FIREBASE_CONFIG,
@@ -25,10 +27,11 @@ function initializeFirebaseAdmin() {
     // Primary: Use FIREBASE_CONFIG secret from Cloud Build/Secret Manager
     if (process.env.FIREBASE_CONFIG) {
       console.log('📝 Attempting to parse FIREBASE_CONFIG...');
+      
+      // Log first 100 chars to debug format issues
+      console.log('FIREBASE_CONFIG preview:', process.env.FIREBASE_CONFIG.substring(0, 100) + '...');
+      
       try {
-        // Log first 100 chars to debug format issues
-        console.log('FIREBASE_CONFIG preview:', process.env.FIREBASE_CONFIG.substring(0, 100) + '...');
-        
         serviceAccount = JSON.parse(process.env.FIREBASE_CONFIG);
         console.log('✅ Firebase config parsed successfully');
         console.log('Config fields present:', {
@@ -39,12 +42,14 @@ function initializeFirebaseAdmin() {
         });
       } catch (parseError) {
         console.error('❌ JSON Parse Error:', parseError);
-        console.error('Raw FIREBASE_CONFIG:', process.env.FIREBASE_CONFIG);
+        console.error('Raw FIREBASE_CONFIG length:', process.env.FIREBASE_CONFIG.length);
+        console.error('First 200 chars:', process.env.FIREBASE_CONFIG.substring(0, 200));
         throw new Error(`FIREBASE_CONFIG JSON parse failed: ${parseError instanceof Error ? parseError.message : 'Unknown parse error'}`);
       }
     } else {
       console.error('❌ FIREBASE_CONFIG environment variable not found');
-      console.log('Available env vars:', Object.keys(process.env).filter(key => key.includes('FIREBASE')));
+      console.log('All env vars containing FIREBASE:', Object.keys(process.env).filter(key => key.includes('FIREBASE')));
+      console.log('Total env vars count:', Object.keys(process.env).length);
       throw new Error('FIREBASE_CONFIG environment variable is missing. Check Cloud Run secret configuration.');
     }
 
@@ -59,6 +64,9 @@ function initializeFirebaseAdmin() {
     }
     
     console.log('📋 Initializing Firebase Admin with credentials...');
+    console.log('Project ID:', serviceAccount.project_id);
+    console.log('Client Email:', serviceAccount.client_email ? serviceAccount.client_email.substring(0, 20) + '...' : 'missing');
+    console.log('Private Key length:', serviceAccount.private_key ? serviceAccount.private_key.length : 0);
     
     // Initialize Firebase Admin
     admin.initializeApp({
@@ -70,29 +78,20 @@ function initializeFirebaseAdmin() {
       projectId: serviceAccount.project_id,
     });
     
+    firebaseInitialized = true;
     console.log('✅ Firebase Admin initialized successfully!');
-    console.log('Project ID:', serviceAccount.project_id);
-    
-    return true;
-  } catch (error) {
-    console.error('❌ CRITICAL: Firebase Admin initialization failed:', error);
-    console.error('Error details:', {
-      message: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : 'No stack trace'
-    });
-    
-    // Don't swallow the error - let it propagate
-    throw error;
+    console.log('✅ Admin apps count:', admin.apps.length);
   }
-}
-
-// Initialize Firebase Admin
-try {
-  initializeFirebaseAdmin();
-} catch (initError) {
-  console.error('🚨 Firebase initialization failed at module load:', initError);
-  // Store the error to show in API responses
-  (global as any).firebaseInitError = initError;
+} catch (error) {
+  firebaseInitError = error instanceof Error ? error : new Error(String(error));
+  console.error('❌ CRITICAL: Firebase Admin initialization failed:', firebaseInitError);
+  console.error('Error details:', {
+    message: firebaseInitError.message,
+    stack: firebaseInitError.stack
+  });
+  
+  // Don't throw here - let the API handle the error gracefully
+  console.error('🚨 Firebase initialization failed at module load - API will return errors');
 }
 
 export async function POST(request: NextRequest) {
@@ -112,26 +111,7 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Development bypass (REMOVE IN PRODUCTION)
-    if (process.env.NODE_ENV === 'development' && process.env.BYPASS_AUTH === 'true') {
-      console.log('🚧 DEVELOPMENT MODE: Bypassing token verification');
-      const response = NextResponse.json({ 
-        success: true,
-        user: { uid: 'dev-user', email: 'dev@example.com' }
-      });
-      
-      response.cookies.set({
-        name: '__session',
-        value: 'dev-session',
-        maxAge: 60 * 60 * 24 * 5,
-        httpOnly: true,
-        secure: false,
-        sameSite: 'lax',
-        path: '/'
-      });
-      
-      return response;
-    }
+
 
     const { idToken } = body;
 
@@ -140,24 +120,23 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'ID token is required' }, { status: 400 });
     }
 
-    // Check if Firebase Admin is initialized
-    if (!admin.apps.length) {
-      console.error('❌ Firebase Admin not initialized - no apps found');
-      
-      // Check if there was an initialization error stored
-      const initError = (global as any).firebaseInitError;
-      if (initError) {
-        console.error('❌ Stored initialization error:', initError.message);
-        return NextResponse.json({ 
-          error: 'Firebase initialization failed',
-          details: `Configuration error: ${initError.message}`,
-          timestamp: new Date().toISOString()
-        }, { status: 500 });
-      }
+    // Check Firebase initialization status
+    if (!firebaseInitialized || firebaseInitError) {
+      console.error('❌ Firebase Admin not properly initialized');
+      console.error('Initialized:', firebaseInitialized);
+      console.error('Init Error:', firebaseInitError?.message);
+      console.error('Admin apps count:', admin.apps.length);
       
       return NextResponse.json({ 
-        error: 'Firebase not initialized',
-        details: 'Firebase Admin SDK is not initialized. Check server logs for configuration errors.',
+        error: 'Firebase initialization failed',
+        details: firebaseInitError ? firebaseInitError.message : 'Firebase Admin SDK failed to initialize',
+        debug: {
+          initialized: firebaseInitialized,
+          appsCount: admin.apps.length,
+          hasError: !!firebaseInitError,
+          nodeEnv: process.env.NODE_ENV,
+          hasFirebaseConfig: !!process.env.FIREBASE_CONFIG
+        },
         timestamp: new Date().toISOString()
       }, { status: 500 });
     }
