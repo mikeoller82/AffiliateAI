@@ -1,5 +1,11 @@
 {
   "compilerOptions": {
+    // ---------- add these two lines ----------
+    "baseUrl": ".",               // <-- required for "paths"
+    "paths": {                    // alias "@/*"  →  "./src/*"
+      "@/*": ["./src/*"]
+    },
+    // ---------- everything you already had ----------
     "target": "es5",
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
@@ -13,15 +19,13 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ],
-    "paths": {
-      "@/*": ["./src/*"]
-    }
+    "plugins": [{ "name": "next" }]
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts"
+  ],
   "exclude": ["node_modules"]
 }
