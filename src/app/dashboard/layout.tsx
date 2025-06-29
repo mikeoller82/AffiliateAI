@@ -1,4 +1,3 @@
-
 'use client';
 
 import type React from 'react';
@@ -153,8 +152,8 @@ function AppSidebar() {
                 <Link href="/dashboard" className="flex items-center gap-3">
                     <div className="p-1 bg-transparent rounded-lg">
                         <Image
-                            src="https://cdn.leonardo.ai/users/31a55a1b-10c8-4725-a4ad-b285-ccef2b6f670a/generations/39ccab2d-4951-448b-b285-ccef2b6f670a/segments/1:1:1/Default_A_cuttingedge_HighlaunchPadAIpowered_CRM_logo_exuding__0.jpg"
-                            alt="HighLaunchPad Logo"
+                            src="https://firebasestorage.googleapis.com/v0/b/firebase-veilnet.firebasestorage.app/o/Default_A_cuttingedge_HighlaunchPadAIpowered_CRM_logo_exuding__0.jpg?alt=media&token=65b41f51-fd64-4aef-9580-736d2f3f14f4"
+                            alt="HighLaunchPad AI CRM Logo"
                             width={32}
                             height={32}
                             className="rounded-md"
