@@ -1,9 +1,0 @@
-# apphosting.yaml
-build:
-  dockerfile: Dockerfile        # or delete this block to let Buildpacks build it
-
-runConfig:
-  maxInstances: 1               # must be 1-100
-  # env var from Secret Manager
-  secretEnv:
-    FIREBASE_SERVICE_ACCOUNT: projects/<PROJECT_NUMBER>/secrets/firebase-service-key/versions/latest
