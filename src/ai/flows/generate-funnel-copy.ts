@@ -24,16 +24,7 @@ const GenerateFunnelCopyOutputSchema = z.object({
 export type GenerateFunnelCopyOutput = z.infer<typeof GenerateFunnelCopyOutputSchema>;
 
 export async function generateFunnelCopy(input: GenerateFunnelCopyInput): Promise<GenerateFunnelCopyOutput> {
-  return generateFunnelCopyFlow(input);
-}
-
-const generateFunnelCopyFlow = ai.defineFlow(
-  {
-    name: 'generateFunnelCopyFlow',
-    inputSchema: GenerateFunnelCopyInputSchema,
-    outputSchema: GenerateFunnelCopyOutputSchema,
-  },
-  async ({ productDescription, copyType, userPrompt, apiKey }) => {
+    const { productDescription, copyType, userPrompt, apiKey } = input;
     const dynamicAI = apiKey ? genkit({ plugins: [googleAI({ apiKey })] }) : ai;
     
     const prompt = `You are an expert conversion copywriter designing a landing page funnel.
@@ -59,5 +50,4 @@ const generateFunnelCopyFlow = ai.defineFlow(
       throw new Error("AI failed to generate a response.");
     }
     return output;
-  }
-);
+}

@@ -25,16 +25,7 @@ export const GenerateAdCopyOutputSchema = z.object({
 export type GenerateAdCopyOutput = z.infer<typeof GenerateAdCopyOutputSchema>;
 
 export async function generateAdCopy(input: GenerateAdCopyInput): Promise<GenerateAdCopyOutput> {
-    return generateAdCopyFlow(input);
-}
-
-const generateAdCopyFlow = ai.defineFlow(
-  {
-    name: 'generateAdCopyFlow',
-    inputSchema: GenerateAdCopyInputSchema,
-    outputSchema: GenerateAdCopyOutputSchema,
-  },
-  async ({ product, audience, platform, apiKey }) => {
+    const { product, audience, platform, apiKey } = input;
     const dynamicAI = apiKey ? genkit({ plugins: [googleAI({ apiKey })] }) : ai;
 
     const prompt = `You are a world-class expert in Direct-Response Copywriting.
@@ -60,5 +51,4 @@ Return ONLY the raw JSON object.`;
       throw new Error("AI failed to generate a response.");
     }
     return output;
-  }
-);
+}

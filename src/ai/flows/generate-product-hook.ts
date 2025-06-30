@@ -27,16 +27,7 @@ export type GenerateProductHookOutput = z.infer<typeof GenerateProductHookOutput
 
 
 export async function generateProductHook(input: GenerateProductHookInput): Promise<GenerateProductHookOutput> {
-    return generateProductHookFlow(input);
-}
-
-const generateProductHookFlow = ai.defineFlow(
-  {
-    name: 'generateProductHookFlow',
-    inputSchema: GenerateProductHookInputSchema,
-    outputSchema: GenerateProductHookOutputSchema,
-  },
-  async ({ productDescription, emotion, apiKey }) => {
+    const { productDescription, emotion, apiKey } = input;
     const dynamicAI = apiKey ? genkit({ plugins: [googleAI({ apiKey })] }) : ai;
 
     const prompt = `You are an expert in Viral Marketing.
@@ -60,5 +51,4 @@ Return ONLY the raw JSON object.`;
       throw new Error("AI failed to generate a response.");
     }
     return output;
-  }
-);
+}

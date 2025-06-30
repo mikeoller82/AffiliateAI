@@ -21,16 +21,7 @@ export const GenerateImageOutputSchema = z.object({
 export type GenerateImageOutput = z.infer<typeof GenerateImageOutputSchema>;
 
 export async function generateImage(input: GenerateImageInput): Promise<GenerateImageOutput> {
-    return generateImageFlow(input);
-}
-
-const generateImageFlow = ai.defineFlow(
-  {
-    name: 'generateImageFlow',
-    inputSchema: GenerateImageInputSchema,
-    outputSchema: GenerateImageOutputSchema,
-  },
-  async ({ prompt, style, apiKey }) => {
+    const { prompt, style, apiKey } = input;
     const dynamicAI = apiKey ? genkit({ plugins: [googleAI({ apiKey })] }) : ai;
 
     const { media } = await dynamicAI.generate({
@@ -49,5 +40,4 @@ const generateImageFlow = ai.defineFlow(
     return {
       imageDataUri: generatedImage.url,
     };
-  }
-);
+}

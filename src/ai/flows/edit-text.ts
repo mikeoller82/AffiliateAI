@@ -22,19 +22,10 @@ const EditTextOutputSchema = z.object({
 export type EditTextOutput = z.infer<typeof EditTextOutputSchema>;
 
 export async function editText(input: EditTextInput): Promise<EditTextOutput> {
-  return editTextFlow(input);
-}
+  const { text, instruction, apiKey } = input;
+  const dynamicAI = apiKey ? genkit({ plugins: [googleAI({ apiKey })] }) : ai;
 
-const editTextFlow = ai.defineFlow(
-  {
-    name: 'editTextFlow',
-    inputSchema: EditTextInputSchema,
-    outputSchema: EditTextOutputSchema,
-  },
-  async ({ text, instruction, apiKey }) => {
-    const dynamicAI = apiKey ? genkit({ plugins: [googleAI({ apiKey })] }) : ai;
-
-    const prompt = `You are an expert copy editor. Your task is to edit the provided text based on the given instruction.
+  const prompt = `You are an expert copy editor. Your task is to edit the provided text based on the given instruction.
 
 Instruction: ${instruction}
 
@@ -45,18 +36,17 @@ ${text}
 
 Return only the edited text in the 'editedText' field of the JSON output. Do not include any preamble or explanation.`;
 
-    const {output} = await dynamicAI.generate({
-      model: 'googleai/gemini-2.0-flash',
-      prompt: prompt,
-      output: {
-          format: 'json',
-          schema: EditTextOutputSchema
-      },
-    });
+  const {output} = await dynamicAI.generate({
+    model: 'googleai/gemini-2.0-flash',
+    prompt: prompt,
+    output: {
+        format: 'json',
+        schema: EditTextOutputSchema
+    },
+  });
 
-    if (!output) {
-      throw new Error("AI failed to generate a response.");
-    }
-    return output;
+  if (!output) {
+    throw new Error("AI failed to generate a response.");
   }
-);
+  return output;
+}

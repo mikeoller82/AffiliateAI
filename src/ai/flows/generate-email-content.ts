@@ -27,16 +27,7 @@ export const GenerateEmailContentOutputSchema = z.object({
 export type GenerateEmailContentOutput = z.infer<typeof GenerateEmailContentOutputSchema>;
 
 export async function generateEmailContent(input: GenerateEmailContentInput): Promise<GenerateEmailContentOutput> {
-    return generateEmailContentFlow(input);
-}
-
-const generateEmailContentFlow = ai.defineFlow(
-  {
-    name: 'generateEmailContentFlow',
-    inputSchema: GenerateEmailContentInputSchema,
-    outputSchema: GenerateEmailContentOutputSchema,
-  },
-  async ({ objective, tone, productDetails, apiKey }) => {
+    const { objective, tone, productDetails, apiKey } = input;
     const dynamicAI = apiKey ? genkit({ plugins: [googleAI({ apiKey })] }) : ai;
     
     const prompt = `You are a world-class expert in Email Copywriting.
@@ -61,5 +52,4 @@ Return ONLY the raw JSON object with the keys "subjectLines" and "body".`;
       throw new Error("AI failed to generate a response.");
     }
     return output;
-  }
-);
+}

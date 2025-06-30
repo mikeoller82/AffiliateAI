@@ -42,16 +42,6 @@ export const GenerateDashboardInsightsOutputSchema = z.object({
 export type GenerateDashboardInsightsOutput = z.infer<typeof GenerateDashboardInsightsOutputSchema>;
 
 export async function generateDashboardInsights(input: GenerateDashboardInsightsInput): Promise<GenerateDashboardInsightsOutput> {
-  return generateDashboardInsightsFlow(input);
-}
-
-const generateDashboardInsightsFlow = ai.defineFlow(
-  {
-    name: 'generateDashboardInsightsFlow',
-    inputSchema: GenerateDashboardInsightsInputSchema,
-    outputSchema: GenerateDashboardInsightsOutputSchema,
-  },
-  async (input) => {
     const dynamicAI = input.apiKey ? genkit({ plugins: [googleAI({ apiKey: input.apiKey })] }) : ai;
     
     const funnelDetails = input.funnels.map(f =>
@@ -91,5 +81,4 @@ Return only the raw JSON object.`;
       throw new Error("AI failed to generate a response. The model may have returned empty output.");
     }
     return output;
-  }
-);
+}

@@ -20,16 +20,7 @@ export type SuggestCTAsOutput = z.infer<typeof SuggestCTAsOutputSchema>;
 
 
 export async function suggestCTAs(input: SuggestCTAsInput): Promise<SuggestCTAsOutput> {
-    return suggestCTAsFlow(input);
-}
-
-const suggestCTAsFlow = ai.defineFlow(
-  {
-    name: 'suggestCTAsFlow',
-    inputSchema: SuggestCTAsInputSchema,
-    outputSchema: SuggestCTAsOutputSchema,
-  },
-  async ({ context, apiKey }) => {
+    const { context, apiKey } = input;
     const dynamicAI = apiKey ? genkit({ plugins: [googleAI({ apiKey })] }) : ai;
     
     const prompt = `You are a world-class expert in Marketing Strategy.
@@ -52,5 +43,4 @@ Return ONLY a raw JSON array of strings.`;
       throw new Error("AI failed to generate a response.");
     }
     return output;
-  }
-);
+}

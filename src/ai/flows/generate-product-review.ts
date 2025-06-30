@@ -31,16 +31,7 @@ export type GenerateProductReviewOutput = z.infer<typeof GenerateProductReviewOu
 
 
 export async function generateProductReview(input: GenerateProductReviewInput): Promise<GenerateProductReviewOutput> {
-    return generateProductReviewFlow(input);
-}
-
-const generateProductReviewFlow = ai.defineFlow(
-  {
-    name: 'generateProductReviewFlow',
-    inputSchema: GenerateProductReviewInputSchema,
-    outputSchema: GenerateProductReviewOutputSchema,
-  },
-  async ({ productName, features, apiKey }) => {
+    const { productName, features, apiKey } = input;
     const dynamicAI = apiKey ? genkit({ plugins: [googleAI({ apiKey })] }) : ai;
 
     const prompt = `You are an expert in SEO Copywriting and Affiliate Marketing.
@@ -70,5 +61,4 @@ Return ONLY the raw JSON object.`;
       throw new Error("AI failed to generate a response.");
     }
     return output;
-  }
-);
+}
