@@ -1,12 +1,9 @@
-
 'use server';
 /**
  * @fileOverview An AI agent that generates marketing hooks for a product.
  */
 import { z } from 'zod';
 import { ai } from '@/ai/genkit';
-import { googleAI } from '@genkit-ai/googleai';
-import { genkit } from 'genkit';
 
 export const GenerateProductHookInputSchema = z.object({
   productDescription: z.string().describe('A description of the product.'),
@@ -28,7 +25,6 @@ export type GenerateProductHookOutput = z.infer<typeof GenerateProductHookOutput
 
 export async function generateProductHook(input: GenerateProductHookInput): Promise<GenerateProductHookOutput> {
     const { productDescription, emotion, apiKey } = input;
-    const dynamicAI = apiKey ? genkit({ plugins: [googleAI({ apiKey })] }) : ai;
 
     const prompt = `You are an expert in Viral Marketing.
 Generate 3-5 short, punchy marketing hook ideas designed to grab attention and evoke a specific emotion.
@@ -38,13 +34,14 @@ Generate 3-5 short, punchy marketing hook ideas designed to grab attention and e
 
 Return ONLY the raw JSON object.`;
     
-    const { output } = await dynamicAI.generate({
+    const { output } = await ai.generate({
         model: 'googleai/gemini-2.0-flash',
         prompt: prompt,
         output: {
             format: 'json',
             schema: GenerateProductHookOutputSchema,
         },
+        pluginOptions: apiKey ? { googleai: { apiKey } } : undefined,
     });
 
     if (!output) {

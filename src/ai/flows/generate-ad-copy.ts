@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview An AI agent that generates ad copy for various platforms.
@@ -6,8 +5,6 @@
 
 import { z } from 'zod';
 import { ai } from '@/ai/genkit';
-import { googleAI } from '@genkit-ai/googleai';
-import { genkit } from 'genkit';
 
 export const GenerateAdCopyInputSchema = z.object({
   product: z.string().describe('The product being advertised.'),
@@ -26,7 +23,6 @@ export type GenerateAdCopyOutput = z.infer<typeof GenerateAdCopyOutputSchema>;
 
 export async function generateAdCopy(input: GenerateAdCopyInput): Promise<GenerateAdCopyOutput> {
     const { product, audience, platform, apiKey } = input;
-    const dynamicAI = apiKey ? genkit({ plugins: [googleAI({ apiKey })] }) : ai;
 
     const prompt = `You are a world-class expert in Direct-Response Copywriting.
 Generate compelling ad copy variations based on the product, audience, and platform.
@@ -38,13 +34,14 @@ Generate compelling ad copy variations based on the product, audience, and platf
 Generate 3-5 variations for headlines and descriptions. The primary text should be engaging and relevant.
 Return ONLY the raw JSON object.`;
     
-    const { output } = await dynamicAI.generate({
+    const { output } = await ai.generate({
         model: 'googleai/gemini-2.0-flash',
         prompt: prompt,
         output: {
             format: 'json',
             schema: GenerateAdCopyOutputSchema,
         },
+        pluginOptions: apiKey ? { googleai: { apiKey } } : undefined,
     });
     
     if (!output) {

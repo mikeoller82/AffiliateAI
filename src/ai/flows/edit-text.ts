@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview An AI agent that edits text based on instructions.
@@ -6,8 +5,6 @@
 
 import { z } from 'genkit';
 import { ai } from '@/ai/genkit';
-import { googleAI } from '@genkit-ai/googleai';
-import { genkit } from 'genkit';
 
 const EditTextInputSchema = z.object({
   text: z.string().describe('The original text to be edited.'),
@@ -23,7 +20,6 @@ export type EditTextOutput = z.infer<typeof EditTextOutputSchema>;
 
 export async function editText(input: EditTextInput): Promise<EditTextOutput> {
   const { text, instruction, apiKey } = input;
-  const dynamicAI = apiKey ? genkit({ plugins: [googleAI({ apiKey })] }) : ai;
 
   const prompt = `You are an expert copy editor. Your task is to edit the provided text based on the given instruction.
 
@@ -36,13 +32,14 @@ ${text}
 
 Return only the edited text in the 'editedText' field of the JSON output. Do not include any preamble or explanation.`;
 
-  const {output} = await dynamicAI.generate({
+  const {output} = await ai.generate({
     model: 'googleai/gemini-2.0-flash',
     prompt: prompt,
     output: {
         format: 'json',
         schema: EditTextOutputSchema
     },
+    pluginOptions: apiKey ? { googleai: { apiKey } } : undefined,
   });
 
   if (!output) {

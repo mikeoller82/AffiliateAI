@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview An AI agent that generates copy for various funnel blocks.
@@ -6,8 +5,6 @@
 
 import { z } from 'genkit';
 import { ai } from '@/ai/genkit';
-import { googleAI } from '@genkit-ai/googleai';
-import { genkit } from 'genkit';
 
 
 const GenerateFunnelCopyInputSchema = z.object({
@@ -25,7 +22,6 @@ export type GenerateFunnelCopyOutput = z.infer<typeof GenerateFunnelCopyOutputSc
 
 export async function generateFunnelCopy(input: GenerateFunnelCopyInput): Promise<GenerateFunnelCopyOutput> {
     const { productDescription, copyType, userPrompt, apiKey } = input;
-    const dynamicAI = apiKey ? genkit({ plugins: [googleAI({ apiKey })] }) : ai;
     
     const prompt = `You are an expert conversion copywriter designing a landing page funnel.
 
@@ -37,13 +33,14 @@ export async function generateFunnelCopy(input: GenerateFunnelCopyInput): Promis
 
       Generate a single, compelling piece of copy. Return ONLY the text for the copy in the 'generatedCopy' field of the JSON output.`;
 
-    const {output} = await dynamicAI.generate({
+    const {output} = await ai.generate({
         model: 'googleai/gemini-2.0-flash',
         prompt: prompt,
         output: {
             format: 'json',
             schema: GenerateFunnelCopyOutputSchema
         },
+        pluginOptions: apiKey ? { googleai: { apiKey } } : undefined,
     });
 
     if (!output) {

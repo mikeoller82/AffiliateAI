@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview An AI agent that generates email content.
@@ -6,8 +5,6 @@
 
 import { z } from 'zod';
 import { ai } from '@/ai/genkit';
-import { googleAI } from '@genkit-ai/googleai';
-import { genkit } from 'genkit';
 
 export const GenerateEmailContentInputSchema = z.object({
   objective: z
@@ -28,7 +25,6 @@ export type GenerateEmailContentOutput = z.infer<typeof GenerateEmailContentOutp
 
 export async function generateEmailContent(input: GenerateEmailContentInput): Promise<GenerateEmailContentOutput> {
     const { objective, tone, productDetails, apiKey } = input;
-    const dynamicAI = apiKey ? genkit({ plugins: [googleAI({ apiKey })] }) : ai;
     
     const prompt = `You are a world-class expert in Email Copywriting.
 Generate email subject lines and body copy based on the provided information.
@@ -39,13 +35,14 @@ Generate email subject lines and body copy based on the provided information.
 
 Return ONLY the raw JSON object with the keys "subjectLines" and "body".`;
         
-    const { output } = await dynamicAI.generate({
+    const { output } = await ai.generate({
         model: 'googleai/gemini-2.0-flash',
         prompt: prompt,
         output: {
             format: 'json',
             schema: GenerateEmailContentOutputSchema,
         },
+        pluginOptions: apiKey ? { googleai: { apiKey } } : undefined,
     });
 
     if (!output) {

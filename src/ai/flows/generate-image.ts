@@ -1,12 +1,9 @@
-
 'use server';
 /**
  * @fileOverview An AI agent that generates images from a text prompt.
  */
 import { z } from 'zod';
 import { ai } from '@/ai/genkit';
-import { googleAI } from '@genkit-ai/googleai';
-import { genkit } from 'genkit';
 
 export const GenerateImageInputSchema = z.object({
   prompt: z.string().describe('A detailed text description of the image to generate.'),
@@ -22,14 +19,14 @@ export type GenerateImageOutput = z.infer<typeof GenerateImageOutputSchema>;
 
 export async function generateImage(input: GenerateImageInput): Promise<GenerateImageOutput> {
     const { prompt, style, apiKey } = input;
-    const dynamicAI = apiKey ? genkit({ plugins: [googleAI({ apiKey })] }) : ai;
 
-    const { media } = await dynamicAI.generate({
+    const { media } = await ai.generate({
       model: 'googleai/gemini-2.0-flash-preview-image-generation',
       prompt: `${prompt}${style ? `, in the style of ${style}` : ''}`,
       config: {
         responseModalities: ['TEXT', 'IMAGE'],
       },
+      pluginOptions: apiKey ? { googleai: { apiKey } } : undefined,
     });
 
     const generatedImage = media[0];
