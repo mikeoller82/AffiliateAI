@@ -25,6 +25,9 @@ export function getAdminApp(): App {
     return getApps()[0];
   }
 
+  // Explicitly use the client-side project ID to ensure consistency.
+  const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+
   // ───── 1) Cloud Run: secret injected as env-var string ─────
   const jsonFromEnv = process.env[ENV_VAR_NAME];
   if (jsonFromEnv) {
@@ -41,7 +44,7 @@ export function getAdminApp(): App {
 
       return initializeApp({
         credential: cert(credsObject),
-        projectId: credsObject.project_id,
+        projectId: projectId || credsObject.project_id, // Prefer client-side project ID
       });
     } catch (err) {
       console.error('[firebaseAdmin] Failed to parse JSON in env var. Ensure it is a valid, single-line JSON string.', err);
@@ -59,7 +62,7 @@ export function getAdminApp(): App {
       const creds = JSON.parse(fs.readFileSync(filePath, 'utf8'));
       return initializeApp({
         credential: cert(creds),
-        projectId: creds.project_id,
+        projectId: projectId || creds.project_id, // Prefer client-side project ID
       });
     } catch (err) {
         console.error(`[firebaseAdmin] Failed to parse JSON from file at ${filePath}`, err);
@@ -72,6 +75,7 @@ export function getAdminApp(): App {
   try {
       return initializeApp({
         credential: applicationDefault(),
+        projectId: projectId, // Explicitly set project ID to match client
       });
   } catch (err) {
       console.error('[firebaseAdmin] Failed to initialize from applicationDefault().', err);
