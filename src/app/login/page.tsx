@@ -75,7 +75,10 @@ export default function LoginPage() {
           title: 'Success!',
           description: 'You have been successfully logged in.',
         });
-        router.push('/dashboard');
+        // This delay gives the browser a moment to set the cookie before redirecting.
+        setTimeout(() => {
+            window.location.href = '/dashboard';
+        }, 100);
       } else {
         throw new Error(result.error || 'Login failed due to an unknown reason.');
       }
@@ -83,12 +86,11 @@ export default function LoginPage() {
     } catch (error: any) {
       console.error("Login failed:", error);
       
-      let description = error.message || 'An unexpected error occurred. Please try again.';
-
-      if (error.code === 'auth/invalid-credential' || 
-          error.code === 'auth/wrong-password' || 
-          error.code === 'auth/user-not-found') {
+      let description = "An unexpected error occurred. Please try again.";
+      if (error?.code?.includes('auth/')) {
         description = 'Invalid email or password. Please check your credentials and try again.';
+      } else if (error.message) {
+        description = error.message;
       }
       
       setApiError(description);
