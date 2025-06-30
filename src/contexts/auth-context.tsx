@@ -1,3 +1,4 @@
+
 'use client';
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
@@ -52,7 +53,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return () => unsubscribeAuth();
       } catch (error) {
         console.error("Firebase initialization error:", error);
-        setAuthError("Failed to load Firebase services.");
+        if (error instanceof Error && error.message.includes("Missing Firebase client configuration")) {
+            setAuthError(error.message);
+        } else {
+            setAuthError("Failed to load Firebase services. Check the console for details.");
+        }
         setLoading(false);
       }
     };

@@ -34,9 +34,10 @@ export function getAdminApp(): App {
       
       // A common issue with service account JSON in env vars is mangled newlines in the private key.
       // This ensures they are formatted correctly before passing to `cert()`.
-      if (credsObject.private_key) {
-        credsObject.private_key = credsObject.private_key.replace(/\\n/g, '\n');
+      if (!credsObject.private_key) {
+        throw new Error("Service account JSON is missing 'private_key' field.");
       }
+      credsObject.private_key = credsObject.private_key.replace(/\\n/g, '\n');
 
       return initializeApp({
         credential: cert(credsObject),
@@ -116,4 +117,3 @@ export async function createSessionCookieWithRetry(
   // This line should be unreachable, but it satisfies TypeScript's need for a return path.
   throw new Error("createSessionCookieWithRetry failed after all retries.");
 }
-
