@@ -75,7 +75,7 @@ export default function LoginPage() {
           title: 'Success!',
           description: 'You have been successfully logged in.',
         });
-        window.location.href = '/dashboard';
+        router.push('/dashboard');
       } else {
         throw new Error(result.error || 'Login failed due to an unknown reason.');
       }

@@ -72,7 +72,7 @@ export default function SignupPage() {
         title: 'Account Created!',
         description: 'Your account has been created successfully.',
       });
-      window.location.href = '/dashboard';
+      router.push('/dashboard');
     } catch (error: any) {
       console.error("Signup failed:", error);
       let description = error.message || 'An unexpected error occurred. Please try again.';
