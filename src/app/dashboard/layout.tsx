@@ -1,259 +1,247 @@
-'use client';
 
-import type React from 'react';
-import { useEffect } from 'react';
+"use client"
+
+import { useState, useEffect, ReactNode, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/auth-context';
+import { AIKeyProvider, useAIKey } from '@/contexts/ai-key-context';
 import Link from 'next/link';
 import Image from 'next/image';
-import { usePathname, useRouter } from 'next/navigation';
-import { useAuth } from '@/contexts/auth-context';
-import { signOut } from 'firebase/auth';
-import {
-  SidebarProvider,
-  Sidebar,
-  SidebarHeader,
-  SidebarContent,
-  SidebarFooter,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-  SidebarInset,
-  SidebarTrigger,
-  useSidebar,
-} from '@/components/ui/sidebar';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import {
-  LayoutDashboard,
-  Link as LinkIcon,
-  Filter,
-  Mail,
-  Users,
-  Settings,
-  HelpCircle,
-  Search,
-  Bell,
-  BrainCircuit,
-  FileText,
-  Workflow,
-  ClipboardList,
-  Globe,
-  Newspaper,
-  Mails,
-  BookText,
-  LogOut,
-  Loader2,
-  Share2,
-  MessagesSquare,
-  GraduationCap,
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { useToast } from '@/hooks/use-toast';
-import { AIKeyProvider } from '@/contexts/ai-key-context';
 
-const navItems = [
-    { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-    { href: '/dashboard/links', icon: LinkIcon, label: 'Affiliate Links' },
-    { href: '/dashboard/funnels', icon: Filter, label: 'Funnels' },
-    { href: '/dashboard/websites', icon: Globe, label: 'Websites' },
-    { href: '/dashboard/courses', icon: GraduationCap, label: 'Courses' },
-    { href: '/dashboard/blog', icon: Newspaper, label: 'Blog' },
-    { href: '/dashboard/newsletter', icon: Mails, label: 'Newsletters' },
-    { href: '/dashboard/social-scheduler', icon: Share2, label: 'Social Scheduler' },
-    { href: '/dashboard/docs', icon: BookText, label: 'Docs' },
-    { href: '/dashboard/notion-pad', icon: FileText, label: 'NotionPad' },
-    { href: '/dashboard/forms', icon: ClipboardList, label: 'Forms' },
-    { href: '/dashboard/crm', icon: Users, label: 'CRM' },
-    { href: '/dashboard/conversations', icon: MessagesSquare, label: 'Conversations' },
-    { href: '/dashboard/email', icon: Mail, label: 'Email Marketing' },
-    { href: '/dashboard/automations', icon: Workflow, label: 'Automations' },
-    { href: '/dashboard/ai-tools', icon: BrainCircuit, label: 'AI Tools' },
+import * as Icons from 'lucide-react';
+import {
+  Bell,
+  Home,
+  LineChart,
+  Package,
+  Package2,
+  Settings,
+  ShoppingCart,
+  Users,
+  ChevronDown,
+  LogOut,
+  BrainCircuit,
+  PanelLeft,
+  Search
+} from 'lucide-react';
+
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Button } from '@/components/ui/button';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { ApiKeyDialog } from '@/components/ai/api-key-dialog';
+
+
+const navLinks = [
+  { href: "/dashboard", icon: Home, label: "Dashboard" },
+  { href: "/dashboard/links", icon: Icons.Link, label: "Links" },
+  { href: "/dashboard/funnels", icon: Icons.Filter, label: "Funnels" },
+  { href: "/dashboard/websites", icon: Icons.Globe, label: "Websites" },
+  { href: "/dashboard/courses", icon: Icons.BookOpen, label: "Courses" },
+  { href: "/dashboard/crm", icon: Users, label: "CRM" },
+  { href: "/dashboard/email", icon: Icons.Mail, label: "Email" },
+  { href: "/dashboard/social-scheduler", icon: Icons.Calendar, label: "Social Scheduler" },
+  { href: "/dashboard/automations", icon: Icons.Workflow, label: "Automations" },
+  { href: "/dashboard/conversations", icon: Icons.MessageSquare, label: "Conversations" },
+  { href: "/dashboard/notion-pad", icon: Icons.FileText, label: "Notion Pad" },
+  { href: "/dashboard/docs", icon: Icons.Folder, label: "Docs" },
+  { href: "/dashboard/forms", icon: Icons.ClipboardList, label: "Forms" },
+  { href: "/dashboard/ai-tools", icon: BrainCircuit, label: "AI Tools" },
 ];
 
-function MainContent({ children }: { children: React.ReactNode }) {
-    const pathname = usePathname();
-    
-    const getPageTitle = () => {
-        if (pathname.startsWith('/dashboard/settings')) return 'Settings';
-        for (const item of navItems) {
-             if (pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href))) {
-                return item.label;
-            }
-        }
-        return 'Dashboard';
-    };
-    
-    const pageTitle = getPageTitle();
-    
-    const isBuilderPage = /^\/dashboard\/(funnels|websites|automations|forms|blog|newsletter|docs|notion-pad|courses)\/(\w|\d)/.test(pathname) || pathname === '/dashboard/notion-pad';
+function UserMenu() {
+  const { user, signOut } = useAuth();
+  const router = useRouter();
+  const { promptApiKey, apiKey } = useAIKey();
 
-
-    return (
-        <div className="flex flex-col h-screen bg-background">
-            <header className="sticky top-0 z-20 flex h-16 shrink-0 items-center gap-4 border-b bg-card px-6">
-                <SidebarTrigger className="md:hidden"/>
-                <div className="flex-1">
-                    <h1 className="text-xl font-semibold">{pageTitle}</h1>
-                </div>
-                <div className="flex items-center gap-4">
-                    <div className="relative hidden md:block">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input placeholder="Search..." className="w-full bg-background pl-9 md:w-64" />
-                    </div>
-                    <Button variant="ghost" size="icon" className="rounded-full">
-                        <Bell className="h-5 w-5" />
-                        <span className="sr-only">Notifications</span>
-                    </Button>
-                </div>
-            </header>
-            <main className={cn("flex-1 overflow-y-auto", !isBuilderPage && "p-6")}>{children}</main>
-        </div>
-    );
-}
-
-function AppSidebar() {
-    const pathname = usePathname();
-    const { user, auth } = useAuth();
-    const { toast } = useToast();
-
-    const handleSignOut = async () => {
-        if (!auth) {
-            toast({
-                variant: 'destructive',
-                title: 'Error',
-                description: 'Authentication service not ready. Cannot sign out.',
-            });
-            return;
-        }
-        try {
-            await fetch('/api/auth/session-logout', { method: 'POST' });
-            await signOut(auth);
-            toast({
-                title: "Signed Out",
-                description: "You have been successfully signed out.",
-            });
-        } catch (error) {
-            console.error("Error signing out:", error);
-            toast({
-                variant: 'destructive',
-                title: "Error",
-                description: "Failed to sign out. Please try again.",
-            });
-        }
-    };
-    
-    const isActive = (href: string) => {
-        if (href === '/dashboard') return pathname === href;
-        return pathname.startsWith(href);
+  const handleSignOut = async () => {
+    try {
+      if(signOut) {
+        await signOut();
+      }
+      router.push('/login');
+    } catch (error) {
+      console.error('Failed to sign out:', error);
     }
-    return (
-        <Sidebar>
-            <SidebarHeader className="p-4 border-b">
-                <Link href="/dashboard" className="flex items-center gap-3">
-                    <div className="p-1 bg-transparent rounded-lg">
-                        <Image
-                            src="https://firebasestorage.googleapis.com/v0/b/firebase-veilnet.firebasestorage.app/o/Default_A_cuttingedge_HighlaunchPadAIpowered_CRM_logo_exuding__0.jpg?alt=media&token=65b41f51-fd64-4aef-9580-736d2f3f14f4"
-                            alt="HighLaunchPad AI CRM Logo"
-                            width={32}
-                            height={32}
-                            className="rounded-md"
-                        />
-                    </div>
-                    <h1 className="text-xl font-semibold text-foreground">HighLaunchPad</h1>
-                </Link>
-            </SidebarHeader>
-            <SidebarContent className="p-4">
-                <SidebarMenu>
-                    {navItems.map((item) => (
-                        <SidebarMenuItem key={item.href}>
-                            <SidebarMenuButton asChild isActive={isActive(item.href)} tooltip={{children: item.label}}>
-                                <Link href={item.href}>
-                                    <item.icon />
-                                    <span>{item.label}</span>
-                                </Link>
-                            </SidebarMenuButton>
-                        </SidebarMenuItem>
-                    ))}
-                </SidebarMenu>
-            </SidebarContent>
-            <SidebarFooter className="mt-auto border-t p-4 space-y-4">
-                 <SidebarMenu>
-                    <SidebarMenuItem>
-                        <SidebarMenuButton asChild tooltip={{children: 'Support'}}>
-                            <Link href="#">
-                                <HelpCircle />
-                                <span>Support</span>
-                            </Link>
-                        </SidebarMenuButton>
-                    </SidebarMenuItem>
-                    <SidebarMenuItem>
-                        <SidebarMenuButton asChild isActive={isActive('/dashboard/settings')} tooltip={{children: 'Settings'}}>
-                            <Link href="/dashboard/settings">
-                                <Settings />
-                                <span>Settings</span>
-                            </Link>
-                        </SidebarMenuButton>
-                    </SidebarMenuItem>
-                </SidebarMenu>
-                <div className="p-2 rounded-lg">
-                    <div className="flex items-center gap-4">
-                        <Avatar className="h-10 w-10">
-                            <AvatarImage src={user?.photoURL || "https://placehold.co/40x40.png"} data-ai-hint="profile picture"/>
-                            <AvatarFallback>{user?.email?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1 overflow-hidden group-data-[collapsible=icon]:hidden">
-                            <p className="font-semibold text-sm truncate">{user?.displayName || 'User'}</p>
-                            <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
-                        </div>
-                        <Button variant="ghost" size="icon" onClick={handleSignOut} className="group-data-[collapsible=icon]:hidden">
-                            <LogOut className="h-4 w-4" />
-                        </Button>
-                    </div>
-                </div>
-            </SidebarFooter>
-        </Sidebar>
-    )
+  };
+  
+  if (!user) return null;
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="outline"
+          size="icon"
+          className="overflow-hidden rounded-full"
+        >
+          <Image
+            src={user.photoURL || `https://api.dicebear.com/8.x/bottts-neutral/svg?seed=${user.uid}`}
+            width={36}
+            height={36}
+            alt="Avatar"
+            className="overflow-hidden rounded-full"
+          />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuLabel>{user.email}</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={() => router.push('/dashboard/settings')}>
+            <Settings className="mr-2 h-4 w-4" />
+            Settings
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={promptApiKey}>
+            <BrainCircuit className="mr-2 h-4 w-4" />
+            { apiKey ? 'Update' : 'Set' } AI Key
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={handleSignOut}>
+            <LogOut className="mr-2 h-4 w-4" />
+            Logout
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
 }
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-    const { user, loading } = useAuth();
+function DashboardLayoutContent({ children }: { children: ReactNode }) {
+    const { user, loading, authError, signOut } = useAuth();
     const router = useRouter();
-
+    
     useEffect(() => {
-        // This effect runs whenever the loading or user state changes.
-        // If loading is finished and there's still no user, it means they
-        // are not authenticated and should be sent to the login page.
         if (!loading && !user) {
-            router.push('/login');
+            router.replace('/login');
         }
     }, [user, loading, router]);
 
-    // While the initial authentication check is running, show a loading screen.
-    // This also prevents rendering child components that might try to access
-    // user data before the user object is available.
-    if (loading) {
-        return (
-            <div className="flex h-screen w-full items-center justify-center bg-background">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-        );
-    }
-    
-    // Only render the full dashboard layout if we're done loading AND we have a user.
-    // If there's no user, the useEffect above will have already started the redirect.
-    // Returning null here prevents a flash of un-authenticated content.
-    if (!user) {
+
+    if (loading || !user) {
         return null;
     }
+  
+    return (
+    <TooltipProvider>
+      <div className="flex min-h-screen w-full flex-col bg-muted/40">
+        <aside className="fixed inset-y-0 left-0 z-10 hidden w-14 flex-col border-r bg-background sm:flex">
+            <nav className="flex flex-col items-center gap-4 px-2 sm:py-5">
+              <Link
+                href="#"
+                className="group flex h-9 w-9 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:h-8 md:w-8 md:text-base"
+              >
+              <Image
+                src="https://cdn.leonardo.ai/users/31a55a1b-10c8-4725-a4ad-b72817f069e1/generations/39ccab2d-4951-448b-b285-ccef2b6f670a/segments/1:1:1/Default_A_cuttingedge_HighlaunchPadAIpowered_CRM_logo_exuding__0.jpg"
+                width={36}
+                height={36}
+                alt="Avatar"
+                className="overflow-hidden rounded-full"
+              />
+                <span className="sr-only">HighLaunchPad</span>
+              </Link>
+               {navLinks.map((link) => (
+                  <Tooltip key={link.href}>
+                    <TooltipTrigger asChild>
+                      <Link
+                        href={link.href}
+                        className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8"
+                      >
+                        <link.icon className="h-5 w-5" />
+                        <span className="sr-only">{link.label}</span>
+                      </Link>
+                    </TooltipTrigger>
+                    <TooltipContent side="right">{link.label}</TooltipContent>
+                  </Tooltip>
+              ))}
+            </nav>
+            <nav className="mt-auto flex flex-col items-center gap-4 px-2 sm:py-5">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Link
+                  href="/dashboard/settings"
+                  className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8"
+                >
+                  <Settings className="h-5 w-5" />
+                  <span className="sr-only">Settings</span>
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent side="right">Settings</TooltipContent>
+            </Tooltip>
+          </nav>
+        </aside>
+        <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
+            <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
+                 <Sheet>
+                  <SheetTrigger asChild>
+                    <Button size="icon" variant="outline" className="sm:hidden">
+                      <PanelLeft className="h-5 w-5" />
+                      <span className="sr-only">Toggle Menu</span>
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent side="left" className="sm:max-w-xs">
+                    <nav className="grid gap-6 text-lg font-medium">
+                      <Link
+                        href="#"
+                        className="group flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:text-base"
+                      >
+                       <Image
+                        src="https://cdn.leonardo.ai/users/31a55a1b-10c8-4725-a4ad-b72817f069e1/generations/39ccab2d-4951-448b-b285-ccef2b6f670a/segments/1:1:1/Default_A_cuttingedge_HighlaunchPadAIpowered_CRM_logo_exuding__0.jpg"
+                        width={36}
+                        height={36}
+                        alt="Avatar"
+                        className="overflow-hidden rounded-full"
+                      />
+                        <span className="sr-only">HighLaunchPad</span>
+                      </Link>
+                      {navLinks.map((link) => (
+                          <Link
+                            key={link.href}
+                            href={link.href}
+                            className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"
+                          >
+                            <link.icon className="h-5 w-5" />
+                            {link.label}
+                          </Link>
+                      ))}
+                    </nav>
+                  </SheetContent>
+                </Sheet>
+                 <div className="relative ml-auto flex-1 md:grow-0">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    type="search"
+                    placeholder="Search..."
+                    className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[336px]"
+                  />
+                </div>
+                <UserMenu />
+            </header>
+            <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
+                {children}
+            </main>
+        </div>
+      </div>
+    </TooltipProvider>
+  );
+}
 
+export default function DashboardLayout({ children }: { children: ReactNode }) {
     return (
         <AIKeyProvider>
-            <SidebarProvider>
-                <AppSidebar />
-                <SidebarInset>
-                    <MainContent>{children}</MainContent>
-                </SidebarInset>
-            </SidebarProvider>
+            <DashboardLayoutContent>{children}</DashboardLayoutContent>
         </AIKeyProvider>
-    );
+    )
 }

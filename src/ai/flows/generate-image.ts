@@ -1,53 +1,49 @@
 
-'use server';
-/**
- * @fileOverview An AI agent that generates images from a text prompt.
- *
- * - generateImage - A function that handles the image generation process.
- * - GenerateImageInput - The input type for the generateImage function.
- * - GenerateImageOutput - The return type for the generateImage function.
- */
+import { z } from 'zod';
+import { defineFlow } from '@genkit-ai/core';
+import { imagen2 } from '@genkit-ai/googleai';
+import { Flow } from '@genkit-ai/core/lib/flow';
 
-import { z } from 'genkit';
-import { ai } from '@/ai/genkit';
-
-
-const GenerateImageInputSchema = z.object({
+export const GenerateImageInputSchema = z.object({
   prompt: z.string().describe('A detailed text description of the image to generate.'),
-  aspectRatio: z.enum(['1:1', '16:9', '9:16']).describe('The desired aspect ratio for the generated image.'),
+  style: z.string().optional().describe('The artistic style of the image.'),
 });
 export type GenerateImageInput = z.infer<typeof GenerateImageInputSchema>;
 
-const GenerateImageOutputSchema = z.object({
+export const GenerateImageOutputSchema = z.object({
   imageDataUri: z.string().describe('The generated image as a data URI.'),
 });
 export type GenerateImageOutput = z.infer<typeof GenerateImageOutputSchema>;
 
-export async function generateImage(input: GenerateImageInput): Promise<GenerateImageOutput> {
-  return generateImageFlow(input);
-}
+// Use a variable to hold the memoized flow
+let generateImageFlow: Flow<typeof GenerateImageInputSchema, typeof GenerateImageOutputSchema, any>;
 
-const generateImageFlow = ai.defineFlow(
-  {
-    name: 'generateImageFlow',
-    inputSchema: GenerateImageInputSchema,
-    outputSchema: GenerateImageOutputSchema,
-  },
-  async ({ prompt, aspectRatio }) => {
-    const { media } = await ai.generate({
-      model: 'googleai/gemini-2.0-flash-preview-image-generation',
-      prompt: `(Aspect Ratio: ${aspectRatio}) ${prompt}`,
-      config: {
-        responseModalities: ['TEXT', 'IMAGE'],
+// Export a function to get the flow, defining it only once.
+export function getGenerateImageFlow() {
+  if (!generateImageFlow) {
+    generateImageFlow = defineFlow(
+      {
+        name: 'generateImageFlow',
+        inputSchema: GenerateImageInputSchema,
+        outputSchema: GenerateImageOutputSchema,
       },
-    });
-    
-    if (!media) {
-      throw new Error('No image was generated. The prompt may have been blocked by safety filters.');
-    }
+      async ({ prompt, style }) => {
+        const generationResponse = await imagen2.generate({
+          prompt: `${prompt}, in the style of ${style}`,
+          width: 1024,
+          height: 576,
+        });
 
-    return {
-      imageDataUri: media.url,
-    };
+        const generatedImage = generationResponse.media[0];
+        if (!generatedImage) {
+          throw new Error('Image generation failed. The prompt may have been blocked.');
+        }
+
+        return {
+          imageDataUri: generatedImage.toDataUri(),
+        };
+      }
+    );
   }
-);
+  return generateImageFlow;
+}

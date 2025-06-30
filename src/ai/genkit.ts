@@ -1,8 +1,10 @@
-// src/ai/genkit-config.ts (no "use server")
-import {genkit} from 'genkit';
-import {googleAI} from '@genkit-ai/googleai';
 
-export const ai = genkit({
-  plugins: [googleAI()],
-  model: 'googleai/gemini-2.0-flash',
-});
+import { initGenkit } from './genkit-init';
+import { geminiPro, imagen2 } from '@genkit-ai/googleai';
+
+// Initialize Genkit
+initGenkit();
+
+// Export the models
+export const gemma = geminiPro;
+export const imageGen = imagen2;

@@ -14,6 +14,7 @@ interface AuthContextType {
   auth: Auth | null;
   db: Firestore | null;
   authError: string | null;
+  signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -65,7 +66,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     initFirebase();
   }, []);
 
-  const value = { user, subscription, loading, auth, db, authError };
+  const signOut = async () => {
+    if (auth) {
+      await auth.signOut();
+    }
+  };
+
+  const value = { user, subscription, loading, auth, db, authError, signOut };
 
   if (loading) {
     return (

@@ -12,15 +12,18 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Wand2, Copy, Download } from "lucide-react";
-import { generateAdCopy, type GenerateAdCopyOutput } from '@/ai/flows/generate-ad-copy';
-import { suggestCTAs, type SuggestCTAsOutput } from '@/ai/flows/suggest-ctas';
-import { generateEmailContent, type GenerateEmailContentOutput } from '@/ai/flows/generate-email-content';
-import { generateProductReview, type GenerateProductReviewOutput } from '@/ai/flows/generate-product-review';
-import { generateProductHook, type GenerateProductHookOutput } from '@/ai/flows/generate-product-hook';
-import { generateImage, type GenerateImageOutput } from '@/ai/flows/generate-image';
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { useAIKey } from '@/contexts/ai-key-context';
+
+// Define the schemas for the AI flow outputs directly in the component
+// to avoid importing server-side code.
+type GenerateAdCopyOutput = { headlines: string[]; primary_text: string; descriptions: string[]; };
+type SuggestCTAsOutput = string[];
+type GenerateProductReviewOutput = { review: string };
+type GenerateProductHookOutput = { hooks: string[] };
+type GenerateEmailContentOutput = { subjectLines: string[]; body: string };
+type GenerateImageOutput = { imageDataUri: string };
 
 function LoadingSpinner() {
   return (
@@ -56,8 +59,15 @@ export function AdCopyGenerator() {
     setIsLoading(true);
     setResult(null);
     try {
-      const response = await generateAdCopy(values);
-      setResult(response);
+      // Replace direct flow call with an API fetch
+      const response = await fetch('/api/ai/generate-ad-copy', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(values),
+      });
+      if (!response.ok) throw new Error(`Server error: ${response.statusText}`);
+      const data = await response.json();
+      setResult(data);
     } catch (error) {
       console.error(error);
       toast({
@@ -165,8 +175,15 @@ export function CtaSuggestor() {
     setIsLoading(true);
     setResult(null);
     try {
-      const response = await suggestCTAs(values);
-      setResult(response);
+      // Replace direct flow call with an API fetch
+      const response = await fetch('/api/ai/suggest-ctas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(values),
+      });
+       if (!response.ok) throw new Error(`Server error: ${response.statusText}`);
+      const data = await response.json();
+      setResult(data);
     } catch (error) {
       console.error(error);
       toast({
@@ -238,8 +255,15 @@ export function ProductReviewWriter() {
     setIsLoading(true);
     setResult(null);
     try {
-      const response = await generateProductReview(values);
-      setResult(response);
+      // Replace direct flow call with an API fetch
+       const response = await fetch('/api/ai/generate-product-review', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(values),
+      });
+      if (!response.ok) throw new Error(`Server error: ${response.statusText}`);
+      const data = await response.json();
+      setResult(data);
     } catch (error) {
       console.error(error);
       toast({
@@ -315,8 +339,15 @@ export function ProductHookGenerator() {
     setIsLoading(true);
     setResult(null);
     try {
-      const response = await generateProductHook(values);
-      setResult(response);
+      // Replace direct flow call with an API fetch
+       const response = await fetch('/api/ai/generate-product-hook', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(values),
+      });
+      if (!response.ok) throw new Error(`Server error: ${response.statusText}`);
+      const data = await response.json();
+      setResult(data);
     } catch (error) {
       console.error(error);
       toast({
@@ -409,8 +440,15 @@ export function EmailGenerator({ defaultValues }: EmailGeneratorProps) {
     setIsLoading(true);
     setResult(null);
     try {
-      const response = await generateEmailContent(values);
-      setResult(response);
+      // Replace direct flow call with an API fetch
+      const response = await fetch('/api/ai/generate-email-content', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(values),
+      });
+      if (!response.ok) throw new Error(`Server error: ${response.statusText}`);
+      const data = await response.json();
+      setResult(data);
     } catch (error) {
       console.error(error);
       toast({
@@ -516,7 +554,7 @@ export function EmailGenerator({ defaultValues }: EmailGeneratorProps) {
 // Image Generator
 const imageGeneratorSchema = z.object({
   prompt: z.string().min(10, 'A detailed prompt is required.'),
-  aspectRatio: z.enum(['1:1', '16:9', '9:16']),
+  style: z.string().optional(),
 });
 
 export function ImageGenerator() {
@@ -527,7 +565,7 @@ export function ImageGenerator() {
 
   const form = useForm<z.infer<typeof imageGeneratorSchema>>({
     resolver: zodResolver(imageGeneratorSchema),
-    defaultValues: { prompt: "", aspectRatio: "1:1" },
+    defaultValues: { prompt: "", style: "photorealistic" },
   });
 
   async function onSubmit(values: z.infer<typeof imageGeneratorSchema>) {
@@ -538,8 +576,18 @@ export function ImageGenerator() {
     setIsLoading(true);
     setResult(null);
     try {
-      const response = await generateImage(values);
-      setResult(response);
+      // Replace direct flow call with an API fetch
+      const response = await fetch('/api/ai/generate-image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(values),
+      });
+       if (!response.ok) {
+         const errorData = await response.json();
+         throw new Error(errorData.details || `Server error: ${response.statusText}`);
+       }
+      const data = await response.json();
+      setResult(data);
     } catch (error) {
       console.error(error);
       const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
@@ -564,17 +612,19 @@ export function ImageGenerator() {
               <FormMessage />
             </FormItem>
           )} />
-           <FormField control={form.control} name="aspectRatio" render={({ field }) => (
+           <FormField control={form.control} name="style" render={({ field }) => (
             <FormItem>
-              <FormLabel>Aspect Ratio</FormLabel>
+              <FormLabel>Image Style</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
-                  <SelectTrigger><SelectValue placeholder="Select an aspect ratio" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder="Select an image style" /></SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="1:1">Square (1:1)</SelectItem>
-                  <SelectItem value="16:9">Widescreen (16:9)</SelectItem>
-                  <SelectItem value="9:16">Portrait (9:16)</SelectItem>
+                  <SelectItem value="photorealistic">Photorealistic</SelectItem>
+                  <SelectItem value="digital-art">Digital Art</SelectItem>
+                  <SelectItem value="anime">Anime</SelectItem>
+                  <SelectItem value="low-poly">Low Poly</SelectItem>
+                  <SelectItem value="pixel-art">Pixel Art</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />

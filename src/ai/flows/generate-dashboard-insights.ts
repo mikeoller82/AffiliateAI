@@ -1,86 +1,77 @@
 
 'use server';
 /**
- * @fileOverview An AI agent that analyzes dashboard metrics and provides insights.
+ * @fileOverview An AI agent that analyzes marketing data to provide insights.
+ * This flow is designed to be called from a server environment.
  *
- * - generateDashboardInsights - Analyzes metrics and returns insights and recommendations.
+ * - generateDashboardInsights - A function that handles the analysis process.
  * - GenerateDashboardInsightsInput - The input type for the function.
  * - GenerateDashboardInsightsOutput - The return type for the function.
  */
 
 import { z } from 'genkit';
 import { ai } from '@/ai/genkit';
+import * as prompts from '../prompts';
+import { funnelTemplates } from '@/lib/funnel-templates';
 
-const GenerateDashboardInsightsInputSchema = z.object({
-  metrics: z.object({
-    clicks: z.number(),
-    conversions: z.number(),
-    commission: z.number(),
-  }),
-  funnels: z.array(z.object({
-      name: z.string(),
-      ctr: z.number(),
-      optInRate: z.number(),
-  })).optional(),
+export const FunnelPerformanceInputSchema = z.object({
+  name: z.string().describe('The name of the marketing funnel'),
+  ctr: z.string().describe('Click-Through Rate (e.g., "2.5%")'),
+  optInRate: z.string().describe('Opt-In Rate for lead magnets (e.g., "35%")'),
+});
+
+export const MetricsInputSchema = z.object({
+  clicks: z.number().describe('Total clicks across all funnels'),
+  conversions: z.number().describe('Total conversions or sales'),
+  commission: z.number().describe('Total affiliate commission earned in USD'),
+});
+
+export const GenerateDashboardInsightsInputSchema = z.object({
+  metrics: MetricsInputSchema,
+  funnels: z.array(FunnelPerformanceInputSchema),
 });
 export type GenerateDashboardInsightsInput = z.infer<typeof GenerateDashboardInsightsInputSchema>;
 
-const GenerateDashboardInsightsOutputSchema = z.object({
-  insights: z.array(z.string()).describe('A list of 2-3 key, concise observations about the data. Frame these as an expert analyst speaking to the user.'),
+export const GenerateDashboardInsightsOutputSchema = z.object({
+  insights: z.array(z.string()).describe("Bulleted list of key observations and insights from the data."),
   recommendations: z.array(z.object({
-    title: z.string().describe('A short, catchy title for the recommendation.'),
-    description: z.string().describe('A longer description explaining the recommendation and why it is important.'),
-    ctaText: z.string().describe('The text for the call-to-action button.'),
-    ctaLink: z.string().describe('The Next.js link for the call-to-action button (e.g., /dashboard/funnels).'),
-    icon: z.string().describe('A relevant icon name from the lucide-react library (e.g., "Lightbulb", "BarChart").')
-  })).describe('A list of 1-2 actionable recommendations for the user to take.')
+    title: z.string().describe("The main headline for the recommendation."),
+    description: z.string().describe("A brief explanation of the recommendation."),
+    icon: z.string().describe("A relevant Lucide icon name (e.g., 'Target', 'DollarSign', 'LineChart')."),
+    ctaText: z.string().describe("The call-to-action text for the button."),
+    ctaLink: z.string().describe("The relative URL for the call-to-action button (e.g., '/dashboard/funnels')."),
+  })),
 });
 export type GenerateDashboardInsightsOutput = z.infer<typeof GenerateDashboardInsightsOutputSchema>;
 
+// This exported function will be the primary way server-side components or API routes interact with the flow.
 export async function generateDashboardInsights(input: GenerateDashboardInsightsInput): Promise<GenerateDashboardInsightsOutput> {
-  return generateDashboardInsightsFlow(input);
+    return generateDashboardInsightsFlow(input);
 }
 
-const generateDashboardInsightsFlow = ai.defineFlow(
-  {
-    name: 'generateDashboardInsightsFlow',
-    inputSchema: GenerateDashboardInsightsInputSchema,
-    outputSchema: GenerateDashboardInsightsOutputSchema,
-  },
-  async ({ metrics, funnels }) => {
-    const funnelData = funnels && funnels.length > 0
-        ? `Funnels Data: ${JSON.stringify(funnels)}`
-        : "No funnel data available.";
 
-    const prompt = `You are an expert marketing analyst for a platform called HighLaunchPad. Your tone is encouraging, insightful, and actionable.
+export const generateDashboardInsightsFlow = ai.defineFlow(
+    {
+      name: 'generateDashboardInsightsFlow',
+      inputSchema: GenerateDashboardInsightsInputSchema,
+      outputSchema: GenerateDashboardInsightsOutputSchema,
+    },
+    async (input) => {
+        const prompt = prompts.generateDashboardInsights(input.metrics, input.funnels);
+        
+        const llmResponse = await ai.generate({
+            model: 'googleai/gemini-2.0-flash',
+            prompt: prompt,
+            output: {
+                format: 'json',
+                schema: GenerateDashboardInsightsOutputSchema,
+            },
+        });
 
-      Analyze the following JSON data which contains key performance metrics for a user's dashboard.
-
-      Metrics Data: ${JSON.stringify(metrics)}
-      ${funnelData}
-
-      Based on this data, your task is to provide:
-      - A list of 2-3 \`insights\`. These should be concise observations about the data. Frame them as an expert analyst speaking to the user. For example: 'Your Lead Magnet funnel has a high click-through rate, but a low opt-in rate. This suggests the landing page copy might not be converting well.'
-      - A list of 1-2 actionable \`recommendations\`. Each recommendation should have a title, a description of what to do, a call-to-action button text ('ctaText'), a Next.js link for that button ('ctaLink'), and a relevant 'icon' name from the lucide-react library.
-      
-      IMPORTANT:
-      - If all metrics are zero or very low, provide encouraging and motivating recommendations for getting started, such as creating the first funnel or generating affiliate links.
-      - Ensure the response is in the specified JSON format.
-      - Make the insights and recommendations specific and directly related to the data provided.
-    `;
-
-    const {output} = await ai.generate({
-      model: 'googleai/gemini-2.0-flash',
-      prompt: prompt,
-      output: { 
-          format: 'json',
-          schema: GenerateDashboardInsightsOutputSchema
-      },
-    });
-
-    if (!output) {
-      throw new Error("AI failed to generate a response.");
+        const output = llmResponse.output;
+        if (!output) {
+            throw new Error("AI failed to generate a response. The model may have returned empty output.");
+        }
+        return output;
     }
-    return output;
-  }
 );
