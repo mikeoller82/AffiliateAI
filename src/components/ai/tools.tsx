@@ -16,8 +16,6 @@ import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { useAIKey } from '@/contexts/ai-key-context';
 
-// Define the schemas for the AI flow outputs directly in the component
-// to avoid importing server-side code.
 type GenerateAdCopyOutput = { headlines: string[]; primary_text: string; descriptions: string[]; };
 type SuggestCTAsOutput = string[];
 type GenerateProductReviewOutput = { review: string };
@@ -33,7 +31,6 @@ function LoadingSpinner() {
   );
 }
 
-// Ad Copy Generator
 const adCopyFormSchema = z.object({
   product: z.string().min(3, 'Product name is required.'),
   audience: z.string().min(3, 'Target audience is required.'),
@@ -153,7 +150,6 @@ export function AdCopyGenerator() {
   );
 }
 
-// CTA Suggestor
 const ctaFormSchema = z.object({
   context: z.string().min(10, 'Context must be at least 10 characters.'),
 });
@@ -234,7 +230,6 @@ export function CtaSuggestor() {
   );
 }
 
-// Product Review Writer
 const productReviewSchema = z.object({
   productName: z.string().min(3, "Product name is required."),
   features: z.string().min(10, "Please describe some features or benefits."),
@@ -319,8 +314,6 @@ export function ProductReviewWriter() {
   );
 }
 
-
-// Product Hook Generator
 const productHookSchema = z.object({
   productDescription: z.string().min(10, 'Product description is required.'),
   emotion: z.string().min(1, 'Emotion is required.'),
@@ -418,7 +411,6 @@ export function ProductHookGenerator() {
   );
 }
 
-// Email Generator
 const emailFormSchema = z.object({
   objective: z.string().min(10, 'Objective must be at least 10 characters.'),
   tone: z.string().min(1, 'Tone is required.'),
@@ -561,7 +553,6 @@ export function EmailGenerator({ defaultValues }: EmailGeneratorProps) {
   );
 }
 
-// Image Generator
 const imageGeneratorSchema = z.object({
   prompt: z.string().min(10, 'A detailed prompt is required.'),
   style: z.string().optional(),

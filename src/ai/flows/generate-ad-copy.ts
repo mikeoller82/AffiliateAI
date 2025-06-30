@@ -21,31 +21,39 @@ export const GenerateAdCopyOutputSchema = z.object({
 });
 export type GenerateAdCopyOutput = z.infer<typeof GenerateAdCopyOutputSchema>;
 
-export async function generateAdCopy(input: GenerateAdCopyInput): Promise<GenerateAdCopyOutput> {
-    const { product, audience, platform, apiKey } = input;
-
-    const prompt = `You are a world-class expert in Direct-Response Copywriting.
+const adCopyPrompt = ai.definePrompt({
+    name: 'adCopyPrompt',
+    input: { schema: GenerateAdCopyInputSchema },
+    output: { schema: GenerateAdCopyOutputSchema },
+    prompt: `You are a world-class expert in Direct-Response Copywriting.
 Generate compelling ad copy variations based on the product, audience, and platform.
 
-**Product:** ${product}
-**Audience:** ${audience}
-**Platform:** ${platform}
+**Product:** {{{product}}}
+**Audience:** {{{audience}}}
+**Platform:** {{{platform}}}
 
-Generate 3-5 variations for headlines and descriptions. The primary text should be engaging and relevant.
-Return ONLY the raw JSON object.`;
-    
-    const { output } = await ai.generate({
+Generate 3-5 variations for headlines and descriptions. The primary text should be engaging and relevant.`
+});
+
+const generateAdCopyFlow = ai.defineFlow(
+  {
+    name: 'generateAdCopyFlow',
+    inputSchema: GenerateAdCopyInputSchema,
+    outputSchema: GenerateAdCopyOutputSchema,
+  },
+  async (input) => {
+    const { output } = await adCopyPrompt(input, {
         model: 'googleai/gemini-2.0-flash',
-        prompt: prompt,
-        output: {
-            format: 'json',
-            schema: GenerateAdCopyOutputSchema,
-        },
-        pluginOptions: apiKey ? { googleai: { apiKey } } : undefined,
+        pluginOptions: input.apiKey ? { googleai: { apiKey: input.apiKey } } : undefined,
     });
     
     if (!output) {
       throw new Error("AI failed to generate a response.");
     }
     return output;
+  }
+);
+
+export async function generateAdCopy(input: GenerateAdCopyInput): Promise<GenerateAdCopyOutput> {
+    return await generateAdCopyFlow(input);
 }

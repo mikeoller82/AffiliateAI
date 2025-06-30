@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
     }
     
     const result = await suggestCTAs(validatedBody.data);
-    return NextResponse.json(result);
+    return NextResponse.json(result.ctas);
   } catch (error: any) {
     console.error('Error running suggestCTAs flow:', error);
     return NextResponse.json(

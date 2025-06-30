@@ -23,29 +23,36 @@ export const GenerateProductHookOutputSchema = z.object({
 export type GenerateProductHookOutput = z.infer<typeof GenerateProductHookOutputSchema>;
 
 
-export async function generateProductHook(input: GenerateProductHookInput): Promise<GenerateProductHookOutput> {
-    const { productDescription, emotion, apiKey } = input;
-
-    const prompt = `You are an expert in Viral Marketing.
+const productHookPrompt = ai.definePrompt({
+    name: 'productHookPrompt',
+    input: { schema: GenerateProductHookInputSchema },
+    output: { schema: GenerateProductHookOutputSchema },
+    prompt: `You are an expert in Viral Marketing.
 Generate 3-5 short, punchy marketing hook ideas designed to grab attention and evoke a specific emotion.
 
-**Product Description:** ${productDescription}
-**Target Emotion:** ${emotion}
+**Product Description:** {{{productDescription}}}
+**Target Emotion:** {{{emotion}}}`
+});
 
-Return ONLY the raw JSON object.`;
-    
-    const { output } = await ai.generate({
+const generateProductHookFlow = ai.defineFlow(
+  {
+    name: 'generateProductHookFlow',
+    inputSchema: GenerateProductHookInputSchema,
+    outputSchema: GenerateProductHookOutputSchema,
+  },
+  async (input) => {
+    const { output } = await productHookPrompt(input, {
         model: 'googleai/gemini-2.0-flash',
-        prompt: prompt,
-        output: {
-            format: 'json',
-            schema: GenerateProductHookOutputSchema,
-        },
-        pluginOptions: apiKey ? { googleai: { apiKey } } : undefined,
+        pluginOptions: input.apiKey ? { googleai: { apiKey: input.apiKey } } : undefined,
     });
-
+    
     if (!output) {
-      throw new Error("AI failed to generate a response.");
+      throw new Error("AI failed to generate product hooks.");
     }
     return output;
+  }
+);
+
+export async function generateProductHook(input: GenerateProductHookInput): Promise<GenerateProductHookOutput> {
+    return await generateProductHookFlow(input);
 }

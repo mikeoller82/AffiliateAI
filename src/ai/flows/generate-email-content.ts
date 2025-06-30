@@ -23,30 +23,38 @@ export const GenerateEmailContentOutputSchema = z.object({
 });
 export type GenerateEmailContentOutput = z.infer<typeof GenerateEmailContentOutputSchema>;
 
-export async function generateEmailContent(input: GenerateEmailContentInput): Promise<GenerateEmailContentOutput> {
-    const { objective, tone, productDetails, apiKey } = input;
-    
-    const prompt = `You are a world-class expert in Email Copywriting.
+
+const emailContentPrompt = ai.definePrompt({
+    name: 'emailContentPrompt',
+    input: { schema: GenerateEmailContentInputSchema },
+    output: { schema: GenerateEmailContentOutputSchema },
+    prompt: `You are a world-class expert in Email Copywriting.
 Generate email subject lines and body copy based on the provided information.
 
-**Objective:** ${objective}
-**Tone:** ${tone}
-**Product Details:** ${productDetails}
+**Objective:** {{{objective}}}
+**Tone:** {{{tone}}}
+**Product Details:** {{{productDetails}}}`
+});
 
-Return ONLY the raw JSON object with the keys "subjectLines" and "body".`;
-        
-    const { output } = await ai.generate({
+const generateEmailContentFlow = ai.defineFlow(
+  {
+    name: 'generateEmailContentFlow',
+    inputSchema: GenerateEmailContentInputSchema,
+    outputSchema: GenerateEmailContentOutputSchema,
+  },
+  async (input) => {
+    const { output } = await emailContentPrompt(input, {
         model: 'googleai/gemini-2.0-flash',
-        prompt: prompt,
-        output: {
-            format: 'json',
-            schema: GenerateEmailContentOutputSchema,
-        },
-        pluginOptions: apiKey ? { googleai: { apiKey } } : undefined,
+        pluginOptions: input.apiKey ? { googleai: { apiKey: input.apiKey } } : undefined,
     });
-
+    
     if (!output) {
-      throw new Error("AI failed to generate a response.");
+      throw new Error("AI failed to generate email content.");
     }
     return output;
+  }
+);
+
+export async function generateEmailContent(input: GenerateEmailContentInput): Promise<GenerateEmailContentOutput> {
+    return await generateEmailContentFlow(input);
 }

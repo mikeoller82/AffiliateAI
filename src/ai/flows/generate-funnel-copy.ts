@@ -20,31 +20,43 @@ const GenerateFunnelCopyOutputSchema = z.object({
 });
 export type GenerateFunnelCopyOutput = z.infer<typeof GenerateFunnelCopyOutputSchema>;
 
-export async function generateFunnelCopy(input: GenerateFunnelCopyInput): Promise<GenerateFunnelCopyOutput> {
-    const { productDescription, copyType, userPrompt, apiKey } = input;
-    
-    const prompt = `You are an expert conversion copywriter designing a landing page funnel.
 
-      The product is: ${productDescription}
+const funnelCopyPrompt = ai.definePrompt({
+    name: 'funnelCopyPrompt',
+    input: { schema: GenerateFunnelCopyInputSchema },
+    output: { schema: GenerateFunnelCopyOutputSchema },
+    prompt: `You are an expert conversion copywriter designing a landing page funnel.
 
-      Your task is to generate a "${copyType}".
+The product is: {{{productDescription}}}
 
-      Follow this instruction from the user: ${userPrompt}
+Your task is to generate a "{{{copyType}}}".
 
-      Generate a single, compelling piece of copy. Return ONLY the text for the copy in the 'generatedCopy' field of the JSON output.`;
+Follow this instruction from the user: {{{userPrompt}}}
 
-    const {output} = await ai.generate({
+Generate a single, compelling piece of copy.`
+});
+
+
+const generateFunnelCopyFlow = ai.defineFlow(
+  {
+    name: 'generateFunnelCopyFlow',
+    inputSchema: GenerateFunnelCopyInputSchema,
+    outputSchema: GenerateFunnelCopyOutputSchema,
+  },
+  async (input) => {
+    const { output } = await funnelCopyPrompt(input, {
         model: 'googleai/gemini-2.0-flash',
-        prompt: prompt,
-        output: {
-            format: 'json',
-            schema: GenerateFunnelCopyOutputSchema
-        },
-        pluginOptions: apiKey ? { googleai: { apiKey } } : undefined,
+        pluginOptions: input.apiKey ? { googleai: { apiKey: input.apiKey } } : undefined,
     });
-
+    
     if (!output) {
-      throw new Error("AI failed to generate a response.");
+      throw new Error("AI failed to generate a response for funnel copy.");
     }
     return output;
+  }
+);
+
+
+export async function generateFunnelCopy(input: GenerateFunnelCopyInput): Promise<GenerateFunnelCopyOutput> {
+    return await generateFunnelCopyFlow(input);
 }

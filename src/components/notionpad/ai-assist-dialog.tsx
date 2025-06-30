@@ -92,12 +92,12 @@ export function AiAssistDialog({ isOpen, onOpenChange, content, onReplaceContent
       };
       const response = await editText(input);
       setResult(response.editedText);
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
       toast({
         variant: 'destructive',
         title: 'AI Generation Failed',
-        description: 'An error occurred. Please try again.',
+        description: error.message || 'An error occurred. Please try again.',
       });
     } finally {
       setIsLoading(false);

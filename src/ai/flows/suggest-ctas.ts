@@ -12,32 +12,41 @@ export const SuggestCTAsInputSchema = z.object({
 export type SuggestCTAsInput = z.infer<typeof SuggestCTAsInputSchema>;
 
 
-export const SuggestCTAsOutputSchema = z.array(z.string()).describe('A list of suggested CTAs.');
+export const SuggestCTAsOutputSchema = z.object({
+    ctas: z.array(z.string()).describe('A list of suggested CTA strings.')
+});
 export type SuggestCTAsOutput = z.infer<typeof SuggestCTAsOutputSchema>;
 
-
-export async function suggestCTAs(input: SuggestCTAsInput): Promise<SuggestCTAsOutput> {
-    const { context, apiKey } = input;
-    
-    const prompt = `You are a world-class expert in Marketing Strategy.
+const suggestCTAsPrompt = ai.definePrompt({
+    name: 'suggestCTAsPrompt',
+    input: { schema: SuggestCTAsInputSchema },
+    output: { schema: SuggestCTAsOutputSchema },
+    prompt: `You are a world-class expert in Marketing Strategy.
 Suggest 3-5 compelling Call-To-Actions (CTAs) for the given context.
 
-**Context:** ${context}
+**Context:** {{{context}}}`
+});
 
-Return ONLY a raw JSON array of strings.`;
-    
-    const { output } = await ai.generate({
+const suggestCTAsFlow = ai.defineFlow(
+  {
+    name: 'suggestCTAsFlow',
+    inputSchema: SuggestCTAsInputSchema,
+    outputSchema: SuggestCTAsOutputSchema,
+  },
+  async (input) => {
+    const { output } = await suggestCTAsPrompt(input, {
         model: 'googleai/gemini-2.0-flash',
-        prompt: prompt,
-        output: {
-            format: 'json',
-            schema: SuggestCTAsOutputSchema,
-        },
-        pluginOptions: apiKey ? { googleai: { apiKey } } : undefined,
+        pluginOptions: input.apiKey ? { googleai: { apiKey: input.apiKey } } : undefined,
     });
     
     if (!output) {
-      throw new Error("AI failed to generate a response.");
+      throw new Error("AI failed to suggest CTAs.");
     }
     return output;
+  }
+);
+
+
+export async function suggestCTAs(input: SuggestCTAsInput): Promise<SuggestCTAsOutput> {
+    return await suggestCTAsFlow(input);
 }

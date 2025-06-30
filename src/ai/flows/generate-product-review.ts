@@ -27,35 +27,44 @@ export const GenerateProductReviewOutputSchema = z.object({
 export type GenerateProductReviewOutput = z.infer<typeof GenerateProductReviewOutputSchema>;
 
 
-export async function generateProductReview(input: GenerateProductReviewInput): Promise<GenerateProductReviewOutput> {
-    const { productName, features, apiKey } = input;
-
-    const prompt = `You are an expert in SEO Copywriting and Affiliate Marketing.
+const productReviewPrompt = ai.definePrompt({
+    name: 'productReviewPrompt',
+    input: { schema: GenerateProductReviewInputSchema },
+    output: { schema: GenerateProductReviewOutputSchema },
+    prompt: `You are an expert in SEO Copywriting and Affiliate Marketing.
 Generate a well-structured and engaging product review in Markdown format.
 
-**Product Name:** ${productName}
-**Key Features/Talking Points:** ${features}
+**Product Name:** {{{productName}}}
+**Key Features/Talking Points:** {{{features}}}
 
 **Structure:**
 - Catchy introduction
 - "Pros" section (bulleted)
 - "Cons" section (bulleted)
-- Concluding summary
+- Concluding summary`
+});
 
-Return ONLY the raw JSON object.`;
-    
-    const { output } = await ai.generate({
+
+const generateProductReviewFlow = ai.defineFlow(
+  {
+    name: 'generateProductReviewFlow',
+    inputSchema: GenerateProductReviewInputSchema,
+    outputSchema: GenerateProductReviewOutputSchema,
+  },
+  async (input) => {
+    const { output } = await productReviewPrompt(input, {
         model: 'googleai/gemini-2.0-flash',
-        prompt: prompt,
-        output: {
-            format: 'json',
-            schema: GenerateProductReviewOutputSchema,
-        },
-        pluginOptions: apiKey ? { googleai: { apiKey } } : undefined,
+        pluginOptions: input.apiKey ? { googleai: { apiKey: input.apiKey } } : undefined,
     });
-
+    
     if (!output) {
-      throw new Error("AI failed to generate a response.");
+      throw new Error("AI failed to generate product review.");
     }
     return output;
+  }
+);
+
+
+export async function generateProductReview(input: GenerateProductReviewInput): Promise<GenerateProductReviewOutput> {
+    return await generateProductReviewFlow(input);
 }
