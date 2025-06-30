@@ -2,15 +2,15 @@
 import express from 'express';
 import cors from 'cors';
 import { run } from '@genkit-ai/core';
-import { getGenerateImageFlow } from './ai/flows/generate-image';
-import { getGenerateAdCopyFlow } from './ai/flows/generate-ad-copy';
-import { getSuggestCTAsFlow } from './ai/flows/suggest-ctas';
-import { getGenerateProductReviewFlow } from './ai/flows/generate-product-review';
-import { getGenerateProductHookFlow } from './ai/flows/generate-product-hook';
-import { getGenerateEmailContentFlow } from './ai/flows/generate-email-content';
+import { getGenerateImageFlow } from './src/ai/flows/generate-image';
+import { getGenerateAdCopyFlow } from './src/ai/flows/generate-ad-copy';
+import { getSuggestCTAsFlow } from './src/ai/flows/suggest-ctas';
+import { getGenerateProductReviewFlow } from './src/ai/flows/generate-product-review';
+import { getGenerateProductHookFlow } from './src/ai/flows/generate-product-hook';
+import { getGenerateEmailContentFlow } from './src/ai/flows/generate-email-content';
 
 // Initialize Genkit
-import './ai/genkit-init';
+import './src/ai/genkit-init';
 
 const app = express();
 const port = 3001; // The AI server will run on a different port
