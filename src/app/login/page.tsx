@@ -75,10 +75,7 @@ export default function LoginPage() {
           title: 'Success!',
           description: 'You have been successfully logged in.',
         });
-        // This delay gives the browser a moment to set the cookie before redirecting.
-        setTimeout(() => {
-            window.location.href = '/dashboard';
-        }, 100);
+        router.push('/dashboard');
       } else {
         throw new Error(result.error || 'Login failed due to an unknown reason.');
       }

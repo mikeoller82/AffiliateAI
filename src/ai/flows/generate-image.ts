@@ -5,10 +5,13 @@
  */
 import { z } from 'zod';
 import { ai } from '@/ai/genkit';
+import { googleAI } from '@genkit-ai/googleai';
+import { genkit } from 'genkit';
 
 export const GenerateImageInputSchema = z.object({
   prompt: z.string().describe('A detailed text description of the image to generate.'),
   style: z.string().optional().describe('The artistic style of the image.'),
+  apiKey: z.string().optional().describe('User-provided Google AI API Key.'),
 });
 export type GenerateImageInput = z.infer<typeof GenerateImageInputSchema>;
 
@@ -27,16 +30,14 @@ const generateImageFlow = ai.defineFlow(
     inputSchema: GenerateImageInputSchema,
     outputSchema: GenerateImageOutputSchema,
   },
-  async ({ prompt, style }) => {
-    const { media } = await ai.generate({
+  async ({ prompt, style, apiKey }) => {
+    const dynamicAI = apiKey ? genkit({ plugins: [googleAI({ apiKey })] }) : ai;
+
+    const { media } = await dynamicAI.generate({
       model: 'googleai/gemini-2.0-flash-preview-image-generation',
       prompt: `${prompt}${style ? `, in the style of ${style}` : ''}`,
       config: {
         responseModalities: ['TEXT', 'IMAGE'],
-        // You can add other configurations like width/height here if needed.
-        // For example:
-        // width: 1024,
-        // height: 576,
       },
     });
 

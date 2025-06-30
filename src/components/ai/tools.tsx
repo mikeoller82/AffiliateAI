@@ -62,7 +62,7 @@ export function AdCopyGenerator() {
       const response = await fetch('/api/ai/generate-ad-copy', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values),
+        body: JSON.stringify({ ...values, apiKey }),
       });
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ details: response.statusText }));
@@ -180,7 +180,7 @@ export function CtaSuggestor() {
       const response = await fetch('/api/ai/suggest-ctas', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values),
+        body: JSON.stringify({ ...values, apiKey }),
       });
        if (!response.ok) {
          const errorData = await response.json().catch(() => ({ details: response.statusText }));
@@ -262,7 +262,7 @@ export function ProductReviewWriter() {
        const response = await fetch('/api/ai/generate-product-review', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values),
+        body: JSON.stringify({ ...values, apiKey }),
       });
       if (!response.ok) {
          const errorData = await response.json().catch(() => ({ details: response.statusText }));
@@ -348,7 +348,7 @@ export function ProductHookGenerator() {
        const response = await fetch('/api/ai/generate-product-hook', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values),
+        body: JSON.stringify({ ...values, apiKey }),
       });
       if (!response.ok) {
          const errorData = await response.json().catch(() => ({ details: response.statusText }));
@@ -451,7 +451,7 @@ export function EmailGenerator({ defaultValues }: EmailGeneratorProps) {
       const response = await fetch('/api/ai/generate-email-content', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values),
+        body: JSON.stringify({ ...values, apiKey }),
       });
       if (!response.ok) {
          const errorData = await response.json().catch(() => ({ details: response.statusText }));
@@ -589,7 +589,7 @@ export function ImageGenerator() {
       const response = await fetch('/api/ai/generate-image', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values),
+        body: JSON.stringify({ ...values, apiKey }),
       });
        if (!response.ok) {
          const errorData = await response.json().catch(() => ({ details: response.statusText }));

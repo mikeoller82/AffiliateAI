@@ -5,6 +5,8 @@
  */
 import { z } from 'zod';
 import { ai } from '@/ai/genkit';
+import { googleAI } from '@genkit-ai/googleai';
+import { genkit } from 'genkit';
 
 export const GenerateProductReviewInputSchema = z.object({
   productName: z.string().describe('The name of the product to review.'),
@@ -13,6 +15,7 @@ export const GenerateProductReviewInputSchema = z.object({
     .describe(
       'Key features, benefits, or talking points about the product.'
     ),
+  apiKey: z.string().optional().describe('User-provided Google AI API Key.'),
 });
 export type GenerateProductReviewInput = z.infer<typeof GenerateProductReviewInputSchema>;
 
@@ -37,7 +40,9 @@ const generateProductReviewFlow = ai.defineFlow(
     inputSchema: GenerateProductReviewInputSchema,
     outputSchema: GenerateProductReviewOutputSchema,
   },
-  async ({ productName, features }) => {
+  async ({ productName, features, apiKey }) => {
+    const dynamicAI = apiKey ? genkit({ plugins: [googleAI({ apiKey })] }) : ai;
+
     const prompt = `You are an expert in SEO Copywriting and Affiliate Marketing.
 Generate a well-structured and engaging product review in Markdown format.
 
@@ -52,7 +57,7 @@ Generate a well-structured and engaging product review in Markdown format.
 
 Return ONLY the raw JSON object.`;
     
-    const { output } = await ai.generate({
+    const { output } = await dynamicAI.generate({
         model: 'googleai/gemini-2.0-flash',
         prompt: prompt,
         output: {

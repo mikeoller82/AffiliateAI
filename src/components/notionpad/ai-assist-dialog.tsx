@@ -88,6 +88,7 @@ export function AiAssistDialog({ isOpen, onOpenChange, content, onReplaceContent
       const input: EditTextInput = {
         text: plainText,
         instruction,
+        apiKey,
       };
       const response = await editText(input);
       setResult(response.editedText);

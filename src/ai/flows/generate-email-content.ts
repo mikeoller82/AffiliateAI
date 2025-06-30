@@ -6,6 +6,8 @@
 
 import { z } from 'zod';
 import { ai } from '@/ai/genkit';
+import { googleAI } from '@genkit-ai/googleai';
+import { genkit } from 'genkit';
 
 export const GenerateEmailContentInputSchema = z.object({
   objective: z
@@ -13,6 +15,7 @@ export const GenerateEmailContentInputSchema = z.object({
     .describe('The objective of the email, e.g., Promote new product X'),
   tone: z.string().describe('The tone of the email, e.g., enthusiastic'),
   productDetails: z.string().describe('Details about the product or service.'),
+  apiKey: z.string().optional().describe('User-provided Google AI API Key.'),
 });
 export type GenerateEmailContentInput = z.infer<typeof GenerateEmailContentInputSchema>;
 
@@ -33,7 +36,9 @@ const generateEmailContentFlow = ai.defineFlow(
     inputSchema: GenerateEmailContentInputSchema,
     outputSchema: GenerateEmailContentOutputSchema,
   },
-  async ({ objective, tone, productDetails }) => {
+  async ({ objective, tone, productDetails, apiKey }) => {
+    const dynamicAI = apiKey ? genkit({ plugins: [googleAI({ apiKey })] }) : ai;
+    
     const prompt = `You are a world-class expert in Email Copywriting.
 Generate email subject lines and body copy based on the provided information.
 
@@ -43,7 +48,7 @@ Generate email subject lines and body copy based on the provided information.
 
 Return ONLY the raw JSON object with the keys "subjectLines" and "body".`;
         
-    const { output } = await ai.generate({
+    const { output } = await dynamicAI.generate({
         model: 'googleai/gemini-2.0-flash',
         prompt: prompt,
         output: {

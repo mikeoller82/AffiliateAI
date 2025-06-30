@@ -48,54 +48,51 @@ export default function DashboardPage() {
   const [insights, setInsights] = useState<InsightsOutput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    const fetchInsights = async () => {
-      // The API key check remains, gating the feature on the client-side
-      if (!apiKey) {
-        return;
+  const fetchInsights = async () => {
+    if (!apiKey) {
+      return;
+    }
+    setIsLoading(true);
+    setInsights(null);
+    try {
+      const mockMetrics = { clicks: 1250, conversions: 150, commission: 4500 };
+      const mockFunnels = funnelTemplates.map(f => ({
+        name: f.title,
+        ctr: `${f.stats.ctr}%`,
+        optInRate: `${f.stats.optInRate}%`,
+      }));
+      
+      const response = await fetch('/api/ai/generateDashboardInsights', {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+              metrics: mockMetrics,
+              funnels: mockFunnels,
+              apiKey: apiKey,
+          }),
+      });
+
+      if (!response.ok) {
+          const errorData = await response.json().catch(() => ({details: response.statusText}));
+          throw new Error(errorData.details || 'Failed to fetch AI insights from API');
       }
-      setIsLoading(true);
-      try {
-        const mockMetrics = { clicks: 1250, conversions: 150, commission: 4500 };
-        const mockFunnels = funnelTemplates.map(f => ({
-          name: f.title,
-          ctr: `${f.stats.ctr}%`,
-          optInRate: `${f.stats.optInRate}%`,
-        }));
-        
-        // Call the new API route instead of the server-side flow directly
-        const response = await fetch('/api/ai/generateDashboardInsights', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                metrics: mockMetrics,
-                funnels: mockFunnels,
-            }),
-        });
 
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Failed to fetch AI insights from API');
-        }
+      const data = await response.json();
+      setInsights(data);
 
-        const data = await response.json();
-        setInsights(data);
-
-      } catch (error: any) {
-        console.error("Failed to fetch AI insights:", error);
-        toast({
-          variant: 'destructive',
-          title: 'AI Insight Error',
-          description: error.message || 'Could not fetch AI-powered recommendations.',
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchInsights();
-  }, [apiKey, toast]);
+    } catch (error: any) {
+      console.error("Failed to fetch AI insights:", error);
+      toast({
+        variant: 'destructive',
+        title: 'AI Insight Error',
+        description: error.message || 'Could not fetch AI-powered recommendations.',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -247,10 +244,10 @@ export default function DashboardPage() {
                 ) : (
                    <div className="flex flex-col items-center justify-center h-full text-center py-12 border-2 border-dashed rounded-lg">
                       <Lightbulb className="h-10 w-10 text-muted-foreground mb-4" />
-                      <h3 className="font-semibold">No Recommendations Yet</h3>
-                      <p className="text-muted-foreground text-sm">Start a campaign to get AI-powered insights.</p>
-                      <Button asChild className="mt-4">
-                          <Link href="/dashboard/funnels">Create a Funnel <ArrowRight className="ml-2 h-4 w-4"/></Link>
+                      <h3 className="font-semibold">Generate Recommendations</h3>
+                      <p className="text-muted-foreground text-sm">Click the button to get AI-powered insights on your data.</p>
+                      <Button className="mt-4" onClick={fetchInsights}>
+                          Generate Insights
                       </Button>
                   </div>
                 )}

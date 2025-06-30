@@ -5,12 +5,15 @@
  */
 import { z } from 'zod';
 import { ai } from '@/ai/genkit';
+import { googleAI } from '@genkit-ai/googleai';
+import { genkit } from 'genkit';
 
 export const GenerateProductHookInputSchema = z.object({
   productDescription: z.string().describe('A description of the product.'),
   emotion: z
     .string()
     .describe('The target emotion for the hook, e.g., Urgency, Curiosity, Transformation.'),
+  apiKey: z.string().optional().describe('User-provided Google AI API Key.'),
 });
 export type GenerateProductHookInput = z.infer<typeof GenerateProductHookInputSchema>;
 
@@ -33,7 +36,9 @@ const generateProductHookFlow = ai.defineFlow(
     inputSchema: GenerateProductHookInputSchema,
     outputSchema: GenerateProductHookOutputSchema,
   },
-  async ({ productDescription, emotion }) => {
+  async ({ productDescription, emotion, apiKey }) => {
+    const dynamicAI = apiKey ? genkit({ plugins: [googleAI({ apiKey })] }) : ai;
+
     const prompt = `You are an expert in Viral Marketing.
 Generate 3-5 short, punchy marketing hook ideas designed to grab attention and evoke a specific emotion.
 
@@ -42,7 +47,7 @@ Generate 3-5 short, punchy marketing hook ideas designed to grab attention and e
 
 Return ONLY the raw JSON object.`;
     
-    const { output } = await ai.generate({
+    const { output } = await dynamicAI.generate({
         model: 'googleai/gemini-2.0-flash',
         prompt: prompt,
         output: {

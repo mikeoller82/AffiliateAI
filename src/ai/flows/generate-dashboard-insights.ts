@@ -7,6 +7,8 @@
 import { z } from 'zod';
 import { ai } from '@/ai/genkit';
 import * as Icons from 'lucide-react';
+import { googleAI } from '@genkit-ai/googleai';
+import { genkit } from 'genkit';
 
 export const FunnelPerformanceInputSchema = z.object({
   name: z.string().describe('The name of the marketing funnel'),
@@ -23,6 +25,7 @@ export const MetricsInputSchema = z.object({
 export const GenerateDashboardInsightsInputSchema = z.object({
   metrics: MetricsInputSchema,
   funnels: z.array(FunnelPerformanceInputSchema),
+  apiKey: z.string().optional().describe('User-provided Google AI API Key.'),
 });
 export type GenerateDashboardInsightsInput = z.infer<typeof GenerateDashboardInsightsInputSchema>;
 
@@ -49,6 +52,8 @@ const generateDashboardInsightsFlow = ai.defineFlow(
     outputSchema: GenerateDashboardInsightsOutputSchema,
   },
   async (input) => {
+    const dynamicAI = input.apiKey ? genkit({ plugins: [googleAI({ apiKey: input.apiKey })] }) : ai;
+    
     const funnelDetails = input.funnels.map(f =>
         `*   **Funnel: ${f.name}**
     *   Click-Through Rate (CTR): ${f.ctr}
@@ -73,7 +78,7 @@ Generate a JSON object with two keys: "insights" and "recommendations".
 
 Return only the raw JSON object.`;
 
-    const { output } = await ai.generate({
+    const { output } = await dynamicAI.generate({
       model: 'googleai/gemini-2.0-flash',
       prompt: prompt,
       output: {

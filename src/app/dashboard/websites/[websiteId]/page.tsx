@@ -390,7 +390,7 @@ export default function WebsiteEditorPage() {
       toast({
         variant: 'destructive',
         title: 'Missing Information',
-        description: 'Please provide a product/service description in the Settings tab and select a content type to generate.',
+        description: 'Please provide a business/service description in the Settings tab and select a content type to generate.',
       });
       return;
     }

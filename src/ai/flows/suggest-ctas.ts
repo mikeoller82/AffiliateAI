@@ -5,9 +5,12 @@
  */
 import { z } from 'zod';
 import { ai } from '@/ai/genkit';
+import { googleAI } from '@genkit-ai/googleai';
+import { genkit } from 'genkit';
 
 export const SuggestCTAsInputSchema = z.object({
   context: z.string().describe('The context of the landing page or ad, e.g., "Landing page for a free webinar on real estate".'),
+  apiKey: z.string().optional().describe('User-provided Google AI API Key.'),
 });
 export type SuggestCTAsInput = z.infer<typeof SuggestCTAsInputSchema>;
 
@@ -26,7 +29,9 @@ const suggestCTAsFlow = ai.defineFlow(
     inputSchema: SuggestCTAsInputSchema,
     outputSchema: SuggestCTAsOutputSchema,
   },
-  async ({ context }) => {
+  async ({ context, apiKey }) => {
+    const dynamicAI = apiKey ? genkit({ plugins: [googleAI({ apiKey })] }) : ai;
+    
     const prompt = `You are a world-class expert in Marketing Strategy.
 Suggest 3-5 compelling Call-To-Actions (CTAs) for the given context.
 
@@ -34,7 +39,7 @@ Suggest 3-5 compelling Call-To-Actions (CTAs) for the given context.
 
 Return ONLY a raw JSON array of strings.`;
     
-    const { output } = await ai.generate({
+    const { output } = await dynamicAI.generate({
         model: 'googleai/gemini-2.0-flash',
         prompt: prompt,
         output: {

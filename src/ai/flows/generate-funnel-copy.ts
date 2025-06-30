@@ -6,12 +6,15 @@
 
 import { z } from 'genkit';
 import { ai } from '@/ai/genkit';
+import { googleAI } from '@genkit-ai/googleai';
+import { genkit } from 'genkit';
 
 
 const GenerateFunnelCopyInputSchema = z.object({
   productDescription: z.string().describe('A brief description of the product or service being offered in the funnel.'),
   copyType: z.string().describe('The type of copy to generate, e.g., "Hero Headline", "Feature Description", "CTA Button Text".'),
   userPrompt: z.string().describe('A specific instruction from the user on how to generate the copy, e.g., "Make it sound more exclusive" or "Focus on the pain point of disorganization".'),
+  apiKey: z.string().optional().describe('User-provided Google AI API Key.'),
 });
 export type GenerateFunnelCopyInput = z.infer<typeof GenerateFunnelCopyInputSchema>;
 
@@ -30,7 +33,9 @@ const generateFunnelCopyFlow = ai.defineFlow(
     inputSchema: GenerateFunnelCopyInputSchema,
     outputSchema: GenerateFunnelCopyOutputSchema,
   },
-  async ({ productDescription, copyType, userPrompt }) => {
+  async ({ productDescription, copyType, userPrompt, apiKey }) => {
+    const dynamicAI = apiKey ? genkit({ plugins: [googleAI({ apiKey })] }) : ai;
+    
     const prompt = `You are an expert conversion copywriter designing a landing page funnel.
 
       The product is: ${productDescription}
@@ -41,7 +46,7 @@ const generateFunnelCopyFlow = ai.defineFlow(
 
       Generate a single, compelling piece of copy. Return ONLY the text for the copy in the 'generatedCopy' field of the JSON output.`;
 
-    const {output} = await ai.generate({
+    const {output} = await dynamicAI.generate({
         model: 'googleai/gemini-2.0-flash',
         prompt: prompt,
         output: {
