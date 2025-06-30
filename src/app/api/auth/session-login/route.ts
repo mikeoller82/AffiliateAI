@@ -1,3 +1,4 @@
+
 import { NextRequest, NextResponse } from 'next/server';
 import {
   getFirebaseAuth,
@@ -11,9 +12,6 @@ import {
  * – Verifies the ID token with Firebase Admin
  * – Creates a session cookie (5-day expiry by default)
  * – Returns the decoded token payload and sets `__session`
- * 
- * In dev mode (NODE_ENV === 'development') you can POST anything and
- * it will short-circuit so you can test the front-end without Firebase.
  */
 export async function POST(request: NextRequest) {
   console.log('=== Session Login API called ===');
@@ -31,30 +29,11 @@ export async function POST(request: NextRequest) {
   }
 
   const { idToken } = body;
-  if (!idToken && process.env.NODE_ENV !== 'development') {
+  if (!idToken) {
     return NextResponse.json(
       { error: 'idToken is required' },
       { status: 400 },
     );
-  }
-
-  // ───── Development shortcut ─────
-  if (process.env.NODE_ENV === 'development') {
-    console.log('[session-login] DEV mode: skipping token verification');
-    const response = NextResponse.json({
-      success: true,
-      user: { uid: 'dev-user', email: 'dev@example.com' },
-    });
-    response.cookies.set({
-      name: '__session',
-      value: 'dev-session',
-      httpOnly: true,
-      secure: false,
-      sameSite: 'lax',
-      path: '/',
-      maxAge: 60 * 60 * 24 * 5, // 5 days in seconds
-    });
-    return response;
   }
 
   try {
