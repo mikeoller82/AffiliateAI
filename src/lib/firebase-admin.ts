@@ -10,114 +10,115 @@ import {
 } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 
-const ENV_VAR_NAME = 'FIREBASE_SERVICE_ACCOUNT'; // Cloud Run injects the secret here
+const ENV_VAR_NAME = 'FIREBASE_SERVICE_ACCOUNT';
 
 /**
- * Initialise Firebase Admin exactly once and return the App instance.
- * Priority order:
- * 1. FIREBASE_SERVICE_ACCOUNT – secret JSON content (Cloud Run)
- * 2. GOOGLE_APPLICATION_CREDENTIALS – path to JSON file (local dev)
- * 3. Application Default Credentials (gcloud auth / metadata-server)
+ * Initializes Firebase Admin SDK for server-side operations.
+ * 
+ * This function handles credentials in a specific order, crucial for both
+ * local development and production deployment on Google Cloud.
+ *
+ * Priority Order:
+ * 1. FIREBASE_SERVICE_ACCOUNT (Environment Variable): 
+ *    - Used in deployed environments like Cloud Run.
+ *    - The service account JSON key is stored as a secret and injected as an environment variable.
+ * 
+ * 2. GOOGLE_APPLICATION_CREDENTIALS (Environment Variable):
+ *    - **This is the recommended method for local development.**
+ *    - Steps:
+ *        a. Download your service account JSON file from the Google Cloud Console.
+ *        b. Save it somewhere safe on your local machine (e.g., `~/.config/gcloud/my-service-account.json`).
+ *        c. Set the environment variable in your terminal:
+ *           `export GOOGLE_APPLICATION_CREDENTIALS="/path/to/your/service-account-file.json"`
+ *        d. Now, when you run `npm run dev`, the SDK will find and use these credentials.
+ * 
+ * 3. Application Default Credentials (ADC):
+ *    - A fallback method, often used in local development.
+ *    - If the above variables are not set, the SDK will look for credentials created by the gcloud CLI.
+ *    - To set this up, run the following command in your terminal and follow the prompts:
+ *      `gcloud auth application-default login`
+ *
+ * If none of these methods succeed, this function will throw an error, as the server cannot securely
+ * communicate with Firebase services without proper authentication.
  */
 export function getAdminApp(): App {
   if (getApps().length) {
-    // already initialised
     return getApps()[0];
   }
 
-  // Explicitly use the client-side project ID to ensure consistency.
   const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
 
-  // ───── 1) Cloud Run: secret injected as env-var string ─────
+  // 1. Production: Cloud Run secret injected as env-var string
   const jsonFromEnv = process.env[ENV_VAR_NAME];
   if (jsonFromEnv) {
-    console.log('[firebaseAdmin] Initialising from env var', ENV_VAR_NAME);
+    console.log('[firebaseAdmin] Initializing from env var', ENV_VAR_NAME);
     try {
       const credsObject = JSON.parse(jsonFromEnv);
-      
-      // A common issue with service account JSON in env vars is mangled newlines in the private key.
-      // This ensures they are formatted correctly before passing to `cert()`.
       if (!credsObject.private_key) {
         throw new Error("Service account JSON is missing 'private_key' field.");
       }
       credsObject.private_key = credsObject.private_key.replace(/\\n/g, '\n');
-
       return initializeApp({
         credential: cert(credsObject),
-        projectId: projectId || credsObject.project_id, // Prefer client-side project ID
+        projectId: projectId || credsObject.project_id,
       });
     } catch (err) {
-      console.error('[firebaseAdmin] Failed to parse JSON in env var. Ensure it is a valid, single-line JSON string.', err);
-      throw new Error(`Failed to initialize Firebase Admin SDK from ${ENV_VAR_NAME}. Check server logs for details.`);
+      console.error('[firebaseAdmin] Failed to parse JSON in env var.', err);
+      throw new Error(`Failed to initialize Firebase Admin from ${ENV_VAR_NAME}.`);
     }
   }
 
-  // ───── 2) Local: GOOGLE_APPLICATION_CREDENTIALS → file path ─────
+  // 2. Local Development: GOOGLE_APPLICATION_CREDENTIALS file path
   const filePath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
   if (filePath && fs.existsSync(filePath)) {
-    console.log(
-      '[firebaseAdmin] Initialising from file in GOOGLE_APPLICATION_CREDENTIALS',
-    );
+    console.log('[firebaseAdmin] Initializing from file in GOOGLE_APPLICATION_CREDENTIALS');
     try {
       const creds = JSON.parse(fs.readFileSync(filePath, 'utf8'));
       return initializeApp({
         credential: cert(creds),
-        projectId: projectId || creds.project_id, // Prefer client-side project ID
+        projectId: projectId || creds.project_id,
       });
     } catch (err) {
         console.error(`[firebaseAdmin] Failed to parse JSON from file at ${filePath}`, err);
-        throw new Error(`Failed to initialize Firebase Admin SDK from ${filePath}.`);
+        throw new Error(`Failed to initialize Firebase Admin from ${filePath}.`);
     }
   }
 
-  // ───── 3) Fallback: ADC (metadata server, gcloud auth, etc.) ─────
-  console.log('[firebaseAdmin] Attempting to initialise from applicationDefault()');
+  // 3. Fallback for Local Development: Application Default Credentials
+  console.log('[firebaseAdmin] Attempting to initialize from applicationDefault()');
   try {
       return initializeApp({
         credential: applicationDefault(),
-        projectId: projectId, // Explicitly set project ID to match client
+        projectId: projectId,
       });
   } catch (err) {
-      console.error('[firebaseAdmin] Failed to initialize from applicationDefault().', err);
-      throw new Error("Firebase Admin SDK initialization failed. No valid credentials found. Please set FIREBASE_SERVICE_ACCOUNT or GOOGLE_APPLICATION_CREDENTIALS.");
+      console.error('[firebaseAdmin] Failed to initialize from applicationDefault(). This is the likely source of your "app/invalid-credential" error.', err);
+      throw new Error("Firebase Admin SDK initialization failed. No valid credentials found. Please set GOOGLE_APPLICATION_CREDENTIALS or run 'gcloud auth application-default login'.");
   }
 }
 
-/**
- * Helper that returns Firebase Auth quickly.
- */
 export function getFirebaseAuth() {
   return getAuth(getAdminApp());
 }
 
-/**
- * Create a session cookie with configurable retries + exponential back-off.
- */
 export async function createSessionCookieWithRetry(
   idToken: string,
   expiresIn: number,
   maxRetries = 3,
 ) {
   const auth = getFirebaseAuth();
-
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      console.log(
-        `[firebaseAdmin] createSessionCookie attempt ${attempt}/${maxRetries}`,
-      );
       return await auth.createSessionCookie(idToken, { expiresIn });
     } catch (err) {
       console.error(
-        `[firebaseAdmin] attempt ${attempt} failed:`,
+        `[firebaseAdmin] createSessionCookie attempt ${attempt} failed:`,
         (err as Error).message,
       );
       if (attempt === maxRetries) throw err;
-
-      // simple exponential back-off up to 10 s
       const wait = Math.min(1000 * 2 ** (attempt - 1), 10_000);
       await new Promise((r) => setTimeout(r, wait));
     }
   }
-  // This line should be unreachable, but it satisfies TypeScript's need for a return path.
   throw new Error("createSessionCookieWithRetry failed after all retries.");
 }
