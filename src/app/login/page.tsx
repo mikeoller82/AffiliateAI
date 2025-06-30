@@ -67,8 +67,8 @@ export default function LoginPage() {
       console.log('Session API response status:', response.status);
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'An unknown server error occurred.'}));
-        throw new Error(errorData.details || errorData.error);
+        const errorData = await response.json().catch(() => ({ details: 'An unknown server error occurred.'}));
+        throw new Error(errorData.details || 'Login failed due to a server error.');
       }
       
       const result = await response.json();
@@ -87,20 +87,14 @@ export default function LoginPage() {
     } catch (error: any) {
       console.error("Login failed:", error);
       
-      let description = 'An unexpected error occurred. Please try again.';
-      
-      if (error.message?.includes('Invalid PEM formatted') || error.message?.includes('private_key')) {
-        description = "Server configuration error: The Firebase Admin private key is formatted incorrectly. Please check your environment variables.";
-      }
-      else if (error.code === 'auth/invalid-credential' || 
+      // The error message now comes directly from our improved API's 'details' field,
+      // or from a client-side Firebase Auth error.
+      let description = error.message || 'An unexpected error occurred. Please try again.';
+
+      if (error.code === 'auth/invalid-credential' || 
           error.code === 'auth/wrong-password' || 
-          error.code === 'auth/user-not-found' || 
-          error.code === 'auth/configuration-not-found' || 
-          error.code === 'auth/api-key-not-valid') {
+          error.code === 'auth/user-not-found') {
         description = 'Invalid email or password. Please check your credentials and try again.';
-      } 
-      else if (error.message) {
-        description = error.message;
       }
       
       toast({

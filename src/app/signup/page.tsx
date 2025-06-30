@@ -61,8 +61,8 @@ export default function SignupPage() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'An unknown server error occurred.'}));
-        throw new Error(errorData.details || errorData.error);
+        const errorData = await response.json().catch(() => ({ details: 'An unknown server error occurred.'}));
+        throw new Error(errorData.details || 'Session creation failed after signup.');
       }
 
       toast({
@@ -72,14 +72,12 @@ export default function SignupPage() {
       router.replace('/dashboard');
     } catch (error: any) {
       console.error("Signup failed:", error);
-      let description = 'An unexpected error occurred. Please try again.';
-       if (error.code === 'auth/email-already-in-use') {
+      let description = error.message || 'An unexpected error occurred. Please try again.';
+
+      if (error.code === 'auth/email-already-in-use') {
           description = 'This email address is already in use. Please try logging in.';
-      } else if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found' || error.code === 'auth/configuration-not-found' || error.code === 'auth/api-key-not-valid') {
-          description = 'There was a problem with the authentication service. Please try again later.';
-      } else if (error.message) {
-          description = error.message;
       }
+      
       toast({
         variant: 'destructive',
         title: 'Sign Up Failed',
