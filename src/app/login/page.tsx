@@ -53,10 +53,8 @@ export default function LoginPage() {
     setIsLoading(true);
     
     try {
-      console.log('Starting login process...');
       const userCredential = await signInWithEmailAndPassword(auth, values.email, values.password);
       const idToken = await userCredential.user.getIdToken();
-      console.log('Got ID token, creating session...');
 
       const response = await fetch('/api/auth/session-login', {
         method: 'POST',
@@ -64,33 +62,31 @@ export default function LoginPage() {
         body: JSON.stringify({ idToken }),
       });
 
-      console.log('Session API response status:', response.status);
-
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ details: 'An unknown server error occurred.'}));
-        throw new Error(errorData.details || 'Login failed due to a server error.');
+        // This is the key change: we now properly parse the error from the server
+        const errorData = await response.json().catch(() => ({ details: `Server responded with status ${response.status}. Please check server logs.`}));
+        throw new Error(errorData.details || 'An unknown server error occurred.');
       }
       
       const result = await response.json();
 
       if (result.success) {
-        console.log('Login successful, redirecting...');
         toast({
           title: 'Success!',
           description: 'You have been successfully logged in.',
         });
         router.replace('/dashboard');
       } else {
-        throw new Error(result.error || 'Login failed - no success status');
+        // This case should ideally not be hit if !response.ok is handled
+        throw new Error(result.error || 'Login failed due to an unknown reason.');
       }
 
     } catch (error: any) {
       console.error("Login failed:", error);
       
-      // The error message now comes directly from our improved API's 'details' field,
-      // or from a client-side Firebase Auth error.
       let description = error.message || 'An unexpected error occurred. Please try again.';
 
+      // Firebase client-side errors
       if (error.code === 'auth/invalid-credential' || 
           error.code === 'auth/wrong-password' || 
           error.code === 'auth/user-not-found') {

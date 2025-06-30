@@ -61,7 +61,8 @@ export default function SignupPage() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ details: 'An unknown server error occurred.'}));
+        // This is the key change: we now properly parse the error from the server
+        const errorData = await response.json().catch(() => ({ details: `Server responded with status ${response.status}. Please check server logs.`}));
         throw new Error(errorData.details || 'Session creation failed after signup.');
       }
 
@@ -74,6 +75,7 @@ export default function SignupPage() {
       console.error("Signup failed:", error);
       let description = error.message || 'An unexpected error occurred. Please try again.';
 
+      // Firebase client-side errors
       if (error.code === 'auth/email-already-in-use') {
           description = 'This email address is already in use. Please try logging in.';
       }
