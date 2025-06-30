@@ -1,3 +1,4 @@
+
 'server-only';
 import fs from 'fs';
 import {
@@ -29,14 +30,21 @@ export function getAdminApp(): App {
   if (jsonFromEnv) {
     console.log('[firebaseAdmin] Initialising from env var', ENV_VAR_NAME);
     try {
-      const creds = JSON.parse(jsonFromEnv);
+      const credsObject = JSON.parse(jsonFromEnv);
+      
+      // A common issue with service account JSON in env vars is mangled newlines in the private key.
+      // This ensures they are formatted correctly before passing to `cert()`.
+      if (credsObject.private_key) {
+        credsObject.private_key = credsObject.private_key.replace(/\\n/g, '\n');
+      }
+
       return initializeApp({
-        credential: cert(creds),
-        projectId: creds.project_id,
+        credential: cert(credsObject),
+        projectId: credsObject.project_id,
       });
     } catch (err) {
-      console.error('[firebaseAdmin] Failed to parse JSON in env var', err);
-      throw err;
+      console.error('[firebaseAdmin] Failed to parse JSON in env var. Ensure it is a valid, single-line JSON string.', err);
+      throw new Error(`Failed to initialize Firebase Admin SDK from ${ENV_VAR_NAME}. Check server logs for details.`);
     }
   }
 
@@ -46,18 +54,28 @@ export function getAdminApp(): App {
     console.log(
       '[firebaseAdmin] Initialising from file in GOOGLE_APPLICATION_CREDENTIALS',
     );
-    const creds = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-    return initializeApp({
-      credential: cert(creds),
-      projectId: creds.project_id,
-    });
+    try {
+      const creds = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+      return initializeApp({
+        credential: cert(creds),
+        projectId: creds.project_id,
+      });
+    } catch (err) {
+        console.error(`[firebaseAdmin] Failed to parse JSON from file at ${filePath}`, err);
+        throw new Error(`Failed to initialize Firebase Admin SDK from ${filePath}.`);
+    }
   }
 
   // ───── 3) Fallback: ADC (metadata server, gcloud auth, etc.) ─────
-  console.log('[firebaseAdmin] Initialising from applicationDefault()');
-  return initializeApp({
-    credential: applicationDefault(),
-  });
+  console.log('[firebaseAdmin] Attempting to initialise from applicationDefault()');
+  try {
+      return initializeApp({
+        credential: applicationDefault(),
+      });
+  } catch (err) {
+      console.error('[firebaseAdmin] Failed to initialize from applicationDefault().', err);
+      throw new Error("Firebase Admin SDK initialization failed. No valid credentials found. Please set FIREBASE_SERVICE_ACCOUNT or GOOGLE_APPLICATION_CREDENTIALS.");
+  }
 }
 
 /**
@@ -95,4 +113,7 @@ export async function createSessionCookieWithRetry(
       await new Promise((r) => setTimeout(r, wait));
     }
   }
+  // This line should be unreachable, but it satisfies TypeScript's need for a return path.
+  throw new Error("createSessionCookieWithRetry failed after all retries.");
 }
+
