@@ -31,6 +31,7 @@ export default function SignupPage() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const { auth, authError } = useAuth();
+  const [apiError, setApiError] = useState<string | null>(null);
 
   const form = useForm<z.infer<typeof signupFormSchema>>({
     resolver: zodResolver(signupFormSchema),
@@ -41,6 +42,7 @@ export default function SignupPage() {
   });
 
   async function onSubmit(values: z.infer<typeof signupFormSchema>) {
+    setApiError(null);
     if (!auth || authError) {
       toast({
         variant: 'destructive',
@@ -60,10 +62,10 @@ export default function SignupPage() {
         body: JSON.stringify({ idToken }),
       });
 
+      const result = await response.json();
+
       if (!response.ok) {
-        // This is the key change: we now properly parse the error from the server
-        const errorData = await response.json().catch(() => ({ details: `Server responded with status ${response.status}. Please check server logs.`}));
-        throw new Error(errorData.details || 'Session creation failed after signup.');
+        throw new Error(result.details || 'Session creation failed after signup.');
       }
 
       toast({
@@ -75,16 +77,11 @@ export default function SignupPage() {
       console.error("Signup failed:", error);
       let description = error.message || 'An unexpected error occurred. Please try again.';
 
-      // Firebase client-side errors
       if (error.code === 'auth/email-already-in-use') {
           description = 'This email address is already in use. Please try logging in.';
       }
       
-      toast({
-        variant: 'destructive',
-        title: 'Sign Up Failed',
-        description: description,
-      });
+      setApiError(description);
     } finally {
       setIsLoading(false);
     }
@@ -105,6 +102,15 @@ export default function SignupPage() {
           <CardDescription>Join HighLaunchPad and start growing your business.</CardDescription>
         </CardHeader>
         <CardContent>
+          {apiError && (
+              <Alert variant="destructive" className="mb-4">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertTitle>Sign Up Failed</AlertTitle>
+                  <AlertDescription>
+                      {apiError}
+                  </AlertDescription>
+              </Alert>
+          )}
           {authError && (
               <Alert variant="destructive" className="mb-4">
                   <AlertTriangle className="h-4 w-4" />

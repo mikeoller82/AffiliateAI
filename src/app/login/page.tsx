@@ -31,6 +31,7 @@ export default function LoginPage() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const { auth, authError } = useAuth();
+  const [apiError, setApiError] = useState<string | null>(null);
 
   const form = useForm<z.infer<typeof loginFormSchema>>({
     resolver: zodResolver(loginFormSchema),
@@ -41,6 +42,7 @@ export default function LoginPage() {
   });
 
   async function onSubmit(values: z.infer<typeof loginFormSchema>) {
+    setApiError(null);
     if (!auth || authError) {
       toast({
         variant: 'destructive',
@@ -62,14 +64,12 @@ export default function LoginPage() {
         body: JSON.stringify({ idToken }),
       });
 
-      if (!response.ok) {
-        // This is the key change: we now properly parse the error from the server
-        const errorData = await response.json().catch(() => ({ details: `Server responded with status ${response.status}. Please check server logs.`}));
-        throw new Error(errorData.details || 'An unknown server error occurred.');
-      }
-      
       const result = await response.json();
 
+      if (!response.ok) {
+        throw new Error(result.details || 'An unknown server error occurred.');
+      }
+      
       if (result.success) {
         toast({
           title: 'Success!',
@@ -77,7 +77,6 @@ export default function LoginPage() {
         });
         router.replace('/dashboard');
       } else {
-        // This case should ideally not be hit if !response.ok is handled
         throw new Error(result.error || 'Login failed due to an unknown reason.');
       }
 
@@ -86,18 +85,13 @@ export default function LoginPage() {
       
       let description = error.message || 'An unexpected error occurred. Please try again.';
 
-      // Firebase client-side errors
       if (error.code === 'auth/invalid-credential' || 
           error.code === 'auth/wrong-password' || 
           error.code === 'auth/user-not-found') {
         description = 'Invalid email or password. Please check your credentials and try again.';
       }
       
-      toast({
-        variant: 'destructive',
-        title: 'Login Failed',
-        description: description,
-      });
+      setApiError(description);
     } finally {
       setIsLoading(false);
     }
@@ -118,6 +112,15 @@ export default function LoginPage() {
           <CardDescription>Enter your credentials to access your dashboard.</CardDescription>
         </CardHeader>
         <CardContent>
+          {apiError && (
+              <Alert variant="destructive" className="mb-4">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertTitle>Login Failed</AlertTitle>
+                  <AlertDescription>
+                      {apiError}
+                  </AlertDescription>
+              </Alert>
+          )}
           {authError && (
               <Alert variant="destructive" className="mb-4">
                   <AlertTriangle className="h-4 w-4" />
