@@ -70,7 +70,7 @@ export default function SignupPage() {
         title: 'Account Created!',
         description: 'Your account has been created successfully.',
       });
-      router.push('/dashboard');
+      router.replace('/dashboard');
     } catch (error: any) {
       console.error("Signup failed:", error);
       let description = 'An unexpected error occurred. Please try again.';

@@ -111,7 +111,7 @@ export default function LoginPage() {
           title: 'Success!',
           description: 'You have been successfully logged in.',
         });
-        router.push('/dashboard');
+        router.replace('/dashboard');
       } else {
         throw new Error(result.error || 'Login failed - no success status');
       }
