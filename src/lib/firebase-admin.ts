@@ -51,51 +51,60 @@ export function getAdminApp(): App {
   // 1. Production: Cloud Run secret injected as env-var string
   const jsonFromEnv = process.env[ENV_VAR_NAME];
   if (jsonFromEnv) {
-    console.log('[firebaseAdmin] Initializing from env var', ENV_VAR_NAME);
+    console.log('[firebaseAdmin] Attempting to initialize from env var', ENV_VAR_NAME);
     try {
       const credsObject = JSON.parse(jsonFromEnv);
       if (!credsObject.private_key) {
-        throw new Error("Service account JSON is missing 'private_key' field.");
+        throw new Error("Service account JSON from env var is missing 'private_key' field.");
       }
       credsObject.private_key = credsObject.private_key.replace(/\\n/g, '\n');
+      console.log('[firebaseAdmin] Successfully parsed env var. Initializing app...');
       return initializeApp({
         credential: cert(credsObject),
         projectId: projectId || credsObject.project_id,
       });
     } catch (err) {
       console.error('[firebaseAdmin] Failed to parse JSON in env var.', err);
-      throw new Error(`Failed to initialize Firebase Admin from ${ENV_VAR_NAME}.`);
+      throw new Error(`Failed to initialize Firebase Admin from ${ENV_VAR_NAME}. Check the JSON format.`);
     }
   }
 
   // 2. Local Development: GOOGLE_APPLICATION_CREDENTIALS file path
   const filePath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
-  if (filePath && fs.existsSync(filePath)) {
-    console.log('[firebaseAdmin] Initializing from file in GOOGLE_APPLICATION_CREDENTIALS');
-    try {
-      const creds = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-      return initializeApp({
-        credential: cert(creds),
-        projectId: projectId || creds.project_id,
-      });
-    } catch (err) {
-        console.error(`[firebaseAdmin] Failed to parse JSON from file at ${filePath}`, err);
-        throw new Error(`Failed to initialize Firebase Admin from ${filePath}.`);
+  if (filePath) {
+    console.log('[firebaseAdmin] Attempting to initialize from file path in GOOGLE_APPLICATION_CREDENTIALS:', filePath);
+    if (fs.existsSync(filePath)) {
+        try {
+            const creds = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+            console.log('[firebaseAdmin] Successfully parsed file. Initializing app...');
+            return initializeApp({
+                credential: cert(creds),
+                projectId: projectId || creds.project_id,
+            });
+        } catch (err) {
+            console.error(`[firebaseAdmin] Failed to parse JSON from file at ${filePath}`, err);
+            throw new Error(`Failed to initialize Firebase Admin from ${filePath}. Check file content.`);
+        }
+    } else {
+        console.warn(`[firebaseAdmin] GOOGLE_APPLICATION_CREDENTIALS was set, but file does not exist at: ${filePath}. Falling back...`);
     }
   }
 
-  // 3. Fallback for Local Development: Application Default Credentials
-  console.log('[firebaseAdmin] Attempting to initialize from applicationDefault()');
+  // 3. Fallback for Local Development or GCE: Application Default Credentials
+  console.log('[firebaseAdmin] Attempting to initialize from applicationDefault(). This is the last resort.');
   try {
-      return initializeApp({
+      const app = initializeApp({
         credential: applicationDefault(),
         projectId: projectId,
       });
+      console.log('[firebaseAdmin] Successfully initialized from applicationDefault().');
+      return app;
   } catch (err) {
-      console.error('[firebaseAdmin] Failed to initialize from applicationDefault(). This is the likely source of your "app/invalid-credential" error.', err);
-      throw new Error("Firebase Admin SDK initialization failed. No valid credentials found. Please set GOOGLE_APPLICATION_CREDENTIALS or run 'gcloud auth application-default login'.");
+      console.error('[firebaseAdmin] CRITICAL: All credential methods failed. Could not initialize Firebase Admin SDK.', err);
+      throw new Error("Firebase Admin SDK initialization failed. No valid credentials found. For local development, set the GOOGLE_APPLICATION_CREDENTIALS environment variable to the path of your service account key file, or run 'gcloud auth application-default login'.");
   }
 }
+
 
 export function getFirebaseAuth() {
   return getAuth(getAdminApp());
