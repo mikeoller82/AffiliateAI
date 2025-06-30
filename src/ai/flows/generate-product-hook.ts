@@ -1,9 +1,10 @@
 
+'use server';
+/**
+ * @fileOverview An AI agent that generates marketing hooks for a product.
+ */
 import { z } from 'zod';
-import { defineFlow } from '@genkit-ai/core';
-import { geminiPro } from '@genkit-ai/googleai';
-import * as prompts from '../prompts';
-import { Flow } from '@genkit-ai/core/lib/flow';
+import { ai } from '@/ai/genkit';
 
 export const GenerateProductHookInputSchema = z.object({
   productDescription: z.string().describe('A description of the product.'),
@@ -11,41 +12,48 @@ export const GenerateProductHookInputSchema = z.object({
     .string()
     .describe('The target emotion for the hook, e.g., Urgency, Curiosity, Transformation.'),
 });
+export type GenerateProductHookInput = z.infer<typeof GenerateProductHookInputSchema>;
+
 
 export const GenerateProductHookOutputSchema = z.object({
   hooks: z
     .array(z.string())
     .describe('An array of short, punchy marketing hooks.'),
 });
+export type GenerateProductHookOutput = z.infer<typeof GenerateProductHookOutputSchema>;
 
-let generateProductHookFlow: Flow<typeof GenerateProductHookInputSchema, typeof GenerateProductHookOutputSchema, any>;
 
-export function getGenerateProductHookFlow() {
-  if (!generateProductHookFlow) {
-    generateProductHookFlow = defineFlow(
-      {
-        name: 'generateProductHookFlow',
-        inputSchema: GenerateProductHookInputSchema,
-        outputSchema: GenerateProductHookOutputSchema,
-      },
-      async ({ productDescription, emotion }) => {
-        const prompt = prompts.generateProductHook(productDescription, emotion);
-        
-        const llmResponse = await geminiPro.generate({
-            prompt: prompt,
-            output: {
-                format: 'json',
-                schema: GenerateProductHookOutputSchema,
-            },
-        });
-
-        const output = llmResponse.output();
-        if (!output) {
-          throw new Error("AI failed to generate a response.");
-        }
-        return output;
-      }
-    );
-  }
-  return generateProductHookFlow;
+export async function generateProductHook(input: GenerateProductHookInput): Promise<GenerateProductHookOutput> {
+    return generateProductHookFlow(input);
 }
+
+const generateProductHookFlow = ai.defineFlow(
+  {
+    name: 'generateProductHookFlow',
+    inputSchema: GenerateProductHookInputSchema,
+    outputSchema: GenerateProductHookOutputSchema,
+  },
+  async ({ productDescription, emotion }) => {
+    const prompt = `You are an expert in Viral Marketing.
+Generate 3-5 short, punchy marketing hook ideas designed to grab attention and evoke a specific emotion.
+
+**Product Description:** ${productDescription}
+**Target Emotion:** ${emotion}
+
+Return ONLY the raw JSON object.`;
+    
+    const { output } = await ai.generate({
+        model: 'googleai/gemini-2.0-flash',
+        prompt: prompt,
+        output: {
+            format: 'json',
+            schema: GenerateProductHookOutputSchema,
+        },
+    });
+
+    if (!output) {
+      throw new Error("AI failed to generate a response.");
+    }
+    return output;
+  }
+);

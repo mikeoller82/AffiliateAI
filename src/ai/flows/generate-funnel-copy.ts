@@ -2,10 +2,6 @@
 'use server';
 /**
  * @fileOverview An AI agent that generates copy for various funnel blocks.
- *
- * - generateFunnelCopy - A function that handles the copy generation process.
- * - GenerateFunnelCopyInput - The input type for the generateFunnelCopy function.
- * - GenerateFunnelCopyOutput - The return type for the generateFunnelCopy function.
  */
 
 import { z } from 'genkit';
@@ -43,8 +39,7 @@ const generateFunnelCopyFlow = ai.defineFlow(
 
       Follow this instruction from the user: ${userPrompt}
 
-      Generate a single, compelling piece of copy. Return ONLY the text for the copy.
-      `;
+      Generate a single, compelling piece of copy. Return ONLY the text for the copy in the 'generatedCopy' field of the JSON output.`;
 
     const {output} = await ai.generate({
         model: 'googleai/gemini-2.0-flash',

@@ -1,15 +1,37 @@
+'use client';
+
+import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AdCopyGenerator, CtaSuggestor, EmailGenerator, ProductReviewWriter, ProductHookGenerator, ImageGenerator } from '@/components/ai/tools';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useAIKey } from '@/contexts/ai-key-context';
+import { ApiKeyDialog } from '@/components/ai/api-key-dialog';
 
 export default function AIToolsPage() {
+  const { apiKey, setApiKey } = useAIKey();
+  const [isDialogOpen, setIsDialogOpen] = useState(!apiKey);
+
+  const handleSaveApiKey = (newApiKey: string) => {
+    setApiKey(newApiKey);
+    setIsDialogOpen(false);
+  };
+
+  if (!apiKey) {
+    return (
+      <ApiKeyDialog
+        isOpen={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        onSave={handleSaveApiKey}
+      />
+    );
+  }
+
   return (
     <Tabs defaultValue="ad-copy" className="w-full">
       <TabsList className="grid w-full grid-cols-1 sm:grid-cols-6">
         <TabsTrigger value="ad-copy">Ad Generator</TabsTrigger>
         <TabsTrigger value="product-review">Product Review</TabsTrigger>
         <TabsTrigger value="cta-optimizer">CTA Optimizer</TabsTrigger>
-        <TabsTrigger value="product-hook">Hook Generator</TabsTrigger>
         <TabsTrigger value="email-content">Email Content</TabsTrigger>
         <TabsTrigger value="image-generator">Image Generator</TabsTrigger>
       </TabsList>
@@ -43,17 +65,6 @@ export default function AIToolsPage() {
           </CardHeader>
           <CardContent>
             <CtaSuggestor />
-          </CardContent>
-        </Card>
-      </TabsContent>
-      <TabsContent value="product-hook">
-        <Card>
-          <CardHeader>
-            <CardTitle>Product Hook Generator</CardTitle>
-            <CardDescription>Short, punchy hook ideas tailored for social posts, landing pages, or ads.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ProductHookGenerator />
           </CardContent>
         </Card>
       </TabsContent>

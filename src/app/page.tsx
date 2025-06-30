@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { Check, Filter, BrainCircuit, Mail, Users, BarChart3, Link as LinkIcon, Star, Globe, Newspaper, Workflow, Target, Handshake, BotMessageSquare, ClipboardList, BookText, Zap, ShieldCheck, Scale, MessageSquareQuestion, Gem, Rocket, Briefcase, GraduationCap, Video } from 'lucide-react'
+import { Logo } from '@/components/icons/logo'
 
 const allInOneFeatures = [
   {
@@ -235,13 +236,7 @@ export default function LandingPage() {
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <Image
-                src="https://cdn.leonardo.ai/users/31a55a1b-10c8-4725-a4ad-b72817f069e1/generations/39ccab2d-4951-448b-b285-ccef2b6f670a/segments/1:1:1/Default_A_cuttingedge_HighlaunchPadAIpowered_CRM_logo_exuding__0.jpg"
-                alt="HighLaunchPad Logo"
-                width={32}
-                height={32}
-                className="rounded-md"
-            />
+            <Logo className="h-8 w-8 text-primary" />
             <span className="font-bold">HighLaunchPad</span>
           </Link>
           <div className="flex items-center gap-4">
@@ -301,7 +296,7 @@ export default function LandingPage() {
                            <div className="p-3 rounded-full bg-primary/10 border border-primary/20">
                                 <feature.icon className="h-6 w-6 text-primary"/>
                             </div>
-                            <CardTitle className="text-lg">{feature.title}</CardTitle>
+                            <h3 className="text-lg font-semibold">{feature.title}</h3>
                         </CardHeader>
                         <CardContent>
                             <p className="text-muted-foreground">{feature.description}</p>
@@ -415,21 +410,21 @@ export default function LandingPage() {
                     <Card className="bg-gray-800 border-gray-700">
                         <CardHeader className="flex flex-row items-center gap-4">
                             <BrainCircuit className="h-8 w-8 text-secondary" />
-                            <CardTitle className="text-white">Generate Ad Copy</CardTitle>
+                            <h3 className="text-xl font-semibold text-white">Generate Ad Copy</h3>
                         </CardHeader>
                         <CardContent className="text-gray-400">Create compelling Facebook, Google, and Instagram ad copy that converts visitors into customers.</CardContent>
                     </Card>
                      <Card className="bg-gray-800 border-gray-700">
                         <CardHeader className="flex flex-row items-center gap-4">
                             <Mail className="h-8 w-8 text-secondary" />
-                            <CardTitle className="text-white">Write Email Sequences</CardTitle>
+                            <h3 className="text-xl font-semibold text-white">Write Email Sequences</h3>
                         </CardHeader>
                         <CardContent className="text-gray-400">Instantly craft entire email campaigns, from welcome series to product launch sequences.</CardContent>
                     </Card>
                      <Card className="bg-gray-800 border-gray-700">
                         <CardHeader className="flex flex-row items-center gap-4">
                             <Newspaper className="h-8 w-8 text-secondary" />
-                            <CardTitle className="text-white">Create Funnel Content</CardTitle>
+                            <h3 className="text-xl font-semibold text-white">Create Funnel Content</h3>
                         </CardHeader>
                         <CardContent className="text-gray-400">Generate persuasive headlines, sub-headlines, and body copy for all your landing pages and funnels.</CardContent>
                     </Card>
@@ -451,7 +446,7 @@ export default function LandingPage() {
                                 <div className="p-4 rounded-full bg-primary/10 border border-primary/20 inline-flex">
                                     <persona.icon className="h-8 w-8 text-primary" />
                                 </div>
-                                <CardTitle>{persona.title}</CardTitle>
+                                <h3 className="font-semibold text-xl mt-4">{persona.title}</h3>
                             </CardHeader>
                             <CardContent>
                                 <p className="text-muted-foreground">{persona.description}</p>
@@ -473,8 +468,8 @@ export default function LandingPage() {
                     {/* The Old Way */}
                     <Card className="border-destructive/50">
                         <CardHeader>
-                            <CardTitle>The "Duct-Tape" Method</CardTitle>
-                            <CardDescription>Juggling 5+ different subscriptions.</CardDescription>
+                            <h3 className="text-xl font-semibold">The "Duct-Tape" Method</h3>
+                            <p className="text-muted-foreground">Juggling 5+ different subscriptions.</p>
                         </CardHeader>
                         <CardContent className="space-y-3">
                             <p className="flex items-center gap-2 text-muted-foreground"><Globe className="h-4 w-4" /> Website Builder: $29/mo</p>
@@ -489,10 +484,10 @@ export default function LandingPage() {
                     <Card className="border-primary/50 border-2">
                         <CardHeader>
                              <div className="flex items-center justify-between">
-                                <CardTitle>The HighLaunchPad Way</CardTitle>
+                                <h3 className="text-xl font-semibold">The HighLaunchPad Way</h3>
                                 <div className="flex items-center gap-2 text-primary font-bold"><Rocket className="h-5 w-5" /> All-In-One</div>
                             </div>
-                            <CardDescription>Everything you need on one platform.</CardDescription>
+                            <p className="text-muted-foreground">Everything you need on one platform.</p>
                         </CardHeader>
                         <CardContent className="space-y-3">
                             <p className="flex items-center gap-2"><Check className="h-4 w-4 text-green-500" /> Website Builder</p>
@@ -553,9 +548,9 @@ export default function LandingPage() {
                                 <div className="text-center py-1 px-4 bg-primary text-primary-foreground font-semibold text-sm rounded-t-lg">Most Popular</div>
                             )}
                             <CardHeader className="items-center text-center">
-                                <CardTitle className="text-2xl">{plan.name}</CardTitle>
+                                <h3 className="text-2xl font-semibold">{plan.name}</h3>
                                 <p className="text-4xl font-bold">{plan.price}<span className="text-lg font-normal text-muted-foreground">/mo</span></p>
-                                <CardDescription>{plan.description}</CardDescription>
+                                <p className="text-muted-foreground">{plan.description}</p>
                             </CardHeader>
                             <CardContent className="flex-1 flex flex-col justify-between">
                                 <ul className="space-y-3 mb-8">
@@ -621,13 +616,7 @@ export default function LandingPage() {
         <div className="container grid grid-cols-1 md:grid-cols-4 gap-8 py-12 text-sm">
             <div className="space-y-4">
                 <Link href="/" className="flex items-center gap-2">
-                    <Image
-                        src="https://cdn.leonardo.ai/users/31a55a1b-10c8-4725-a4ad-b72817f069e1/generations/39ccab2d-4951-448b-b285-ccef2b6f670a/segments/1:1:1/Default_A_cuttingedge_HighlaunchPadAIpowered_CRM_logo_exuding__0.jpg"
-                        alt="HighLaunchPad Logo"
-                        width={24}
-                        height={24}
-                        className="rounded-md"
-                    />
+                    <Logo className="h-6 w-6 text-primary" />
                     <span className="font-bold">HighLaunchPad</span>
                 </Link>
                 <p className="text-muted-foreground">The all-in-one platform to launch, automate, and scale your business.</p>

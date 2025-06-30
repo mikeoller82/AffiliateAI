@@ -20,7 +20,6 @@ export function initGenkit() {
         googleAI({ apiKey: process.env.GOOGLE_API_KEY as string }),
       ],
       logLevel: 'debug',
-      enableTracingAndMetrics: true,
     });
 
     isGenkitConfigured = true;

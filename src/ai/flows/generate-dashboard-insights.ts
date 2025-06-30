@@ -3,16 +3,10 @@
 /**
  * @fileOverview An AI agent that analyzes marketing data to provide insights.
  * This flow is designed to be called from a server environment.
- *
- * - generateDashboardInsights - A function that handles the analysis process.
- * - GenerateDashboardInsightsInput - The input type for the function.
- * - GenerateDashboardInsightsOutput - The return type for the function.
  */
-
-import { z } from 'genkit';
+import { z } from 'zod';
 import { ai } from '@/ai/genkit';
-import * as prompts from '../prompts';
-import { funnelTemplates } from '@/lib/funnel-templates';
+import * as Icons from 'lucide-react';
 
 export const FunnelPerformanceInputSchema = z.object({
   name: z.string().describe('The name of the marketing funnel'),
@@ -44,34 +38,53 @@ export const GenerateDashboardInsightsOutputSchema = z.object({
 });
 export type GenerateDashboardInsightsOutput = z.infer<typeof GenerateDashboardInsightsOutputSchema>;
 
-// This exported function will be the primary way server-side components or API routes interact with the flow.
 export async function generateDashboardInsights(input: GenerateDashboardInsightsInput): Promise<GenerateDashboardInsightsOutput> {
-    return generateDashboardInsightsFlow(input);
+  return generateDashboardInsightsFlow(input);
 }
 
+const generateDashboardInsightsFlow = ai.defineFlow(
+  {
+    name: 'generateDashboardInsightsFlow',
+    inputSchema: GenerateDashboardInsightsInputSchema,
+    outputSchema: GenerateDashboardInsightsOutputSchema,
+  },
+  async (input) => {
+    const funnelDetails = input.funnels.map(f =>
+        `*   **Funnel: ${f.name}**
+    *   Click-Through Rate (CTR): ${f.ctr}
+    *   Opt-In Rate: ${f.optInRate}`
+    ).join('\n');
 
-export const generateDashboardInsightsFlow = ai.defineFlow(
-    {
-      name: 'generateDashboardInsightsFlow',
-      inputSchema: GenerateDashboardInsightsInputSchema,
-      outputSchema: GenerateDashboardInsightsOutputSchema,
-    },
-    async (input) => {
-        const prompt = prompts.generateDashboardInsights(input.metrics, input.funnels);
-        
-        const llmResponse = await ai.generate({
-            model: 'googleai/gemini-2.0-flash',
-            prompt: prompt,
-            output: {
-                format: 'json',
-                schema: GenerateDashboardInsightsOutputSchema,
-            },
-        });
+    const prompt = `You are a world-class expert in Marketing Analysis.
+Your task is to analyze the following marketing data and provide actionable insights and recommendations for a digital marketer.
 
-        const output = llmResponse.output;
-        if (!output) {
-            throw new Error("AI failed to generate a response. The model may have returned empty output.");
-        }
-        return output;
+**Data Provided:**
+*   **Overall Metrics:**
+    *   Total Clicks: ${input.metrics.clicks}
+    *   Total Conversions: ${input.metrics.conversions}
+    *   Total Commission: $${input.metrics.commission}
+*   **Funnel Performance:**
+${funnelDetails}
+
+**Your Task:**
+Generate a JSON object with two keys: "insights" and "recommendations".
+1.  **insights**: A bulleted list of 3-4 key, data-driven observations.
+2.  **recommendations**: A list of 3 actionable recommendations with the structure: \`{ title, description, icon, ctaText, ctaLink }\`. The icon must be a valid name from the lucide-react library.
+
+Return only the raw JSON object.`;
+
+    const { output } = await ai.generate({
+      model: 'googleai/gemini-2.0-flash',
+      prompt: prompt,
+      output: {
+        format: 'json',
+        schema: GenerateDashboardInsightsOutputSchema,
+      },
+    });
+
+    if (!output) {
+      throw new Error("AI failed to generate a response. The model may have returned empty output.");
     }
+    return output;
+  }
 );

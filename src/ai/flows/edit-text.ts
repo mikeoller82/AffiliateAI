@@ -2,10 +2,6 @@
 'use server';
 /**
  * @fileOverview An AI agent that edits text based on instructions.
- *
- * - editText - A function that handles the text editing process.
- * - EditTextInput - The input type for the editText function.
- * - EditTextOutput - The return type for the editText function.
  */
 
 import { z } from 'genkit';
@@ -47,7 +43,7 @@ Return only the edited text in the 'editedText' field of the JSON output. Do not
     const {output} = await ai.generate({
       model: 'googleai/gemini-2.0-flash',
       prompt: prompt,
-      output: { 
+      output: {
           format: 'json',
           schema: EditTextOutputSchema
       },

@@ -1,5 +1,6 @@
-import { db, auth } from './firebase';
+import { auth } from './firebase';
 import {
+    getFirestore,
     collection,
     doc,
     addDoc,
@@ -24,11 +25,6 @@ const getCurrentUserId = (): string | null => {
     return auth.currentUser?.uid || null;
 };
 
-// --- Firestore Collection References ---
-const coursesCollection = collection(db, 'courses');
-const getModulesCollection = (courseId: string) => collection(db, `courses/${courseId}/modules`);
-const getLessonsCollection = (courseId: string, moduleId: string) => collection(db, `courses/${courseId}/modules/${moduleId}/lessons`);
-
 // --- Course Functions ---
 
 export const createCourse = async (
@@ -38,6 +34,9 @@ export const createCourse = async (
 ): Promise<string> => {
     const instructorId = getCurrentUserId();
     if (!instructorId) throw new Error('User not authenticated.');
+
+    const db = getFirestore();
+    const coursesCollection = collection(db, 'courses');
 
     const newCourseData = {
         title: title || defaultCourseTemplate.title,
@@ -58,6 +57,8 @@ export const getUserCourses = async (): Promise<Course[]> => {
     const instructorId = getCurrentUserId();
     if (!instructorId) return [];
 
+    const db = getFirestore();
+    const coursesCollection = collection(db, 'courses');
     const q = query(coursesCollection, where('instructorId', '==', instructorId), orderBy('createdAt', 'desc'));
     const querySnapshot = await getDocs(q);
     
@@ -68,6 +69,7 @@ export const getUserCourses = async (): Promise<Course[]> => {
 };
 
 export const getCourse = async (courseId: string): Promise<Course | null> => {
+    const db = getFirestore();
     const docRef = doc(db, 'courses', courseId);
     const docSnap = await getDoc(docRef);
 
@@ -78,18 +80,22 @@ export const getCourse = async (courseId: string): Promise<Course | null> => {
 };
 
 export const updateCourse = async (courseId: string, updates: Partial<Course>): Promise<void> => {
+    const db = getFirestore();
     const docRef = doc(db, 'courses', courseId);
     await updateDoc(docRef, { ...updates, updatedAt: serverTimestamp() });
 };
 
 export const deleteCourse = async (courseId: string): Promise<void> => {
+    const db = getFirestore();
     const batch = writeBatch(db);
     const courseRef = doc(db, 'courses', courseId);
+    const modulesCollection = collection(db, `courses/${courseId}/modules`);
+    const getLessonsCollection = (moduleId: string) => collection(db, `courses/${courseId}/modules/${moduleId}/lessons`);
 
     // Delete all lessons and modules within the course
-    const modulesSnapshot = await getDocs(getModulesCollection(courseId));
+    const modulesSnapshot = await getDocs(modulesCollection);
     for (const moduleDoc of modulesSnapshot.docs) {
-        const lessonsSnapshot = await getDocs(getLessonsCollection(courseId, moduleDoc.id));
+        const lessonsSnapshot = await getDocs(getLessonsCollection(moduleDoc.id));
         lessonsSnapshot.docs.forEach(lessonDoc => {
             batch.delete(lessonDoc.ref);
         });
@@ -103,8 +109,10 @@ export const deleteCourse = async (courseId: string): Promise<void> => {
 // --- Module Functions ---
 
 export const addModule = async (courseId: string, title: string, description?: string): Promise<{ moduleId: string, updatedModulesOrder: string[] }> => {
+    const db = getFirestore();
     const courseRef = doc(db, 'courses', courseId);
-    const newModuleRef = doc(getModulesCollection(courseId));
+    const modulesCollection = collection(db, `courses/${courseId}/modules`);
+    const newModuleRef = doc(modulesCollection);
     
     const newModule: Omit<Module, 'id'> = {
         title,
@@ -122,7 +130,9 @@ export const addModule = async (courseId: string, title: string, description?: s
 };
 
 export const getModules = async (courseId: string, modulesOrderFromCourse?: string[]): Promise<Module[]> => {
-    const modulesSnapshot = await getDocs(getModulesCollection(courseId));
+    const db = getFirestore();
+    const modulesCollection = collection(db, `courses/${courseId}/modules`);
+    const modulesSnapshot = await getDocs(modulesCollection);
     const modules = modulesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Module));
     
     const order = modulesOrderFromCourse || (await getCourse(courseId))?.modulesOrder || [];
@@ -131,16 +141,19 @@ export const getModules = async (courseId: string, modulesOrderFromCourse?: stri
 };
 
 export const updateModule = async (courseId: string, moduleId: string, updates: Partial<Module>): Promise<void> => {
+    const db = getFirestore();
     const moduleRef = doc(db, `courses/${courseId}/modules`, moduleId);
     await updateDoc(moduleRef, updates);
 };
 
 export const deleteModule = async (courseId: string, moduleId: string): Promise<string[]> => {
+    const db = getFirestore();
     const courseRef = doc(db, 'courses', courseId);
     const moduleRef = doc(db, `courses/${courseId}/modules`, moduleId);
+    const lessonsCollection = collection(db, `courses/${courseId}/modules/${moduleId}/lessons`);
 
     // Delete all lessons in the module
-    const lessonsSnapshot = await getDocs(getLessonsCollection(courseId, moduleId));
+    const lessonsSnapshot = await getDocs(lessonsCollection);
     const batch = writeBatch(db);
     lessonsSnapshot.docs.forEach(lessonDoc => batch.delete(lessonDoc.ref));
     batch.delete(moduleRef);
@@ -152,6 +165,7 @@ export const deleteModule = async (courseId: string, moduleId: string): Promise<
 };
 
 export const updateModulesOrder = async (courseId: string, newOrder: string[]): Promise<void> => {
+    const db = getFirestore();
     const courseRef = doc(db, 'courses', courseId);
     await updateDoc(courseRef, { modulesOrder: newOrder });
 };
@@ -166,8 +180,10 @@ export const addLesson = async (
     contentType: LessonContentType,
     content: LessonContent
 ): Promise<{ lessonId: string, updatedLessonsOrder: string[] }> => {
+    const db = getFirestore();
     const moduleRef = doc(db, `courses/${courseId}/modules`, moduleId);
-    const newLessonRef = doc(getLessonsCollection(courseId, moduleId));
+    const lessonsCollection = collection(db, `courses/${courseId}/modules/${moduleId}/lessons`);
+    const newLessonRef = doc(lessonsCollection);
 
     const newLesson: Omit<Lesson, 'id'> = {
         title,
@@ -187,7 +203,9 @@ export const addLesson = async (
 };
 
 export const getLessons = async (courseId: string, moduleId: string, lessonsOrderFromModule?: string[]): Promise<Lesson[]> => {
-    const lessonsSnapshot = await getDocs(getLessonsCollection(courseId, moduleId));
+    const db = getFirestore();
+    const lessonsCollection = collection(db, `courses/${courseId}/modules/${moduleId}/lessons`);
+    const lessonsSnapshot = await getDocs(lessonsCollection);
     const lessons = lessonsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Lesson));
 
     let order = lessonsOrderFromModule;
@@ -200,11 +218,13 @@ export const getLessons = async (courseId: string, moduleId: string, lessonsOrde
 };
 
 export const updateLesson = async (courseId: string, moduleId: string, lessonId: string, updates: Partial<Lesson>): Promise<void> => {
+    const db = getFirestore();
     const lessonRef = doc(db, `courses/${courseId}/modules/${moduleId}/lessons`, lessonId);
     await updateDoc(lessonRef, updates);
 };
 
 export const deleteLesson = async (courseId: string, moduleId: string, lessonId: string): Promise<string[]> => {
+    const db = getFirestore();
     const moduleRef = doc(db, `courses/${courseId}/modules`, moduleId);
     const lessonRef = doc(db, `courses/${courseId}/modules/${moduleId}/lessons`, lessonId);
 
@@ -214,10 +234,12 @@ export const deleteLesson = async (courseId: string, moduleId: string, lessonId:
         .commit();
 
     const updatedModuleSnap = await getDoc(moduleRef);
+
     return (updatedModuleSnap.data() as Module)?.lessonsOrder || [];
 };
 
 export const updateLessonsOrder = async (courseId: string, moduleId: string, newOrder: string[]): Promise<void> => {
+    const db = getFirestore();
     const moduleRef = doc(db, `courses/${courseId}/modules`, moduleId);
     await updateDoc(moduleRef, { lessonsOrder: newOrder });
 };

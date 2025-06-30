@@ -16,8 +16,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, AlertTriangle } from 'lucide-react';
-import Image from 'next/image';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Logo } from '@/components/icons/logo';
 
 export const dynamic = 'force-dynamic';
 
@@ -91,15 +91,9 @@ export default function SignupPage() {
     <div className="flex min-h-screen items-center justify-center bg-muted/40 p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-             <Image
-                src="https://cdn.leonardo.ai/users/31a55a1b-10c8-4725-a4ad-b72817f069e1/generations/39ccab2d-4951-448b-b285-ccef2b6f670a/segments/1:1:1/Default_A_cuttingedge_HighlaunchPadAIpowered_CRM_logo_exuding__0.jpg"
-                alt="HighLaunchPad Logo"
-                width={64}
-                height={64}
-                className="rounded-md mx-auto mb-4"
-            />
-          <CardTitle>Create an Account</CardTitle>
-          <CardDescription>Join HighLaunchPad and start growing your business.</CardDescription>
+             <Logo className="h-16 w-16 mx-auto mb-4" />
+          <h1 className="text-2xl font-bold">Create an Account</h1>
+          <p className="text-muted-foreground">Join HighLaunchPad and start growing your business.</p>
         </CardHeader>
         <CardContent>
           {apiError && (

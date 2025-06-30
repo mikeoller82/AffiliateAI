@@ -44,6 +44,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { ApiKeyDialog } from '@/components/ai/api-key-dialog';
+import { Logo } from '@/components/icons/logo';
 
 
 const navLinks = [
@@ -140,16 +141,10 @@ function DashboardLayoutContent({ children }: { children: ReactNode }) {
         <aside className="fixed inset-y-0 left-0 z-10 hidden w-14 flex-col border-r bg-background sm:flex">
             <nav className="flex flex-col items-center gap-4 px-2 sm:py-5">
               <Link
-                href="#"
+                href="/dashboard"
                 className="group flex h-9 w-9 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:h-8 md:w-8 md:text-base"
               >
-              <Image
-                src="https://cdn.leonardo.ai/users/31a55a1b-10c8-4725-a4ad-b72817f069e1/generations/39ccab2d-4951-448b-b285-ccef2b6f670a/segments/1:1:1/Default_A_cuttingedge_HighlaunchPadAIpowered_CRM_logo_exuding__0.jpg"
-                width={36}
-                height={36}
-                alt="Avatar"
-                className="overflow-hidden rounded-full"
-              />
+                <Logo className="h-4 w-4 transition-all group-hover:scale-110" />
                 <span className="sr-only">HighLaunchPad</span>
               </Link>
                {navLinks.map((link) => (
@@ -194,16 +189,10 @@ function DashboardLayoutContent({ children }: { children: ReactNode }) {
                   <SheetContent side="left" className="sm:max-w-xs">
                     <nav className="grid gap-6 text-lg font-medium">
                       <Link
-                        href="#"
+                        href="/dashboard"
                         className="group flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:text-base"
                       >
-                       <Image
-                        src="https://cdn.leonardo.ai/users/31a55a1b-10c8-4725-a4ad-b72817f069e1/generations/39ccab2d-4951-448b-b285-ccef2b6f670a/segments/1:1:1/Default_A_cuttingedge_HighlaunchPadAIpowered_CRM_logo_exuding__0.jpg"
-                        width={36}
-                        height={36}
-                        alt="Avatar"
-                        className="overflow-hidden rounded-full"
-                      />
+                       <Logo className="h-5 w-5 transition-all group-hover:scale-110" />
                         <span className="sr-only">HighLaunchPad</span>
                       </Link>
                       {navLinks.map((link) => (

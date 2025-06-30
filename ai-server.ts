@@ -1,45 +1,82 @@
-
-import express from 'express';
-import cors from 'cors';
-import { run } from '@genkit-ai/core';
-import { getGenerateImageFlow } from './src/ai/flows/generate-image';
-import { getGenerateAdCopyFlow } from './src/ai/flows/generate-ad-copy';
-import { getSuggestCTAsFlow } from './src/ai/flows/suggest-ctas';
-import { getGenerateProductReviewFlow } from './src/ai/flows/generate-product-review';
-import { getGenerateProductHookFlow } from './src/ai/flows/generate-product-hook';
-import { getGenerateEmailContentFlow } from './src/ai/flows/generate-email-content';
-
-// Initialize Genkit
-import './src/ai/genkit-init';
-
-const app = express();
-const port = 3001; // The AI server will run on a different port
-
-app.use(cors());
-app.use(express.json());
-
-// A simple middleware to handle all flow runs
-const runFlowMiddleware = (getFlow: Function) => async (req: express.Request, res: express.Response) => {
-  try {
-    const result = await run(getFlow(), req.body);
-    res.json(result);
-  } catch (error: any) {
-    console.error(`Error running flow: ${getFlow.name}`, error);
-    res.status(500).json({
-      error: 'An error occurred while running the AI flow.',
-      details: error.message,
-    });
+{
+  "name": "highlaunchpad",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "test:flow": "npx ts-node -r dotenv/config src/ai/dev.ts"
+  },
+  "dependencies": {
+    "@dnd-kit/core": "^6.1.0",
+    "@dnd-kit/sortable": "^8.0.0",
+    "@genkit-ai/core": "^1.1.2",
+    "@genkit-ai/googleai": "^1.1.2",
+    "@hello-pangea/dnd": "^16.6.0",
+    "@hookform/resolvers": "^3.9.0",
+    "@radix-ui/react-accordion": "^1.2.0",
+    "@radix-ui/react-alert-dialog": "^1.1.1",
+    "@radix-ui/react-avatar": "^1.1.0",
+    "@radix-ui/react-checkbox": "^1.1.1",
+    "@radix-ui/react-dialog": "^1.1.1",
+    "@radix-ui/react-dropdown-menu": "^2.1.1",
+    "@radix-ui/react-label": "^2.1.0",
+    "@radix-ui/react-menubar": "^1.1.1",
+    "@radix-ui/react-popover": "^1.1.1",
+    "@radix-ui/react-progress": "^1.1.0",
+    "@radix-ui/react-radio-group": "^1.2.0",
+    "@radix-ui/react-scroll-area": "^1.1.0",
+    "@radix-ui/react-select": "^2.1.1",
+    "@radix-ui/react-separator": "^1.1.0",
+    "@radix-ui/react-slot": "^1.1.0",
+    "@radix-ui/react-switch": "^1.1.0",
+    "@radix-ui/react-tabs": "^1.1.0",
+    "@radix-ui/react-toast": "^1.2.1",
+    "@radix-ui/react-tooltip": "^1.1.2",
+    "@stripe/stripe-js": "^4.1.0",
+    "@tailwindcss/typography": "^0.5.13",
+    "@tiptap/core": "^2.5.4",
+    "@tiptap/extension-link": "^2.5.4",
+    "@tiptap/extension-placeholder": "^2.5.4",
+    "@tiptap/react": "^2.5.4",
+    "@tiptap/starter-kit": "^2.5.4",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.1.1",
+    "cors": "^2.8.5",
+    "date-fns": "^3.6.0",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "firebase": "^10.12.3",
+    "firebase-admin": "^12.2.0",
+    "genkit": "^1.1.2",
+    "lucide-react": "^0.411.0",
+    "nanoid": "^5.0.7",
+    "next": "14.2.5",
+    "react": "^18",
+    "react-day-picker": "^8.10.1",
+    "react-dom": "^18",
+    "react-hook-form": "^7.52.1",
+    "reactflow": "^11.11.4",
+    "recharts": "^2.12.7",
+    "stripe": "^16.2.0",
+    "tailwind-merge": "^2.4.0",
+    "tailwindcss-animate": "^1.0.7",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "cypress": "^13.13.1",
+    "eslint": "^8",
+    "eslint-config-next": "14.2.5",
+    "postcss": "^8",
+    "tailwindcss": "^3.4.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5"
   }
-};
-
-// Define endpoints for each AI flow
-app.post('/api/ai/generate-image', runFlowMiddleware(getGenerateImageFlow));
-app.post('/api/ai/generate-ad-copy', runFlowMiddleware(getGenerateAdCopyFlow));
-app.post('/api/ai/suggest-ctas', runFlowMiddleware(getSuggestCTAsFlow));
-app.post('/api/ai/generate-product-review', runFlowMiddleware(getGenerateProductReviewFlow));
-app.post('/api/ai/generate-product-hook', runFlowMiddleware(getGenerateProductHookFlow));
-app.post('/api/ai/generate-email-content', runFlowMiddleware(getGenerateEmailContentFlow));
-
-app.listen(port, () => {
-  console.log(`AI server listening at http://localhost:${port}`);
-});
+}

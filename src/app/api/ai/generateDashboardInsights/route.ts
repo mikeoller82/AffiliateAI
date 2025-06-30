@@ -1,15 +1,15 @@
 
-// Ensure Genkit is configured before any other imports
-import '@/ai/genkit';
-
 import { NextRequest, NextResponse } from 'next/server';
-import { run } from '@genkit-ai/core';
-import { generateDashboardInsightsFlow } from '@/ai/flows/generate-dashboard-insights';
-import { GenerateDashboardInsightsInputSchema } from '@/ai/flows/generate-dashboard-insights';
-
 
 export async function POST(req: NextRequest) {
   try {
+    // Dynamically import Genkit-related modules
+    const { run } = await import('@genkit-ai/core');
+    const { generateDashboardInsightsFlow, GenerateDashboardInsightsInputSchema } = await import('@/ai/flows/generate-dashboard-insights');
+    
+    // Initialize Genkit inside the request
+    await import('@/ai/genkit-init').then(module => module.initGenkit());
+
     const body = await req.json();
     
     // Validate the input using the Zod schema

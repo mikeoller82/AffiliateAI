@@ -1,9 +1,11 @@
 
+'use server';
+/**
+ * @fileOverview An AI agent that generates email content.
+ */
+
 import { z } from 'zod';
-import { defineFlow } from '@genkit-ai/core';
-import { geminiPro } from '@genkit-ai/googleai';
-import * as prompts from '../prompts';
-import { Flow } from '@genkit-ai/core/lib/flow';
+import { ai } from '@/ai/genkit';
 
 export const GenerateEmailContentInputSchema = z.object({
   objective: z
@@ -12,40 +14,47 @@ export const GenerateEmailContentInputSchema = z.object({
   tone: z.string().describe('The tone of the email, e.g., enthusiastic'),
   productDetails: z.string().describe('Details about the product or service.'),
 });
+export type GenerateEmailContentInput = z.infer<typeof GenerateEmailContentInputSchema>;
+
 
 export const GenerateEmailContentOutputSchema = z.object({
   subjectLines: z.array(z.string()).describe('Generated subject lines.'),
   body: z.string().describe('Generated email body.'),
 });
+export type GenerateEmailContentOutput = z.infer<typeof GenerateEmailContentOutputSchema>;
 
-let generateEmailContentFlow: Flow<typeof GenerateEmailContentInputSchema, typeof GenerateEmailContentOutputSchema, any>;
-
-export function getGenerateEmailContentFlow() {
-  if (!generateEmailContentFlow) {
-    generateEmailContentFlow = defineFlow(
-      {
-        name: 'generateEmailContentFlow',
-        inputSchema: GenerateEmailContentInputSchema,
-        outputSchema: GenerateEmailContentOutputSchema,
-      },
-      async ({ objective, tone, productDetails }) => {
-        const prompt = prompts.generateEmailContent(objective, tone, productDetails);
-        
-        const llmResponse = await geminiPro.generate({
-            prompt: prompt,
-            output: {
-                format: 'json',
-                schema: GenerateEmailContentOutputSchema,
-            },
-        });
-
-        const output = llmResponse.output();
-        if (!output) {
-          throw new Error("AI failed to generate a response.");
-        }
-        return output;
-      }
-    );
-  }
-  return generateEmailContentFlow;
+export async function generateEmailContent(input: GenerateEmailContentInput): Promise<GenerateEmailContentOutput> {
+    return generateEmailContentFlow(input);
 }
+
+const generateEmailContentFlow = ai.defineFlow(
+  {
+    name: 'generateEmailContentFlow',
+    inputSchema: GenerateEmailContentInputSchema,
+    outputSchema: GenerateEmailContentOutputSchema,
+  },
+  async ({ objective, tone, productDetails }) => {
+    const prompt = `You are a world-class expert in Email Copywriting.
+Generate email subject lines and body copy based on the provided information.
+
+**Objective:** ${objective}
+**Tone:** ${tone}
+**Product Details:** ${productDetails}
+
+Return ONLY the raw JSON object with the keys "subjectLines" and "body".`;
+        
+    const { output } = await ai.generate({
+        model: 'googleai/gemini-2.0-flash',
+        prompt: prompt,
+        output: {
+            format: 'json',
+            schema: GenerateEmailContentOutputSchema,
+        },
+    });
+
+    if (!output) {
+      throw new Error("AI failed to generate a response.");
+    }
+    return output;
+  }
+);

@@ -1,29 +1,21 @@
 
 import { NextRequest, NextResponse } from 'next/server';
-
-const AI_SERVER_URL = 'http://localhost:3001/api/ai/generate-ad-copy';
+import { generateAdCopy, GenerateAdCopyInputSchema } from '@/ai/flows/generate-ad-copy';
 
 export async function POST(req: NextRequest) {
   try {
-    const response = await fetch(AI_SERVER_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(await req.json()),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      return NextResponse.json(errorData, { status: response.status });
+    const body = await req.json();
+    const validatedBody = GenerateAdCopyInputSchema.safeParse(body);
+    if (!validatedBody.success) {
+      return NextResponse.json({ error: 'Invalid input', details: validatedBody.error.format() }, { status: 400 });
     }
-
-    const data = await response.json();
-    return NextResponse.json(data);
+    
+    const result = await generateAdCopy(validatedBody.data);
+    return NextResponse.json(result);
   } catch (error: any) {
-    console.error('Error proxying to AI server:', error);
+    console.error('Error running generateAdCopy flow:', error);
     return NextResponse.json(
-      { error: 'An error occurred while proxying to the AI server.' },
+      { error: 'An error occurred while generating ad copy.', details: error.message },
       { status: 500 }
     );
   }

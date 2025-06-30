@@ -59,21 +59,23 @@ export function AdCopyGenerator() {
     setIsLoading(true);
     setResult(null);
     try {
-      // Replace direct flow call with an API fetch
       const response = await fetch('/api/ai/generate-ad-copy', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(values),
       });
-      if (!response.ok) throw new Error(`Server error: ${response.statusText}`);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ details: response.statusText }));
+        throw new Error(errorData.details || `Server error: ${response.status}`);
+      }
       const data = await response.json();
       setResult(data);
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to generate ad copy. Please try again.",
+        description: error.message || "Failed to generate ad copy.",
       });
     } finally {
       setIsLoading(false);
@@ -126,20 +128,20 @@ export function AdCopyGenerator() {
       {isLoading && <LoadingSpinner />}
       {result && (
         <Card className="mt-6 bg-muted/30">
-          <CardHeader><CardTitle>Generated Ad Copy</CardTitle></CardHeader>
+          <CardHeader><h3 className="text-xl font-semibold">Generated Ad Copy</h3></CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <h3 className="font-semibold text-lg mb-2">Headlines</h3>
+              <h4 className="font-semibold text-lg mb-2">Headlines</h4>
               <ul className="list-disc list-inside space-y-1">
                 {result.headlines.map((h, i) => <li key={i}>{h}</li>)}
               </ul>
             </div>
             <div>
-              <h3 className="font-semibold text-lg mb-2">Primary Text</h3>
+              <h4 className="font-semibold text-lg mb-2">Primary Text</h4>
               <p className="whitespace-pre-wrap">{result.primary_text}</p>
             </div>
             <div>
-              <h3 className="font-semibold text-lg mb-2">Descriptions</h3>
+              <h4 className="font-semibold text-lg mb-2">Descriptions</h4>
               <ul className="list-disc list-inside space-y-1">
                 {result.descriptions.map((d, i) => <li key={i}>{d}</li>)}
               </ul>
@@ -175,21 +177,23 @@ export function CtaSuggestor() {
     setIsLoading(true);
     setResult(null);
     try {
-      // Replace direct flow call with an API fetch
       const response = await fetch('/api/ai/suggest-ctas', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(values),
       });
-       if (!response.ok) throw new Error(`Server error: ${response.statusText}`);
+       if (!response.ok) {
+         const errorData = await response.json().catch(() => ({ details: response.statusText }));
+        throw new Error(errorData.details || `Server error: ${response.status}`);
+       }
       const data = await response.json();
       setResult(data);
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to suggest CTAs. Please try again.",
+        description: error.message || "Failed to suggest CTAs.",
       });
     } finally {
       setIsLoading(false);
@@ -216,7 +220,7 @@ export function CtaSuggestor() {
       {isLoading && <LoadingSpinner />}
       {result && (
         <Card className="mt-6 bg-muted/30">
-          <CardHeader><CardTitle>Suggested CTAs</CardTitle></CardHeader>
+          <CardHeader><h3 className="text-xl font-semibold">Suggested CTAs</h3></CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-2">
               {result.map((cta, i) => (
@@ -255,21 +259,23 @@ export function ProductReviewWriter() {
     setIsLoading(true);
     setResult(null);
     try {
-      // Replace direct flow call with an API fetch
        const response = await fetch('/api/ai/generate-product-review', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(values),
       });
-      if (!response.ok) throw new Error(`Server error: ${response.statusText}`);
+      if (!response.ok) {
+         const errorData = await response.json().catch(() => ({ details: response.statusText }));
+        throw new Error(errorData.details || `Server error: ${response.status}`);
+      }
       const data = await response.json();
       setResult(data);
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to generate product review. Please try again.",
+        description: error.message || "Failed to generate product review.",
       });
     } finally {
       setIsLoading(false);
@@ -303,7 +309,7 @@ export function ProductReviewWriter() {
       {isLoading && <LoadingSpinner />}
       {result && (
         <Card className="mt-6 bg-muted/30">
-          <CardHeader><CardTitle>Generated Product Review (Markdown)</CardTitle></CardHeader>
+          <CardHeader><h3 className="text-xl font-semibold">Generated Product Review (Markdown)</h3></CardHeader>
           <CardContent>
             <Textarea className="min-h-[400px] whitespace-pre-wrap" value={result.review} readOnly />
           </CardContent>
@@ -339,21 +345,23 @@ export function ProductHookGenerator() {
     setIsLoading(true);
     setResult(null);
     try {
-      // Replace direct flow call with an API fetch
        const response = await fetch('/api/ai/generate-product-hook', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(values),
       });
-      if (!response.ok) throw new Error(`Server error: ${response.statusText}`);
+      if (!response.ok) {
+         const errorData = await response.json().catch(() => ({ details: response.statusText }));
+        throw new Error(errorData.details || `Server error: ${response.status}`);
+      }
       const data = await response.json();
       setResult(data);
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to generate product hooks. Please try again.",
+        description: error.message || "Failed to generate product hooks.",
       });
     } finally {
       setIsLoading(false);
@@ -398,7 +406,7 @@ export function ProductHookGenerator() {
       {isLoading && <LoadingSpinner />}
       {result && (
         <Card className="mt-6 bg-muted/30">
-          <CardHeader><CardTitle>Generated Hooks</CardTitle></CardHeader>
+          <CardHeader><h3 className="text-xl font-semibold">Generated Hooks</h3></CardHeader>
           <CardContent>
             <ul className="list-disc list-inside space-y-2">
               {result.hooks.map((hook, i) => <li key={i}>{hook}</li>)}
@@ -440,21 +448,23 @@ export function EmailGenerator({ defaultValues }: EmailGeneratorProps) {
     setIsLoading(true);
     setResult(null);
     try {
-      // Replace direct flow call with an API fetch
       const response = await fetch('/api/ai/generate-email-content', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(values),
       });
-      if (!response.ok) throw new Error(`Server error: ${response.statusText}`);
+      if (!response.ok) {
+         const errorData = await response.json().catch(() => ({ details: response.statusText }));
+        throw new Error(errorData.details || `Server error: ${response.status}`);
+      }
       const data = await response.json();
       setResult(data);
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to generate email content. Please try again.",
+        description: error.message || "Failed to generate email content.",
       });
     } finally {
       setIsLoading(false);
@@ -515,11 +525,11 @@ export function EmailGenerator({ defaultValues }: EmailGeneratorProps) {
       {result && (
         <Card className="mt-6 bg-muted/30">
           <CardHeader>
-            <CardTitle>Generated Email Content</CardTitle>
+            <h3 className="text-xl font-semibold">Generated Email Content</h3>
           </CardHeader>
           <CardContent className="space-y-6">
             <div>
-              <h3 className="font-semibold text-lg mb-2">Subject Lines</h3>
+              <h4 className="font-semibold text-lg mb-2">Subject Lines</h4>
               <div className="space-y-2">
                 {result.subjectLines.map((subject, i) => (
                   <div key={i} className="flex items-center gap-2 p-2 rounded-md bg-background border">
@@ -534,7 +544,7 @@ export function EmailGenerator({ defaultValues }: EmailGeneratorProps) {
             
             <div>
                 <div className="flex justify-between items-center mb-2">
-                    <h3 className="font-semibold text-lg">Email Body</h3>
+                    <h4 className="font-semibold text-lg">Email Body</h4>
                     <Button variant="outline" size="sm" onClick={() => handleCopy(result.body)}>
                         <Copy className="mr-2 h-4 w-4" />
                         Copy Body
@@ -576,21 +586,20 @@ export function ImageGenerator() {
     setIsLoading(true);
     setResult(null);
     try {
-      // Replace direct flow call with an API fetch
       const response = await fetch('/api/ai/generate-image', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(values),
       });
        if (!response.ok) {
-         const errorData = await response.json();
-         throw new Error(errorData.details || `Server error: ${response.statusText}`);
+         const errorData = await response.json().catch(() => ({ details: response.statusText }));
+         throw new Error(errorData.details || `Server error: ${response.status}`);
        }
       const data = await response.json();
       setResult(data);
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
+      const errorMessage = error.message || "An unknown error occurred.";
       toast({
         variant: "destructive",
         title: "Error Generating Image",
@@ -642,7 +651,7 @@ export function ImageGenerator() {
       {result && (
         <Card className="mt-6 bg-muted/30">
           <CardHeader>
-            <CardTitle>Generated Image</CardTitle>
+            <h3 className="text-xl font-semibold">Generated Image</h3>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="relative aspect-video w-full max-w-lg mx-auto rounded-lg overflow-hidden border">

@@ -1,29 +1,21 @@
 
 import { NextRequest, NextResponse } from 'next/server';
-
-const AI_SERVER_URL = 'http://localhost:3001/api/ai/suggest-ctas';
+import { suggestCTAs, SuggestCTAsInputSchema } from '@/ai/flows/suggest-ctas';
 
 export async function POST(req: NextRequest) {
   try {
-    const response = await fetch(AI_SERVER_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(await req.json()),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      return NextResponse.json(errorData, { status: response.status });
+    const body = await req.json();
+    const validatedBody = SuggestCTAsInputSchema.safeParse(body);
+    if (!validatedBody.success) {
+      return NextResponse.json({ error: 'Invalid input', details: validatedBody.error.format() }, { status: 400 });
     }
-
-    const data = await response.json();
-    return NextResponse.json(data);
+    
+    const result = await suggestCTAs(validatedBody.data);
+    return NextResponse.json(result);
   } catch (error: any) {
-    console.error('Error proxying to AI server:', error);
+    console.error('Error running suggestCTAs flow:', error);
     return NextResponse.json(
-      { error: 'An error occurred while proxying to the AI server.' },
+      { error: 'An error occurred while suggesting CTAs.', details: error.message },
       { status: 500 }
     );
   }
