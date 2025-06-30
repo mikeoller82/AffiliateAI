@@ -28,30 +28,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [authError, setAuthError] = useState<string | null>(null);
 
   useEffect(() => {
+    // This effect runs once on mount to initialize Firebase and set up the auth listener.
     const initFirebase = async () => {
       try {
         const { auth: firebaseAuth, db: firebaseDb } = await import('@/lib/firebase');
         const { onAuthStateChanged } = await import('firebase/auth');
-        const { onCurrentUserSubscriptionUpdate } = await import('@/lib/stripe');
-
+        
         setAuth(firebaseAuth);
         setDb(firebaseDb);
 
-        const unsubscribeAuth = onAuthStateChanged(firebaseAuth, (userAuth) => {
-          setUser(userAuth);
-          if (userAuth && firebaseDb) {
-            const unsubscribeSub = onCurrentUserSubscriptionUpdate(firebaseDb, userAuth, (snapshot) => {
-              const newSubscription = snapshot.subscriptions[0] || null;
-              setSubscription(newSubscription);
-            });
-            // This is a simplified approach; in a real app, you'd manage this unsubscribe more carefully.
-          } else {
-            setSubscription(null);
-          }
-          setLoading(false);
+        // onAuthStateChanged returns its own unsubscribe function.
+        const unsubscribeAuth = onAuthStateChanged(firebaseAuth, (user) => {
+          setUser(user);
+          // We set loading to false as soon as the auth state is determined.
+          // The subscription will be handled by the next effect.
+          setLoading(false); 
         });
 
+        // Cleanup function for the auth listener.
         return () => unsubscribeAuth();
+
       } catch (error) {
         console.error("Firebase initialization error:", error);
         if (error instanceof Error && error.message.includes("Missing Firebase client configuration")) {
@@ -62,9 +58,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setLoading(false);
       }
     };
-
     initFirebase();
   }, []);
+
+  useEffect(() => {
+    // This effect runs whenever the user or db state changes.
+    // It's responsible for setting up the subscription listener.
+    if (user && db) {
+      const { onCurrentUserSubscriptionUpdate } = require('@/lib/stripe');
+      const unsubscribeSub = onCurrentUserSubscriptionUpdate(db, user, (snapshot: { subscriptions: DocumentData[] }) => {
+        const newSubscription = snapshot.subscriptions[0] || null;
+        setSubscription(newSubscription);
+      });
+
+      // Cleanup function for the subscription listener.
+      return () => unsubscribeSub();
+    } else {
+      // If there is no user, clear the subscription.
+      setSubscription(null);
+    }
+  }, [user, db]);
+
 
   const signOut = async () => {
     if (auth) {
