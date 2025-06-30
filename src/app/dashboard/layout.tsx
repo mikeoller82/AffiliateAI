@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState, useEffect, ReactNode, useCallback } from 'react';
+import { ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/auth-context';
 import { AIKeyProvider, useAIKey } from '@/contexts/ai-key-context';
@@ -43,7 +43,6 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { ApiKeyDialog } from '@/components/ai/api-key-dialog';
 import { Logo } from '@/components/icons/logo';
 
 
@@ -121,20 +120,9 @@ function UserMenu() {
 }
 
 function DashboardLayoutContent({ children }: { children: ReactNode }) {
-    const { user, loading, authError, signOut } = useAuth();
-    const router = useRouter();
-    
-    useEffect(() => {
-        if (!loading && !user) {
-            router.replace('/login');
-        }
-    }, [user, loading, router]);
-
-
-    if (loading || !user) {
-        return null;
-    }
-  
+    // The AuthProvider higher up the tree now handles the main loading state,
+    // and the middleware handles route protection. We no longer need to perform
+    // a client-side redirect here, which was causing the redirect loop.
     return (
     <TooltipProvider>
       <div className="flex min-h-screen w-full flex-col bg-muted/40">
