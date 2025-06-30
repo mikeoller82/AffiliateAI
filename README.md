@@ -1,3 +1,4 @@
+
 # 🚀 HighLaunchPad – Open-Source AI CRM for the Creator Economy
 
 > **HighLaunchPad is the open-source AI CRM and marketing automation platform designed to empower 80M+ digital entrepreneurs in the Creator Economy. Launch, automate, and scale your monetized campaigns with powerful AI tools, a visual funnel builder, email marketing automation, and more.**

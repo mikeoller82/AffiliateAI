@@ -1,7 +1,5 @@
 import type {Metadata} from 'next';
 import './globals.css';
-import './editor.css';
-import './automations.css';
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from '@/contexts/auth-context';
 import { cn } from '@/lib/utils';
