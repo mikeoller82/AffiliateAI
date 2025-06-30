@@ -15,8 +15,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
+import { Loader2, AlertTriangle } from 'lucide-react';
 import Image from 'next/image';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 export const dynamic = 'force-dynamic';
 
@@ -40,11 +41,11 @@ export default function LoginPage() {
   });
 
   async function onSubmit(values: z.infer<typeof loginFormSchema>) {
-    if (!auth) {
+    if (!auth || authError) {
       toast({
         variant: 'destructive',
         title: 'Authentication Not Ready',
-        description: authError || 'The authentication service is not available. Please wait a moment and try again.',
+        description: authError || 'The authentication service is not available. Please fix the configuration error above.',
       });
       return;
     }
@@ -57,7 +58,6 @@ export default function LoginPage() {
       const idToken = await userCredential.user.getIdToken();
       console.log('Got ID token, creating session...');
 
-      // Create session cookie with better error handling
       const response = await fetch('/api/auth/session-login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -65,45 +65,13 @@ export default function LoginPage() {
       });
 
       console.log('Session API response status:', response.status);
-      console.log('Session API response headers:', Object.fromEntries(response.headers.entries()));
-
-      // Get response text first to handle potential parsing issues
-      const responseText = await response.text();
-      console.log('Session API response text:', responseText);
 
       if (!response.ok) {
-        let errorMessage = `Server error: ${response.status} ${response.statusText}`;
-        
-        // Try to parse error response as JSON
-        if (responseText) {
-          try {
-            const errorData = JSON.parse(responseText);
-            errorMessage = errorData.error || errorData.details || errorMessage;
-          } catch (parseError) {
-            console.error('Failed to parse error response as JSON:', parseError);
-            // If it's HTML (like a 500 error page), extract useful info
-            if (responseText.includes('<title>')) {
-              errorMessage = 'Server error occurred. Please try again in a moment.';
-            } else {
-              errorMessage = responseText.substring(0, 100) || errorMessage;
-            }
-          }
-        }
-        
-        throw new Error(errorMessage);
+        const errorData = await response.json().catch(() => ({ error: 'An unknown server error occurred.'}));
+        throw new Error(errorData.details || errorData.error);
       }
-
-      // Parse successful response
-      let result;
-      try {
-        if (!responseText) {
-          throw new Error('Empty response from server');
-        }
-        result = JSON.parse(responseText);
-      } catch (parseError) {
-        console.error('Failed to parse success response:', parseError);
-        throw new Error('Invalid response format from server');
-      }
+      
+      const result = await response.json();
 
       if (result.success) {
         console.log('Login successful, redirecting...');
@@ -121,11 +89,9 @@ export default function LoginPage() {
       
       let description = 'An unexpected error occurred. Please try again.';
       
-      // Handle specific configuration errors
       if (error.message?.includes('Invalid PEM formatted') || error.message?.includes('private_key')) {
-        description = "Server configuration error: The Firebase Admin private key is formatted incorrectly. Please ensure it's copied correctly into your environment variables, preserving the '\\n' characters.";
+        description = "Server configuration error: The Firebase Admin private key is formatted incorrectly. Please check your environment variables.";
       }
-      // Handle Firebase Auth errors
       else if (error.code === 'auth/invalid-credential' || 
           error.code === 'auth/wrong-password' || 
           error.code === 'auth/user-not-found' || 
@@ -133,18 +99,7 @@ export default function LoginPage() {
           error.code === 'auth/api-key-not-valid') {
         description = 'Invalid email or password. Please check your credentials and try again.';
       } 
-      // Handle network/timeout errors
-      else if (error.message?.includes('timeout') || 
-               error.message?.includes('Network timeout') ||
-               error.message?.includes('ERR_SOCKET_CONNECTION_TIMEOUT')) {
-        description = 'Connection timeout. Please check your internet connection and try again.';
-      }
-      // Handle server errors
-      else if (error.message?.includes('Server error: 50')) {
-        description = 'Server is temporarily unavailable. Please try again in a moment.';
-      }
-      // Use the actual error message if available
-      else if (error.message && !error.message.includes('Failed to fetch')) {
+      else if (error.message) {
         description = error.message;
       }
       
@@ -159,7 +114,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted/40">
+    <div className="flex min-h-screen items-center justify-center bg-muted/40 p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
             <Image
@@ -173,6 +128,15 @@ export default function LoginPage() {
           <CardDescription>Enter your credentials to access your dashboard.</CardDescription>
         </CardHeader>
         <CardContent>
+          {authError && (
+              <Alert variant="destructive" className="mb-4">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertTitle>Configuration Error</AlertTitle>
+                  <AlertDescription>
+                      {authError} This is required for local development.
+                  </AlertDescription>
+              </Alert>
+          )}
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
@@ -182,7 +146,7 @@ export default function LoginPage() {
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input type="email" placeholder="you@example.com" {...field} autoComplete="email" />
+                      <Input type="email" placeholder="you@example.com" {...field} autoComplete="email" disabled={!!authError} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -195,7 +159,7 @@ export default function LoginPage() {
                   <FormItem>
                     <FormLabel>Password</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="••••••••" {...field} autoComplete="current-password" />
+                      <Input type="password" placeholder="••••••••" {...field} autoComplete="current-password" disabled={!!authError} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -205,11 +169,6 @@ export default function LoginPage() {
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Log In
               </Button>
-               {authError && (
-                <p className="text-xs text-center text-destructive bg-destructive/20 p-2 rounded-md">
-                  <strong>Configuration Error:</strong> {authError}
-                </p>
-              )}
             </form>
           </Form>
           <div className="mt-4 text-center text-sm">

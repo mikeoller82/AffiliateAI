@@ -15,8 +15,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
+import { Loader2, AlertTriangle } from 'lucide-react';
 import Image from 'next/image';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 export const dynamic = 'force-dynamic';
 
@@ -40,11 +41,11 @@ export default function SignupPage() {
   });
 
   async function onSubmit(values: z.infer<typeof signupFormSchema>) {
-    if (!auth) {
+    if (!auth || authError) {
       toast({
         variant: 'destructive',
         title: 'Authentication Not Ready',
-        description: authError || 'The authentication service is not available. Please wait a moment and try again.',
+        description: authError || 'The authentication service is not available. Please fix the configuration error above.',
       });
       return;
     }
@@ -53,7 +54,6 @@ export default function SignupPage() {
       const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
       const idToken = await userCredential.user.getIdToken();
 
-      // Create session cookie
       const response = await fetch('/api/auth/session-login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -61,10 +61,9 @@ export default function SignupPage() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.details || errorData.error || 'Failed to create server session.');
+        const errorData = await response.json().catch(() => ({ error: 'An unknown server error occurred.'}));
+        throw new Error(errorData.details || errorData.error);
       }
-
 
       toast({
         title: 'Account Created!',
@@ -92,7 +91,7 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted/40">
+    <div className="flex min-h-screen items-center justify-center bg-muted/40 p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
              <Image
@@ -106,6 +105,15 @@ export default function SignupPage() {
           <CardDescription>Join HighLaunchPad and start growing your business.</CardDescription>
         </CardHeader>
         <CardContent>
+          {authError && (
+              <Alert variant="destructive" className="mb-4">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertTitle>Configuration Error</AlertTitle>
+                  <AlertDescription>
+                      {authError} This is required for local development.
+                  </AlertDescription>
+              </Alert>
+          )}
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
@@ -115,7 +123,7 @@ export default function SignupPage() {
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input type="email" placeholder="you@example.com" {...field} autoComplete="email"/>
+                      <Input type="email" placeholder="you@example.com" {...field} autoComplete="email" disabled={!!authError}/>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -128,7 +136,7 @@ export default function SignupPage() {
                   <FormItem>
                     <FormLabel>Password</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="••••••••" {...field} autoComplete="new-password" />
+                      <Input type="password" placeholder="••••••••" {...field} autoComplete="new-password" disabled={!!authError} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -138,11 +146,6 @@ export default function SignupPage() {
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Create Account
               </Button>
-              {authError && (
-                <p className="text-xs text-center text-destructive bg-destructive/20 p-2 rounded-md">
-                  <strong>Configuration Error:</strong> {authError}
-                </p>
-              )}
             </form>
           </Form>
           <div className="mt-4 text-center text-sm">

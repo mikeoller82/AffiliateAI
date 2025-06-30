@@ -16,7 +16,6 @@ import {
 export async function POST(request: NextRequest) {
   console.log('=== Session Login API called ===');
 
-  // ───── Parse and validate request body ─────
   let body: { idToken?: string };
   try {
     body = await request.json();
@@ -37,27 +36,17 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    // ───── Verify the ID token with a 15-second timeout ─────
     const auth = getFirebaseAuth();
-    const decodedToken = await Promise.race([
-      auth.verifyIdToken(idToken as string),
-      new Promise((_, r) =>
-        setTimeout(() => r(new Error('Token verification timeout')), 15_000),
-      ),
-    ]);
-
-    if (decodedToken instanceof Error) throw decodedToken;
+    const decodedToken = await auth.verifyIdToken(idToken);
 
     console.log('[session-login] Token verified for UID', decodedToken.uid);
 
-    // ───── Create a session cookie (retry logic encapsulated) ─────
     const expiresIn = 5 * 24 * 60 * 60 * 1000; // 5 days in ms
     const sessionCookie = await createSessionCookieWithRetry(
-      idToken as string,
+      idToken,
       expiresIn,
     );
 
-    // ───── Build and return response ─────
     const response = NextResponse.json({
       success: true,
       user: {
@@ -80,18 +69,21 @@ export async function POST(request: NextRequest) {
   } catch (err: any) {
     console.error('[session-login] Failed:', err);
 
-    // Granular error mapping if you like
-    const isTimeout =
-      err?.message?.includes('timeout') ||
-      err?.code === 'ETIMEDOUT' ||
-      err?.message === 'Token verification timeout';
+    let errorMessage = "Authentication error occurred.";
+    if (err.code === 'auth/id-token-expired') {
+        errorMessage = "Login session has expired. Please try again.";
+    } else if (err.message?.includes('Firebase ID token has invalid signature')) {
+        errorMessage = "Invalid login credentials. Please try again.";
+    } else if (err.message?.includes('private_key')) {
+        errorMessage = "Server configuration error: The Firebase Admin private key is not configured correctly.";
+    }
 
     return NextResponse.json(
       {
-        error: isTimeout ? 'Network timeout while verifying token' : 'Auth error',
-        details: err instanceof Error ? err.message : String(err),
+        error: "Auth error",
+        details: errorMessage,
       },
-      { status: isTimeout ? 408 : 401 },
+      { status: 401 },
     );
   }
 }
