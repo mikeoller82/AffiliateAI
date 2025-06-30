@@ -75,7 +75,7 @@ export default function LoginPage() {
           title: 'Success!',
           description: 'You have been successfully logged in.',
         });
-        router.replace('/dashboard');
+        window.location.href = '/dashboard';
       } else {
         throw new Error(result.error || 'Login failed due to an unknown reason.');
       }
@@ -102,8 +102,8 @@ export default function LoginPage() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
             <Logo className="h-16 w-16 mx-auto mb-4" />
-            <h1 className="text-2xl font-bold">Welcome Back!</h1>
-            <p className="text-muted-foreground">Enter your credentials to access your dashboard.</p>
+            <CardTitle>Welcome Back!</CardTitle>
+            <CardDescription>Enter your credentials to access your dashboard.</CardDescription>
         </CardHeader>
         <CardContent>
           {apiError && (

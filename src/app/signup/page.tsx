@@ -72,7 +72,7 @@ export default function SignupPage() {
         title: 'Account Created!',
         description: 'Your account has been created successfully.',
       });
-      router.replace('/dashboard');
+      window.location.href = '/dashboard';
     } catch (error: any) {
       console.error("Signup failed:", error);
       let description = error.message || 'An unexpected error occurred. Please try again.';
@@ -92,8 +92,8 @@ export default function SignupPage() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
              <Logo className="h-16 w-16 mx-auto mb-4" />
-          <h1 className="text-2xl font-bold">Create an Account</h1>
-          <p className="text-muted-foreground">Join HighLaunchPad and start growing your business.</p>
+          <CardTitle>Create an Account</CardTitle>
+          <CardDescription>Join HighLaunchPad and start growing your business.</CardDescription>
         </CardHeader>
         <CardContent>
           {apiError && (
