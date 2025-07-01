@@ -75,9 +75,8 @@ export default function LoginPage() {
           title: 'Success!',
           description: 'You have been successfully logged in.',
         });
-        // This ensures a full page reload, which guarantees the new
+        // This ensures a full page reload after a short delay, guaranteeing the new
         // session cookie is sent to the server for the dashboard route.
-        // A short delay helps ensure the cookie is processed by the browser.
         setTimeout(() => {
           window.location.href = '/dashboard';
         }, 100);
