@@ -75,7 +75,12 @@ export default function LoginPage() {
           title: 'Success!',
           description: 'You have been successfully logged in.',
         });
-        router.push('/dashboard');
+        // This ensures a full page reload, which guarantees the new
+        // session cookie is sent to the server for the dashboard route.
+        // A short delay helps ensure the cookie is processed by the browser.
+        setTimeout(() => {
+          window.location.href = '/dashboard';
+        }, 100);
       } else {
         throw new Error(result.error || 'Login failed due to an unknown reason.');
       }
@@ -84,9 +89,20 @@ export default function LoginPage() {
       console.error("Login failed:", error);
       
       let description = "An unexpected error occurred. Please try again.";
-      if (error?.code?.includes('auth/')) {
-        description = 'Invalid email or password. Please check your credentials and try again.';
+      // Check for specific Firebase Auth error codes for better user feedback
+      if (error.code) {
+        switch (error.code) {
+          case 'auth/user-not-found':
+          case 'auth/wrong-password':
+          case 'auth/invalid-credential':
+            description = 'Invalid email or password. Please check your credentials and try again.';
+            break;
+          default:
+            description = error.message || 'An unexpected error occurred.';
+            break;
+        }
       } else if (error.message) {
+        // Handle server-side errors from our session API
         description = error.message;
       }
       
