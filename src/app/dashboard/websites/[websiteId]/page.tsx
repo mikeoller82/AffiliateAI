@@ -406,12 +406,12 @@ export default function WebsiteEditorPage() {
       };
       const result = await generateFunnelCopy(input);
       setAiResult(result.generatedCopy);
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
       toast({
         variant: 'destructive',
         title: 'AI Generation Failed',
-        description: 'An error occurred while generating content. Please try again.',
+        description: error.message || 'An error occurred while generating content. Please try again.',
       });
     } finally {
       setAiIsLoading(false);
