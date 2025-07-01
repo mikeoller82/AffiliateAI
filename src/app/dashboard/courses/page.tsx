@@ -120,7 +120,7 @@ export default function CoursesPage() {
         return (
              <div className="flex flex-col items-center justify-center h-32 border border-dashed rounded-lg">
                 <GraduationCap className="h-12 w-12 text-gray-400 mb-2" />
-                <p className="text-muted-foreground font-medium">You haven&apos;t created any courses yet.</p>
+                <p className="text-muted-foreground font-medium">You haven't created any courses yet.</p>
                 <p className="text-sm text-muted-foreground">Get started with a template below or from scratch!</p>
             </div>
         );

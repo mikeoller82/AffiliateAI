@@ -94,7 +94,7 @@ export default function CourseEditorPage() {
     };
 
     const handleAddNewLesson = async (moduleId: string) => {
-        const { lessonId } = await addLesson(courseId, moduleId, 'New Lesson', 'text', { text: '' });
+        const { lessonId } = await addLesson(courseId, moduleId, 'New Lesson', 'text' as LessonContentType, { text: '' });
         await fetchCourseData();
         setEditingLessonId(lessonId);
     };
@@ -138,7 +138,7 @@ export default function CourseEditorPage() {
                                                                 {lessons[module.id]?.map((lesson, index) => (
                                                                     <Draggable key={lesson.id} draggableId={lesson.id} index={index}>
                                                                         {(provided) => (
-                                                                            <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps} className="flex items-center gap-2 bg-gray-100 p-2 rounded-md">
+                                                                            <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps} className="flex items-center gap-2 bg-gray-100 dark:bg-gray-800 p-2 rounded-md">
                                                                                 <GripVertical className="h-5 w-5 text-muted-foreground" />
                                                                                 <Input defaultValue={lesson.title} onBlur={e => updateLesson(courseId, module.id, lesson.id, { title: e.target.value })} />
                                                                                 <Button variant="ghost" size="icon" onClick={() => deleteLesson(courseId, module.id, lesson.id).then(fetchCourseData)}><Trash2 className="h-4 w-4" /></Button>
