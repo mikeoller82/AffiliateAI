@@ -36,9 +36,17 @@ export default function BlogPage() {
                 </div>
             </div>
 
-            {posts.length > 0 && (
-                <div>
-                     <h3 className="text-xl font-semibold tracking-tight mb-4">Your Posts</h3>
+            <div>
+                 <h3 className="text-xl font-semibold tracking-tight mb-4">Your Posts</h3>
+                 {posts.length === 0 ? (
+                     <Card className="flex flex-col items-center justify-center border-dashed min-h-[200px]">
+                        <div className="text-center p-6">
+                            <Newspaper className="h-12 w-12 mx-auto text-muted-foreground" />
+                            <h3 className="mt-4 text-lg font-semibold">No Blog Posts Yet</h3>
+                            <p className="mt-1 text-sm text-muted-foreground">Get started by creating a post from a template below.</p>
+                        </div>
+                    </Card>
+                 ) : (
                      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
                         {posts.map(post => (
                             <Card key={post.id} className="overflow-hidden flex flex-col">
@@ -71,8 +79,10 @@ export default function BlogPage() {
                             </Card>
                         ))}
                     </div>
-                </div>
-            )}
+                )}
+            </div>
+            
+            <Separator />
             
             <div>
                  <h3 className="text-xl font-semibold tracking-tight mb-4">Start from a Template</h3>
@@ -100,5 +110,3 @@ export default function BlogPage() {
         </div>
     );
 }
-
-    
