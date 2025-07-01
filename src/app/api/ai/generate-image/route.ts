@@ -1,6 +1,8 @@
 
+process.env.DISABLE_OTEL = 'true'; // Disable OpenTelemetry tracing for this route to prevent timeouts.
+
 import { NextRequest, NextResponse } from 'next/server';
-import { generateImage, ImageGenerationBrief } from '@/ai/flows/generate-image';
+import { generateImage, type ImageGenerationBrief } from '@/ai/flows/generate-image';
 
 export async function POST(req: NextRequest) {
   try {
