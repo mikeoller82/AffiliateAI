@@ -39,9 +39,33 @@ const operatorOptions: Record<string, string[]> = {
     "Last Click": ["is within the last", "is not within the last"],
 };
 
+const initialSegments: Segment[] = [
+    {
+        id: 1,
+        name: "Active Subscribers",
+        description: "Contacts who have opened an email in the last 30 days.",
+        count: 1204,
+        rules: [{ logic: 'AND', rules: [{ field: "Last Email Open", operator: "is within the last", value: "30 days" }] }]
+    },
+    {
+        id: 2,
+        name: "Potential Customers",
+        description: "Hot leads who have not yet purchased.",
+        count: 89,
+        rules: [{ logic: 'AND', rules: [{ field: "Tag", operator: "is", value: "Hot Lead" }, { field: "Tag", operator: "is not", value: "Customer" }] }]
+    },
+    {
+        id: 3,
+        name: "Pro Plan Users",
+        description: "All contacts who are on the Pro subscription plan.",
+        count: 432,
+        rules: [{ logic: 'AND', rules: [{ field: "Tag", operator: "is", value: "Pro Plan" }] }]
+    },
+];
+
 export default function SegmentsPage() {
     const { toast } = useToast();
-    const [segments, setSegments] = useState<Segment[]>([]);
+    const [segments, setSegments] = useState<Segment[]>(initialSegments);
     const [isRuleEditorOpen, setIsRuleEditorOpen] = useState(false);
     const [selectedSegment, setSelectedSegment] = useState<Segment | null>(null);
     

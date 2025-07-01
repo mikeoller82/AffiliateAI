@@ -21,9 +21,16 @@ interface Contact {
     tags: string[];
 }
 
+const initialContacts: Contact[] = [
+    { id: 1, name: 'Alice Johnson', email: 'alice.j@example.com', avatar: 'https://i.pravatar.cc/40?img=11', date: '2023-10-26', tags: ['New Lead', 'Newsletter'] },
+    { id: 2, name: 'Bob Williams', email: 'bob.w@example.com', avatar: 'https://i.pravatar.cc/40?img=12', date: '2023-10-25', tags: ['Customer', 'Pro Plan'] },
+    { id: 3, name: 'Charlie Brown', email: 'charlie.b@example.com', avatar: 'https://i.pravatar.cc/40?img=13', date: '2023-10-24', tags: ['Inactive'] },
+    { id: 4, name: 'Diana Prince', email: 'diana.p@example.com', avatar: 'https://i.pravatar.cc/40?img=14', date: '2023-10-23', tags: ['Hot Lead', 'Webinar Registrant'] },
+];
+
 export default function ContactsPage() {
     const { toast } = useToast();
-    const [contacts, setContacts] = useState<Contact[]>([]);
+    const [contacts, setContacts] = useState<Contact[]>(initialContacts);
     
     const handleDeleteContact = (id: number) => {
         setContacts(contacts.filter(c => c.id !== id));
