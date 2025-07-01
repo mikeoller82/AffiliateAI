@@ -1,12 +1,15 @@
-
 'use server';
 /**
  * @fileOverview AI flow for generating ad copy.
+ * This has been corrected to strictly follow the required server-side pattern,
+ * using environment variables for auth and a single prompt object.
  */
-import { GoogleGenerativeAI } from "@google/genai";
+import { GoogleGenAI } from "@google/genai";
 import { AdCopyBrief, GeneratedAdCopy } from '../types';
 
-const constructPrompt = (brief: Omit<AdCopyBrief, 'apiKey'>): string => {
+// This helper function correctly combines all instructions into a single
+// prompt string, matching the pattern's use of a single `contents` field.
+const constructPrompt = (brief: AdCopyBrief): string => {
   return `
     You are a world-class expert in Direct-Response Copywriting.
     Your task is to generate compelling ad copy based on the following brief.
@@ -28,40 +31,40 @@ const constructPrompt = (brief: Omit<AdCopyBrief, 'apiKey'>): string => {
     - "headlines": an array of strings.
     - "primary_text": a string.
     - "descriptions": an array of strings.
-
-    Example JSON output:
-    {
-      "headlines": ["Headline 1", "Headline 2", "Headline 3"],
-      "primary_text": "This is the main ad copy. It should be persuasive and engaging.",
-      "descriptions": ["Description 1", "Description 2"]
-    }
   `;
 };
 
 export const generateAdCopy = async (brief: AdCopyBrief): Promise<GeneratedAdCopy> => {
-    const { apiKey, ...promptBrief } = brief;
+    // Correct initialization. This relies on your GOOGLE_API_KEY environment variable.
+    const genAI = new GoogleGenAI({});
     
-    if (!apiKey) {
-        throw new Error("API key is required for ad copy generation.");
-    }
-    
-    const prompt = constructPrompt(promptBrief);
-    const genAI = new GoogleGenerativeAI(apiKey);
+    // Construct the full prompt string from the user's brief.
+    const prompt = constructPrompt(brief);
 
     try {
-        const model = genAI.getGenerativeModel({ 
-            model: "gemini-1.5-flash",
+        // This is the modern, direct API call pattern you specified.
+        const result = await genAI.models.generateContent({ 
+            model: "gemini-1.5-flash", // Use 1.5-flash for its strong JSON capabilities
+            contents: prompt,
             generationConfig: {
                 responseMimeType: "application/json",
                 temperature: 0.8,
-                topP: 0.9,
             }
         });
-        const result = await model.generateContent(prompt);
+        
         const response = result.response;
         
-        const jsonStr = response.text().trim().replace(/```json\n?|\n?```/g, '');
+        // This check is what's correctly throwing your "empty or blocked" error.
+        if (!response || !response.candidates || response.candidates.length === 0) {
+            // Check for specific feedback from the API if available.
+            if (response?.promptFeedback?.blockReason) {
+                const reason = response.promptFeedback.blockReason;
+                throw new Error(`Request was blocked by safety filters. Reason: ${reason}.`);
+            }
+            throw new Error("The AI returned an empty or blocked response.");
+        }
 
+        const jsonStr = response.text();
         try {
             const parsedData = JSON.parse(jsonStr);
             if (Array.isArray(parsedData.headlines) && 
@@ -78,12 +81,6 @@ export const generateAdCopy = async (brief: AdCopyBrief): Promise<GeneratedAdCop
 
     } catch (error: any) {
         console.error("Ad copy generation error:", error);
-        if (error.message.includes('API key not valid')) {
-             throw new Error("Your API key is invalid. Please check it and try again.");
-        }
-         if (error.message.includes('400 Bad Request')) {
-             throw new Error("The AI service rejected the request. Your API key might be invalid or restricted.");
-        }
-        throw new Error("Failed to communicate with the AI service.");
+        throw new Error(error.message || "Failed to communicate with the AI service.");
     }
 };

@@ -4,32 +4,31 @@ process.env.DISABLE_OTEL = 'true'; // Disable OpenTelemetry tracing for this rou
 import { NextRequest, NextResponse } from 'next/server';
 import { generateImage, type ImageGenerationBrief } from '@/ai/flows/generate-image';
 
+export const maxDuration = 30; // Set a 30-second timeout for this route
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-
     const { prompt, style, apiKey } = body;
+
     if (typeof prompt !== 'string') {
       return NextResponse.json({ error: 'Invalid input', details: 'Missing or invalid prompt field.' }, { status: 400 });
     }
 
     const brief: ImageGenerationBrief = { prompt, style, apiKey };
-    
-    // Add timeout to prevent hanging requests
-    const timeoutPromise = new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error('Request timed out after 30 seconds.')), 30000)
-    );
-
-    const generationPromise = generateImage(brief);
-    
-    const result = await Promise.race([generationPromise, timeoutPromise]);
+    const result = await generateImage(brief);
     
     return NextResponse.json(result);
   } catch (error: any) {
     console.error('Error in generateImage API route:', error);
+    const status = error.message.includes('timed out') ? 504 : 500;
+    const details = status === 504 
+      ? 'The image generation request timed out. Please try again later or with a simpler prompt.'
+      : error.message;
+      
     return NextResponse.json(
-      { error: 'An error occurred while generating the image.', details: error.message },
-      { status: 500 }
+      { error: 'An error occurred while generating the image.', details },
+      { status }
     );
   }
 }
