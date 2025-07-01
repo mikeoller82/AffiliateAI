@@ -24,9 +24,43 @@ interface AffiliateLink {
     status: 'Active' | 'Archived';
 }
 
+const initialLinks: AffiliateLink[] = [
+    {
+        id: 'link_1',
+        name: 'AI Playbook - Product Hunt Launch',
+        targetUrl: 'https://producthunt.com/posts/ai-playbook',
+        slug: 'aipb-ph',
+        clicks: 1254,
+        conversions: 312,
+        commission: 1248.00,
+        status: 'Active',
+    },
+    {
+        id: 'link_2',
+        name: 'Growth Course - Facebook Ad',
+        targetUrl: 'https://growthcourse.com/offer',
+        slug: 'growth-fb',
+        clicks: 876,
+        conversions: 98,
+        commission: 2450.00,
+        status: 'Active',
+    },
+     {
+        id: 'link_3',
+        name: 'Old SaaS Tool',
+        targetUrl: 'https://oldsaas.com',
+        slug: 'old-saas',
+        clicks: 50,
+        conversions: 2,
+        commission: 10.00,
+        status: 'Archived',
+    },
+];
+
+
 export default function LinksPage() {
     const { toast } = useToast();
-    const [links, setLinks] = useState<AffiliateLink[]>([]);
+    const [links, setLinks] = useState<AffiliateLink[]>(initialLinks);
     
     // State for Create Dialog
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
