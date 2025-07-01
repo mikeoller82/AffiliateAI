@@ -60,7 +60,7 @@ export const suggestCTAs = async (brief: CTABrief): Promise<GeneratedCTAs> => {
         try {
             const parsedData = JSON.parse(jsonStr);
             if (Array.isArray(parsedData.ctas)) {
-                return parsedData;
+                return { ctas: parsedData.ctas };
             } else {
                 throw new Error("Invalid JSON structure from API.");
             }

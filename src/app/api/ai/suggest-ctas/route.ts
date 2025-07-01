@@ -14,6 +14,7 @@ export async function POST(req: NextRequest) {
     const brief: CTABrief = { context, apiKey };
     
     const result = await suggestCTAs(brief);
+    // The suggestCTAs flow now returns an object { ctas: [...] }, so we return the array directly.
     return NextResponse.json(result.ctas);
   } catch (error: any)
   {
