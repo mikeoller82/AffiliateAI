@@ -1,4 +1,3 @@
-
 'use client';
 
 import React from 'react';
@@ -36,7 +35,7 @@ export function DocViewer({ content }: DocViewerProps) {
   });
 
   return (
-    <div className="w-full max-w-4xl mx-auto p-8 rounded-lg bg-card text-card-foreground shadow-md">
+    <div className="w-full">
         <EditorContent editor={editor} />
     </div>
   );
