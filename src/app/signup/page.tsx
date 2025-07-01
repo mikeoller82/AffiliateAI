@@ -70,12 +70,14 @@ export default function SignupPage() {
 
       toast({
         title: 'Account Created!',
-        description: 'Your account has been created successfully.',
+        description: 'Your account has been created successfully. Redirecting...',
       });
-      // This delay gives the browser a moment to set the cookie before redirecting.
-      setTimeout(() => {
-          window.location.href = '/dashboard';
-      }, 100);
+      
+      // Use Next.js router for client-side navigation
+      router.push('/dashboard');
+      // Refresh the page to ensure server-side middleware picks up the new session cookie
+      router.refresh();
+
     } catch (error: any) {
       console.error("Signup failed:", error);
       let description = "An unexpected error occurred. Please try again.";
@@ -107,7 +109,7 @@ export default function SignupPage() {
                   <AlertTitle>Sign Up Failed</AlertTitle>
                   <AlertDescription>
                       {apiError}
-                  </AlertDescription>
+                  </Description>
               </Alert>
           )}
           {authError && (

@@ -29,26 +29,31 @@ const generateImageFlow = ai.defineFlow(
     outputSchema: GenerateImageOutputSchema,
   },
   async (input) => {
-    const { prompt, style, apiKey } = input;
-    
-    const fullPrompt = `${prompt}, in the style of ${style || 'photorealism'}`;
+    try {
+      const { prompt, style, apiKey } = input;
+      
+      const fullPrompt = `${prompt}, in the style of ${style || 'photorealism'}`;
 
-    const { media } = await ai.generate({
-      model: 'googleai/gemini-2.0-flash-preview-image-generation',
-      prompt: fullPrompt,
-      config: {
-        responseModalities: ['TEXT', 'IMAGE'],
-      },
-      pluginOptions: apiKey ? { googleai: { apiKey } } : undefined,
-    });
-    
-    if (!media) {
-      throw new Error('No image was generated. The prompt may have been blocked by safety filters.');
+      const { media } = await ai.generate({
+        model: 'googleai/gemini-2.0-flash-preview-image-generation',
+        prompt: fullPrompt,
+        config: {
+          responseModalities: ['TEXT', 'IMAGE'],
+        },
+        pluginOptions: apiKey ? { googleai: { apiKey } } : undefined,
+      });
+      
+      if (!media) {
+        throw new Error('No image was generated. The prompt may have been blocked by safety filters.');
+      }
+
+      return {
+        imageDataUri: media.url,
+      };
+    } catch (error: any) {
+        console.error('Error within generateImageFlow:', error);
+        throw new Error(`Image generation failed: ${error.message}`);
     }
-
-    return {
-      imageDataUri: media.url,
-    };
   }
 );
 

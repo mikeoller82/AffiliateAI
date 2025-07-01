@@ -33,7 +33,7 @@ export function initGenkit() {
         ],
         logLevel: 'debug',
         // Optional: enable telemetry for better debugging
-        enableTracingAndMetrics: true,
+        enableTracingAndMetrics: false,
       });
 
       isGenkitConfigured = true;
@@ -85,7 +85,7 @@ export function initGenkitWithApiKey(apiKey: string) {
         }),
       ],
       logLevel: 'debug',
-      enableTracingAndMetrics: true,
+      enableTracingAndMetrics: false,
     });
 
     console.log("Genkit initialized successfully with provided API key.");

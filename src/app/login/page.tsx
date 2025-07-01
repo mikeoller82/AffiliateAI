@@ -73,13 +73,14 @@ export default function LoginPage() {
       if (result.success) {
         toast({
           title: 'Success!',
-          description: 'You have been successfully logged in.',
+          description: 'You have been successfully logged in. Redirecting...',
         });
-        // This ensures a full page reload after a short delay, guaranteeing the new
-        // session cookie is sent to the server for the dashboard route.
-        setTimeout(() => {
-          window.location.href = '/dashboard';
-        }, 100);
+        
+        // Use Next.js router for client-side navigation
+        router.push('/dashboard');
+        // Refresh the page to ensure server-side middleware picks up the new session cookie
+        router.refresh();
+
       } else {
         throw new Error(result.error || 'Login failed due to an unknown reason.');
       }

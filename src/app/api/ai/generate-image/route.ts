@@ -10,7 +10,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid input', details: validatedBody.error.format() }, { status: 400 });
     }
     
-    const result = await generateImage(validatedBody.data);
+    // Add timeout to prevent hanging requests
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Request timed out after 30 seconds.')), 30000)
+    );
+
+    const generationPromise = generateImage(validatedBody.data);
+    
+    const result = await Promise.race([generationPromise, timeoutPromise]);
+    
     return NextResponse.json(result);
   } catch (error: any) {
     console.error('Error running generateImage flow:', error);
