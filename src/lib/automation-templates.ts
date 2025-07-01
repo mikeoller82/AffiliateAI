@@ -7,6 +7,7 @@ export interface AutomationTemplate {
     description: string;
     trigger: string;
     steps: number;
+    status: 'active' | 'paused';
     nodes: Node[];
     edges: Edge[];
 }
@@ -55,7 +56,7 @@ export const automationTemplates: AutomationTemplate[] = [
     {
         id: "welcome-sequence",
         title: "New Lead Welcome Sequence",
-        description: "Sends a welcome email and tags new leads.",
+        description: "Sends a welcome email and tags new leads after a form submission.",
         status: "active",
         trigger: "Form Submitted",
         steps: 4,
@@ -65,7 +66,7 @@ export const automationTemplates: AutomationTemplate[] = [
     {
         id: "webinar-reminder",
         title: "Webinar Reminder Flow",
-        description: "Reminds registrants about the upcoming webinar.",
+        description: "Sends email and SMS reminders to webinar registrants.",
         status: "active",
         trigger: "Tag Added",
         steps: 6,
@@ -75,7 +76,7 @@ export const automationTemplates: AutomationTemplate[] = [
     {
         id: "post-purchase-upsell",
         title: "Post-Purchase Upsell",
-        description: "Offers a related product after a purchase.",
+        description: "Offers a related product one day after a customer makes a purchase.",
         status: "paused",
         trigger: "Product Purchased",
         steps: 4,
@@ -87,9 +88,10 @@ export const automationTemplates: AutomationTemplate[] = [
 export const blankTemplate: AutomationTemplate = {
     id: "blank",
     title: "New Automation",
-    description: "Start from a blank canvas.",
+    description: "Start with a blank canvas.",
     trigger: "",
     steps: 1,
+    status: 'paused',
     nodes: [
         { id: '1', type: 'trigger', position: { x: 250, y: 50 }, data: { icon: 'PlayCircle', title: 'Start Trigger', config: {} } },
     ],
