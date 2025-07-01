@@ -3,7 +3,7 @@
 /**
  * @fileOverview AI flow for generating copy for a landing page funnel.
  */
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/genai";
 import { FunnelCopyBrief, GeneratedFunnelCopy } from '../types';
 
 const constructPrompt = (brief: Omit<FunnelCopyBrief, 'apiKey'>): string => {
@@ -35,11 +35,11 @@ export const generateFunnelCopy = async (brief: FunnelCopyBrief): Promise<Genera
     }
     
     const prompt = constructPrompt(promptBrief);
-    const ai = new GoogleGenAI(apiKey);
+    const genAI = new GoogleGenerativeAI(apiKey);
 
     try {
-        const model = ai.getGenerativeModel({ 
-            model: "gemini-1.5-flash-preview-0514",
+        const model = genAI.getGenerativeModel({ 
+            model: "gemini-1.5-flash",
             generationConfig: {
                 responseMimeType: "application/json",
                 temperature: 0.7,
@@ -67,6 +67,9 @@ export const generateFunnelCopy = async (brief: FunnelCopyBrief): Promise<Genera
         console.error("Funnel copy generation error:", error);
         if (error.message.includes('API key not valid')) {
              throw new Error("Your API key is invalid. Please check it and try again.");
+        }
+         if (error.message.includes('400 Bad Request')) {
+             throw new Error("The AI service rejected the request. Your API key might be invalid or restricted.");
         }
         throw new Error("Failed to communicate with the AI service.");
     }
