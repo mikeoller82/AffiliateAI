@@ -1,9 +1,10 @@
+
 'use client';
 
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { PlusCircle, Filter, GripVertical } from "lucide-react";
+import { PlusCircle, Filter, GripVertical, Flame } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DndContext, useDraggable, useDroppable, type DragEndEvent } from '@dnd-kit/core';
@@ -19,6 +20,7 @@ interface Lead {
     value: number;
     tags: string[];
     company: string;
+    score: number;
 }
 
 type PipelineStage = 'newLeads' | 'contacted' | 'proposalSent' | 'won';
@@ -32,17 +34,17 @@ interface PipelineData {
 
 const initialPipelineData: PipelineData = {
     newLeads: [
-        { id: 'lead-1', name: 'Acme Inc.', value: 5000, tags: ['Hot Lead', 'SaaS'], company: 'Acme Inc.' },
-        { id: 'lead-2', name: 'Stark Industries', value: 12000, tags: ['Enterprise'], company: 'Stark Industries' },
+        { id: 'lead-1', name: 'Acme Inc.', value: 5000, tags: ['Hot Lead', 'SaaS'], company: 'Acme Inc.', score: 95 },
+        { id: 'lead-2', name: 'Stark Industries', value: 12000, tags: ['Enterprise'], company: 'Stark Industries', score: 82 },
     ],
     contacted: [
-        { id: 'lead-3', name: 'Wayne Enterprises', value: 8000, tags: ['Follow Up'], company: 'Wayne Enterprises' },
+        { id: 'lead-3', name: 'Wayne Enterprises', value: 8000, tags: ['Follow Up'], company: 'Wayne Enterprises', score: 65 },
     ],
     proposalSent: [
-        { id: 'lead-4', name: 'Cyberdyne Systems', value: 25000, tags: ['High Value'], company: 'Cyberdyne Systems' },
+        { id: 'lead-4', name: 'Cyberdyne Systems', value: 25000, tags: ['High Value'], company: 'Cyberdyne Systems', score: 78 },
     ],
     won: [
-        { id: 'lead-5', name: 'Ollivanders Wand Shop', value: 1500, tags: ['SMB', 'Closed Won'], company: 'Ollivanders' },
+        { id: 'lead-5', name: 'Ollivanders Wand Shop', value: 1500, tags: ['SMB', 'Closed Won'], company: 'Ollivanders', score: 99 },
     ]
 };
 
@@ -57,13 +59,25 @@ function DraggableLeadCard({ lead }: { lead: Lead }) {
         zIndex: 100, // Ensure the dragged item is on top
     } : undefined;
 
+    const getScoreColor = (score: number) => {
+        if (score > 85) return 'text-red-500';
+        if (score > 65) return 'text-orange-500';
+        return 'text-amber-500';
+    };
+
     return (
         <Card ref={setNodeRef} style={style} className="mb-4 group bg-card touch-none">
             <CardContent className="p-4">
                 <div className="flex justify-between items-start">
                     <h4 className="font-semibold text-sm">{lead.name}</h4>
-                    <div {...listeners} {...attributes} className="cursor-grab p-1">
-                        <GripVertical className="h-5 w-5 text-muted-foreground group-hover:opacity-100 opacity-0 transition-opacity" />
+                    <div className="flex items-center gap-2">
+                         <div className={`flex items-center gap-1 font-bold text-xs ${getScoreColor(lead.score)}`}>
+                            <Flame className="h-4 w-4" />
+                            {lead.score}
+                        </div>
+                        <div {...listeners} {...attributes} className="cursor-grab p-1">
+                            <GripVertical className="h-5 w-5 text-muted-foreground group-hover:opacity-100 opacity-0 transition-opacity" />
+                        </div>
                     </div>
                 </div>
                 <p className="text-xs text-muted-foreground">{lead.company}</p>
@@ -106,7 +120,7 @@ function DroppablePipelineColumn({ id, title, leads }: { id: string; title: stri
 export default function CrmPage() {
     const [pipelineData, setPipelineData] = useState<PipelineData>(initialPipelineData);
     const [isAddLeadOpen, setIsAddLeadOpen] = useState(false);
-    const [newLead, setNewLead] = useState({ name: '', company: '', value: '', tags: '' });
+    const [newLead, setNewLead] = useState({ name: '', company: '', value: '', tags: '', score: '' });
     const { toast } = useToast();
 
     const handleDragEnd = (event: DragEndEvent) => {
@@ -155,6 +169,7 @@ export default function CrmPage() {
             company: newLead.company,
             value: Number(newLead.value),
             tags: newLead.tags.split(',').map(t => t.trim()).filter(t => t),
+            score: Number(newLead.score) || 50,
         };
 
         setPipelineData(prevData => ({
@@ -163,7 +178,7 @@ export default function CrmPage() {
         }));
         
         setIsAddLeadOpen(false);
-        setNewLead({ name: '', company: '', value: '', tags: '' });
+        setNewLead({ name: '', company: '', value: '', tags: '', score: '' });
         toast({ title: 'Lead Added', description: `${lead.name} has been added to the pipeline.` });
     };
 
@@ -204,7 +219,10 @@ export default function CrmPage() {
                                 <div className="space-y-4 py-4">
                                     <div className="space-y-2"><Label htmlFor="lead-name">Name</Label><Input id="lead-name" value={newLead.name} onChange={e => setNewLead({...newLead, name: e.target.value})} /></div>
                                     <div className="space-y-2"><Label htmlFor="lead-company">Company</Label><Input id="lead-company" value={newLead.company} onChange={e => setNewLead({...newLead, company: e.target.value})} /></div>
-                                    <div className="space-y-2"><Label htmlFor="lead-value">Value ($)</Label><Input id="lead-value" type="number" value={newLead.value} onChange={e => setNewLead({...newLead, value: e.target.value})} /></div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2"><Label htmlFor="lead-value">Value ($)</Label><Input id="lead-value" type="number" value={newLead.value} onChange={e => setNewLead({...newLead, value: e.target.value})} /></div>
+                                        <div className="space-y-2"><Label htmlFor="lead-score">Lead Score</Label><Input id="lead-score" type="number" placeholder="Default: 50" value={newLead.score} onChange={e => setNewLead({...newLead, score: e.target.value})} /></div>
+                                    </div>
                                     <div className="space-y-2"><Label htmlFor="lead-tags">Tags (comma-separated)</Label><Input id="lead-tags" value={newLead.tags} onChange={e => setNewLead({...newLead, tags: e.target.value})} /></div>
                                 </div>
                                 <DialogFooter>
