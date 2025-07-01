@@ -1,4 +1,5 @@
 
+
 export type FormFieldType =
   | 'text'
   | 'textarea'
@@ -21,8 +22,10 @@ export interface FormField {
 }
 
 export interface FormSettings {
+  id: string; // Identifier for the form itself
   name: string;
   submitButtonText: string;
   successMessage: string;
   redirectUrl?: string;
+  ownerId?: string; // ID of the user/workspace that owns this form
 }

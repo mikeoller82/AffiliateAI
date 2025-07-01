@@ -1,29 +1,19 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { PlusCircle, Filter, GripVertical, Flame } from "lucide-react";
+import { PlusCircle, Filter, GripVertical, Flame, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DndContext, useDraggable, useDroppable, type DragEndEvent } from '@dnd-kit/core';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { nanoid } from 'nanoid';
 import { useToast } from '@/hooks/use-toast';
-
-interface Lead {
-    id: string;
-    name: string;
-    value: number;
-    tags: string[];
-    company: string;
-    score: number;
-}
-
-type PipelineStage = 'newLeads' | 'contacted' | 'proposalSent' | 'won';
+import type { Lead, PipelineStage } from '@/lib/crm-types';
 
 interface PipelineData {
     newLeads: Lead[];
@@ -31,22 +21,6 @@ interface PipelineData {
     proposalSent: Lead[];
     won: Lead[];
 }
-
-const initialPipelineData: PipelineData = {
-    newLeads: [
-        { id: 'lead-1', name: 'Acme Inc.', value: 5000, tags: ['Hot Lead', 'SaaS'], company: 'Acme Inc.', score: 95 },
-        { id: 'lead-2', name: 'Stark Industries', value: 12000, tags: ['Enterprise'], company: 'Stark Industries', score: 82 },
-    ],
-    contacted: [
-        { id: 'lead-3', name: 'Wayne Enterprises', value: 8000, tags: ['Follow Up'], company: 'Wayne Enterprises', score: 65 },
-    ],
-    proposalSent: [
-        { id: 'lead-4', name: 'Cyberdyne Systems', value: 25000, tags: ['High Value'], company: 'Cyberdyne Systems', score: 78 },
-    ],
-    won: [
-        { id: 'lead-5', name: 'Ollivanders Wand Shop', value: 1500, tags: ['SMB', 'Closed Won'], company: 'Ollivanders', score: 99 },
-    ]
-};
 
 function DraggableLeadCard({ lead }: { lead: Lead }) {
     const { attributes, listeners, setNodeRef, transform } = useDraggable({
@@ -56,7 +30,7 @@ function DraggableLeadCard({ lead }: { lead: Lead }) {
 
     const style = transform ? {
         transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-        zIndex: 100, // Ensure the dragged item is on top
+        zIndex: 100,
     } : undefined;
 
     const getScoreColor = (score: number) => {
@@ -84,7 +58,7 @@ function DraggableLeadCard({ lead }: { lead: Lead }) {
                 <div className="flex items-center justify-between mt-3">
                     <span className="text-lg font-bold text-primary">${lead.value.toLocaleString()}</span>
                     <Avatar className="h-6 w-6">
-                        <AvatarImage src={`https://placehold.co/40x40.png`} data-ai-hint="profile avatar" />
+                        <AvatarImage src={`https://avatar.vercel.sh/${lead.email || lead.name}.png`} data-ai-hint="profile avatar" />
                         <AvatarFallback>{lead.name.charAt(0)}</AvatarFallback>
                     </Avatar>
                 </div>
@@ -118,22 +92,50 @@ function DroppablePipelineColumn({ id, title, leads }: { id: string; title: stri
 }
 
 export default function CrmPage() {
-    const [pipelineData, setPipelineData] = useState<PipelineData>(initialPipelineData);
+    const [pipelineData, setPipelineData] = useState<PipelineData>({ newLeads: [], contacted: [], proposalSent: [], won: [] });
+    const [isLoading, setIsLoading] = useState(true);
     const [isAddLeadOpen, setIsAddLeadOpen] = useState(false);
-    const [newLead, setNewLead] = useState({ name: '', company: '', value: '', tags: '', score: '' });
+    const [newLead, setNewLead] = useState({ name: '', company: '', value: '', tags: '', score: '50' });
     const { toast } = useToast();
 
-    const handleDragEnd = (event: DragEndEvent) => {
+    const fetchLeads = useCallback(async () => {
+        setIsLoading(true);
+        try {
+            const response = await fetch('/api/crm/leads');
+            if (!response.ok) throw new Error('Failed to fetch leads');
+            const leads: Lead[] = await response.json();
+            
+            const groupedLeads: PipelineData = { newLeads: [], contacted: [], proposalSent: [], won: [] };
+            leads.forEach(lead => {
+                if (groupedLeads[lead.stage]) {
+                    groupedLeads[lead.stage].push(lead);
+                } else {
+                    groupedLeads.newLeads.push(lead); // Default fallback
+                }
+            });
+            setPipelineData(groupedLeads);
+        } catch (error) {
+            console.error(error);
+            toast({ variant: 'destructive', title: 'Error', description: 'Could not load your leads.' });
+        } finally {
+            setIsLoading(false);
+        }
+    }, [toast]);
+
+    useEffect(() => {
+        fetchLeads();
+    }, [fetchLeads]);
+
+    const handleDragEnd = async (event: DragEndEvent) => {
         const { over, active } = event;
 
         if (over && active.id) {
-            const activeLeadId = active.id;
+            const activeLeadId = active.id as string;
             const targetStage = over.id as PipelineStage;
-
-            // Find the lead and its current stage
             let sourceStage: PipelineStage | null = null;
             let movingLead: Lead | undefined;
 
+            // Find lead and source stage
             for (const stage in pipelineData) {
                 const s = stage as PipelineStage;
                 const lead = pipelineData[s].find(l => l.id === activeLeadId);
@@ -143,28 +145,41 @@ export default function CrmPage() {
                     break;
                 }
             }
-
+            
             if (sourceStage && movingLead && sourceStage !== targetStage) {
+                // Optimistic UI update
+                const originalPipelineData = JSON.parse(JSON.stringify(pipelineData));
                 setPipelineData(prevData => {
                     const newData = { ...prevData };
-                    // Remove from source
                     newData[sourceStage!] = prevData[sourceStage!].filter(l => l.id !== activeLeadId);
-                    // Add to target
-                    newData[targetStage].push(movingLead!);
+                    newData[targetStage].push({ ...movingLead!, stage: targetStage });
                     return newData;
                 });
+
+                // API call to persist change
+                try {
+                    const response = await fetch(`/api/crm/leads/${activeLeadId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ stage: targetStage }),
+                    });
+                    if (!response.ok) throw new Error('Failed to update lead stage');
+                } catch (error) {
+                    console.error(error);
+                    toast({ variant: 'destructive', title: 'Update Failed', description: 'Could not save lead stage change.' });
+                    setPipelineData(originalPipelineData); // Revert UI on failure
+                }
             }
         }
     };
     
-    const handleAddLead = () => {
+    const handleAddLead = async () => {
         if (!newLead.name || !newLead.company || !newLead.value) {
             toast({ variant: 'destructive', title: 'Missing Fields', description: 'Please fill out Name, Company, and Value.' });
             return;
         }
 
-        const lead: Lead = {
-            id: nanoid(),
+        const leadData = {
             name: newLead.name,
             company: newLead.company,
             value: Number(newLead.value),
@@ -172,14 +187,25 @@ export default function CrmPage() {
             score: Number(newLead.score) || 50,
         };
 
-        setPipelineData(prevData => ({
-            ...prevData,
-            newLeads: [lead, ...prevData.newLeads],
-        }));
-        
-        setIsAddLeadOpen(false);
-        setNewLead({ name: '', company: '', value: '', tags: '', score: '' });
-        toast({ title: 'Lead Added', description: `${lead.name} has been added to the pipeline.` });
+        try {
+            const response = await fetch('/api/crm/leads', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(leadData),
+            });
+
+            if (!response.ok) throw new Error('Failed to create lead');
+            
+            const createdLead = await response.json();
+            setPipelineData(prev => ({ ...prev, newLeads: [createdLead, ...prev.newLeads] }));
+
+            setIsAddLeadOpen(false);
+            setNewLead({ name: '', company: '', value: '', tags: '', score: '50' });
+            toast({ title: 'Lead Added', description: `${createdLead.name} has been added to the pipeline.` });
+        } catch (error) {
+            console.error(error);
+            toast({ variant: 'destructive', title: 'Error', description: 'Could not create the lead.' });
+        }
     };
 
     const pipelineColumns = [
@@ -188,6 +214,14 @@ export default function CrmPage() {
         { id: 'proposalSent', title: 'Proposal Sent', data: pipelineData.proposalSent },
         { id: 'won', title: 'Won', data: pipelineData.won },
     ];
+
+    if (isLoading) {
+        return (
+            <div className="flex h-full w-full items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+        )
+    }
 
     return (
         <DndContext onDragEnd={handleDragEnd}>
