@@ -1,62 +1,57 @@
+
 'use server';
 /**
- * @fileOverview An AI agent that generates images from a text prompt.
- *
- * - generateImage - A function that handles the image generation process.
- * - GenerateImageInput - The input type for the generateImage function.
- * - GenerateImageOutput - The return type for the generateImage function.
+ * @fileOverview AI flow for generating an image from a prompt.
  */
+import { GoogleGenAI } from "@google/genai";
+import { ImageGenerationBrief, GeneratedImage } from '../types';
 
-import { z } from 'genkit';
-import { ai } from '@/ai/genkit';
-
-export const GenerateImageInputSchema = z.object({
-  prompt: z.string().describe('A detailed text description of the image to generate.'),
-  style: z.string().optional().describe('The artistic style of the image (e.g., photorealistic, anime).'),
-  apiKey: z.string().optional().describe('User-provided Google AI API Key.'),
-});
-export type GenerateImageInput = z.infer<typeof GenerateImageInputSchema>;
-
-export const GenerateImageOutputSchema = z.object({
-  imageDataUri: z.string().describe('The generated image as a data URI.'),
-});
-export type GenerateImageOutput = z.infer<typeof GenerateImageOutputSchema>;
-
-const generateImageFlow = ai.defineFlow(
-  {
-    name: 'generateImageFlow',
-    inputSchema: GenerateImageInputSchema,
-    outputSchema: GenerateImageOutputSchema,
-  },
-  async (input) => {
-    try {
-      const { prompt, style, apiKey } = input;
-      
-      const fullPrompt = `${prompt}, in the style of ${style || 'photorealism'}`;
-
-      const { media } = await ai.generate({
-        model: 'googleai/gemini-2.0-flash-preview-image-generation',
-        prompt: fullPrompt,
-        config: {
-          responseModalities: ['TEXT', 'IMAGE'],
-        },
-        pluginOptions: apiKey ? { googleai: { apiKey } } : undefined,
-      });
-      
-      if (!media) {
-        throw new Error('No image was generated. The prompt may have been blocked by safety filters.');
-      }
-
-      return {
-        imageDataUri: media.url,
-      };
-    } catch (error: any) {
-        console.error('Error within generateImageFlow:', error);
-        throw new Error(`Image generation failed: ${error.message}`);
+export const generateImage = async (brief: ImageGenerationBrief): Promise<GeneratedImage> => {
+    const { prompt, style, apiKey } = brief;
+    
+    if (!apiKey) {
+        throw new Error("API key is required for image generation.");
     }
-  }
-);
+    
+    const fullPrompt = `${prompt}, in the style of ${style || 'photorealism'}`;
+    const ai = new GoogleGenAI(apiKey);
 
-export async function generateImage(input: GenerateImageInput): Promise<GenerateImageOutput> {
-  return await generateImageFlow(input);
-}
+    try {
+        const model = ai.getGenerativeModel({ 
+            model: "gemini-1.5-flash-preview-0514"
+        });
+
+        const result = await model.generateContent([
+            fullPrompt,
+            {
+                inlineData: {
+                    mimeType: "image/png", // Placeholder, the model infers generation from config
+                    data: ""
+                }
+            }
+        ]);
+        const response = await result.response;
+        
+        const imageParts = response.parts?.filter(part => part.inlineData && part.inlineData.mimeType.startsWith('image/'));
+
+        if (imageParts && imageParts.length > 0 && imageParts[0].inlineData) {
+            const { mimeType, data } = imageParts[0].inlineData;
+            const imageDataUri = `data:${mimeType};base64,${data}`;
+            return { imageDataUri };
+        }
+        
+        const textResponse = response.text();
+        if (textResponse) {
+             throw new Error(`Image generation failed: ${textResponse}`);
+        }
+
+        throw new Error('No image was generated. The prompt may have been blocked by safety filters.');
+
+    } catch (error: any) {
+        console.error("Image generation error:", error);
+        if (error.message.includes('API key not valid')) {
+             throw new Error("Your API key is invalid. Please check it and try again.");
+        }
+        throw new Error(error.message || `Failed to communicate with the AI service.`);
+    }
+};

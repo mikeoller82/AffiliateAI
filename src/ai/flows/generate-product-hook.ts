@@ -1,58 +1,80 @@
+
 'use server';
 /**
- * @fileOverview An AI agent that generates marketing hooks for a product.
+ * @fileOverview AI flow for generating product marketing hooks.
  */
-import { z } from 'zod';
-import { ai } from '@/ai/genkit';
+import { GoogleGenAI } from "@google/genai";
+import { ProductHookBrief, GeneratedProductHooks } from '../types';
 
-export const GenerateProductHookInputSchema = z.object({
-  productDescription: z.string().describe('A description of the product.'),
-  emotion: z
-    .string()
-    .describe('The target emotion for the hook, e.g., Urgency, Curiosity, Transformation.'),
-  apiKey: z.string().optional().describe('User-provided Google AI API Key.'),
-});
-export type GenerateProductHookInput = z.infer<typeof GenerateProductHookInputSchema>;
+const constructPrompt = (brief: Omit<ProductHookBrief, 'apiKey'>): string => {
+  return `
+    You are an expert in Viral Marketing.
+    Your task is to generate 3-5 short, punchy marketing hook ideas designed to grab attention and evoke a specific emotion.
 
+    **Product Description:** ${brief.productDescription}
+    **Target Emotion:** ${brief.emotion}
 
-export const GenerateProductHookOutputSchema = z.object({
-  hooks: z
-    .array(z.string())
-    .describe('An array of short, punchy marketing hooks.'),
-});
-export type GenerateProductHookOutput = z.infer<typeof GenerateProductHookOutputSchema>;
+    **Instructions:**
+    - Generate hooks that are concise and memorable.
+    - Each hook should strongly resonate with the target emotion.
+    - The hooks should be directly related to the product.
 
+    **Output Format:**
+    Return your response as a valid JSON object. Do not wrap it in markdown backticks.
+    The JSON object must have a single key: "hooks", which is an array of strings.
 
-const productHookPrompt = ai.definePrompt({
-    name: 'productHookPrompt',
-    input: { schema: GenerateProductHookInputSchema },
-    output: { schema: GenerateProductHookOutputSchema },
-    prompt: `You are an expert in Viral Marketing.
-Generate 3-5 short, punchy marketing hook ideas designed to grab attention and evoke a specific emotion.
-
-**Product Description:** {{{productDescription}}}
-**Target Emotion:** {{{emotion}}}`
-});
-
-const generateProductHookFlow = ai.defineFlow(
-  {
-    name: 'generateProductHookFlow',
-    inputSchema: GenerateProductHookInputSchema,
-    outputSchema: GenerateProductHookOutputSchema,
-  },
-  async (input) => {
-    const { output } = await productHookPrompt(input, {
-        model: 'googleai/gemini-2.0-flash',
-        pluginOptions: input.apiKey ? { googleai: { apiKey: input.apiKey } } : undefined,
-    });
-    
-    if (!output) {
-      throw new Error("AI failed to generate product hooks.");
+    Example JSON output:
+    {
+      "hooks": [
+        "Hook idea number one.",
+        "A second, more curiosity-driven hook.",
+        "The final hook, focused on transformation."
+      ]
     }
-    return output;
-  }
-);
+  `;
+};
 
-export async function generateProductHook(input: GenerateProductHookInput): Promise<GenerateProductHookOutput> {
-    return await generateProductHookFlow(input);
-}
+export const generateProductHook = async (brief: ProductHookBrief): Promise<GeneratedProductHooks> => {
+    const { apiKey, ...promptBrief } = brief;
+
+    if (!apiKey) {
+        throw new Error("API key is required for product hook generation.");
+    }
+    
+    const prompt = constructPrompt(promptBrief);
+    const ai = new GoogleGenAI(apiKey);
+
+    try {
+        const model = ai.getGenerativeModel({ 
+            model: "gemini-1.5-flash-preview-0514",
+            generationConfig: {
+                responseMimeType: "application/json",
+                temperature: 0.9,
+                topP: 0.9,
+            }
+        });
+        const result = await model.generateContent(prompt);
+        const response = result.response;
+        
+        const jsonStr = response.text().trim().replace(/```json\n?|\n?```/g, '');
+
+        try {
+            const parsedData = JSON.parse(jsonStr);
+            if (Array.isArray(parsedData.hooks)) {
+                return parsedData;
+            } else {
+                throw new Error("Invalid JSON structure from API.");
+            }
+        } catch (e: any) {
+            console.error("JSON parsing error:", e.message, "\nRaw AI response:", jsonStr);
+            throw new Error("The AI returned a malformed response. Please try again.");
+        }
+
+    } catch (error: any) {
+        console.error("Product hook generation error:", error);
+         if (error.message.includes('API key not valid')) {
+             throw new Error("Your API key is invalid. Please check it and try again.");
+        }
+        throw new Error("Failed to communicate with the AI service.");
+    }
+};

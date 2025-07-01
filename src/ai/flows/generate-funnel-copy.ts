@@ -1,62 +1,73 @@
+
 'use server';
 /**
- * @fileOverview An AI agent that generates copy for various funnel blocks.
+ * @fileOverview AI flow for generating copy for a landing page funnel.
  */
+import { GoogleGenAI } from "@google/genai";
+import { FunnelCopyBrief, GeneratedFunnelCopy } from '../types';
 
-import { z } from 'genkit';
-import { ai } from '@/ai/genkit';
+const constructPrompt = (brief: Omit<FunnelCopyBrief, 'apiKey'>): string => {
+  return `
+    You are an expert conversion copywriter designing a landing page funnel.
 
+    The product is: ${brief.productDescription}
 
-const GenerateFunnelCopyInputSchema = z.object({
-  productDescription: z.string().describe('A brief description of the product or service being offered in the funnel.'),
-  copyType: z.string().describe('The type of copy to generate, e.g., "Hero Headline", "Feature Description", "CTA Button Text".'),
-  userPrompt: z.string().describe('A specific instruction from the user on how to generate the copy, e.g., "Make it sound more exclusive" or "Focus on the pain point of disorganization".'),
-  apiKey: z.string().optional().describe('User-provided Google AI API Key.'),
-});
-export type GenerateFunnelCopyInput = z.infer<typeof GenerateFunnelCopyInputSchema>;
+    Your task is to generate a "${brief.copyType}".
 
-const GenerateFunnelCopyOutputSchema = z.object({
-  generatedCopy: z.string().describe('The generated piece of copy.'),
-});
-export type GenerateFunnelCopyOutput = z.infer<typeof GenerateFunnelCopyOutputSchema>;
+    Follow this instruction from the user: ${brief.userPrompt}
 
+    **Output Format:**
+    Return your response as a valid JSON object. Do not wrap it in markdown backticks.
+    The JSON object must have a single key: "generatedCopy", which should be a string containing the generated copy.
 
-const funnelCopyPrompt = ai.definePrompt({
-    name: 'funnelCopyPrompt',
-    input: { schema: GenerateFunnelCopyInputSchema },
-    output: { schema: GenerateFunnelCopyOutputSchema },
-    prompt: `You are an expert conversion copywriter designing a landing page funnel.
-
-The product is: {{{productDescription}}}
-
-Your task is to generate a "{{{copyType}}}".
-
-Follow this instruction from the user: {{{userPrompt}}}
-
-Generate a single, compelling piece of copy.`
-});
-
-
-const generateFunnelCopyFlow = ai.defineFlow(
-  {
-    name: 'generateFunnelCopyFlow',
-    inputSchema: GenerateFunnelCopyInputSchema,
-    outputSchema: GenerateFunnelCopyOutputSchema,
-  },
-  async (input) => {
-    const { output } = await funnelCopyPrompt(input, {
-        model: 'googleai/gemini-2.0-flash',
-        pluginOptions: input.apiKey ? { googleai: { apiKey: input.apiKey } } : undefined,
-    });
-    
-    if (!output) {
-      throw new Error("AI failed to generate a response for funnel copy.");
+    Example JSON output:
+    {
+      "generatedCopy": "This is the generated headline or text."
     }
-    return output;
-  }
-);
+  `;
+};
 
+export const generateFunnelCopy = async (brief: FunnelCopyBrief): Promise<GeneratedFunnelCopy> => {
+    const { apiKey, ...promptBrief } = brief;
 
-export async function generateFunnelCopy(input: GenerateFunnelCopyInput): Promise<GenerateFunnelCopyOutput> {
-    return await generateFunnelCopyFlow(input);
-}
+    if (!apiKey) {
+        throw new Error("API key is required for funnel copy generation.");
+    }
+    
+    const prompt = constructPrompt(promptBrief);
+    const ai = new GoogleGenAI(apiKey);
+
+    try {
+        const model = ai.getGenerativeModel({ 
+            model: "gemini-1.5-flash-preview-0514",
+            generationConfig: {
+                responseMimeType: "application/json",
+                temperature: 0.7,
+                topP: 0.9,
+            }
+        });
+        const result = await model.generateContent(prompt);
+        const response = result.response;
+        
+        const jsonStr = response.text().trim().replace(/```json\n?|\n?```/g, '');
+
+        try {
+            const parsedData = JSON.parse(jsonStr);
+            if (typeof parsedData.generatedCopy === 'string') {
+                return parsedData;
+            } else {
+                throw new Error("Invalid JSON structure from API.");
+            }
+        } catch (e: any) {
+            console.error("JSON parsing error:", e.message, "\nRaw AI response:", jsonStr);
+            throw new Error("The AI returned a malformed response. Please try again.");
+        }
+
+    } catch (error: any) {
+        console.error("Funnel copy generation error:", error);
+        if (error.message.includes('API key not valid')) {
+             throw new Error("Your API key is invalid. Please check it and try again.");
+        }
+        throw new Error("Failed to communicate with the AI service.");
+    }
+};

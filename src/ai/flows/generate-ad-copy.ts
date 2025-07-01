@@ -1,59 +1,86 @@
+
 'use server';
 /**
- * @fileOverview An AI agent that generates ad copy for various platforms.
+ * @fileOverview AI flow for generating ad copy.
  */
+import { GoogleGenAI } from "@google/genai";
+import { AdCopyBrief, GeneratedAdCopy } from '../types';
 
-import { z } from 'zod';
-import { ai } from '@/ai/genkit';
+const constructPrompt = (brief: Omit<AdCopyBrief, 'apiKey'>): string => {
+  return `
+    You are a world-class expert in Direct-Response Copywriting.
+    Your task is to generate compelling ad copy based on the following brief.
 
-export const GenerateAdCopyInputSchema = z.object({
-  product: z.string().describe('The product being advertised.'),
-  audience: z.string().describe('The target audience for the ad.'),
-  platform: z.string().describe('The platform where the ad will be displayed (e.g., Facebook, Google Ads).'),
-  apiKey: z.string().optional().describe('User-provided Google AI API Key.'),
-});
-export type GenerateAdCopyInput = z.infer<typeof GenerateAdCopyInputSchema>;
+    **Ad Copy Brief:**
+    - **Product/Service:** ${brief.product}
+    - **Target Audience:** ${brief.audience}
+    - **Platform:** ${brief.platform}
 
-export const GenerateAdCopyOutputSchema = z.object({
-  headlines: z.array(z.string()).describe('An array of suggested ad headlines.'),
-  primary_text: z.string().describe('The main body text of the ad.'),
-  descriptions: z.array(z.string()).describe('An array of suggested ad descriptions.'),
-});
-export type GenerateAdCopyOutput = z.infer<typeof GenerateAdCopyOutputSchema>;
+    **Instructions:**
+    1.  Create 3-5 compelling, attention-grabbing headlines.
+    2.  Write a persuasive primary text for the ad body.
+    3.  Create 3-5 concise and relevant descriptions.
+    4.  Ensure the tone and style are appropriate for the specified platform.
 
-const adCopyPrompt = ai.definePrompt({
-    name: 'adCopyPrompt',
-    input: { schema: GenerateAdCopyInputSchema },
-    output: { schema: GenerateAdCopyOutputSchema },
-    prompt: `You are a world-class expert in Direct-Response Copywriting.
-Generate compelling ad copy variations based on the product, audience, and platform.
+    **Output Format:**
+    Return your response as a valid JSON object. Do not wrap it in markdown backticks. 
+    The JSON object must have three keys: 
+    - "headlines": an array of strings.
+    - "primary_text": a string.
+    - "descriptions": an array of strings.
 
-**Product:** {{{product}}}
-**Audience:** {{{audience}}}
-**Platform:** {{{platform}}}
-
-Generate 3-5 variations for headlines and descriptions. The primary text should be engaging and relevant.`
-});
-
-const generateAdCopyFlow = ai.defineFlow(
-  {
-    name: 'generateAdCopyFlow',
-    inputSchema: GenerateAdCopyInputSchema,
-    outputSchema: GenerateAdCopyOutputSchema,
-  },
-  async (input) => {
-    const { output } = await adCopyPrompt(input, {
-        model: 'googleai/gemini-2.0-flash',
-        pluginOptions: input.apiKey ? { googleai: { apiKey: input.apiKey } } : undefined,
-    });
-    
-    if (!output) {
-      throw new Error("AI failed to generate a response.");
+    Example JSON output:
+    {
+      "headlines": ["Headline 1", "Headline 2", "Headline 3"],
+      "primary_text": "This is the main ad copy. It should be persuasive and engaging.",
+      "descriptions": ["Description 1", "Description 2"]
     }
-    return output;
-  }
-);
+  `;
+};
 
-export async function generateAdCopy(input: GenerateAdCopyInput): Promise<GenerateAdCopyOutput> {
-    return await generateAdCopyFlow(input);
-}
+export const generateAdCopy = async (brief: AdCopyBrief): Promise<GeneratedAdCopy> => {
+    const { apiKey, ...promptBrief } = brief;
+    
+    if (!apiKey) {
+        throw new Error("API key is required for ad copy generation.");
+    }
+    
+    const prompt = constructPrompt(promptBrief);
+    const ai = new GoogleGenAI(apiKey);
+
+    try {
+        const model = ai.getGenerativeModel({ 
+            model: "gemini-1.5-flash-preview-0514",
+            generationConfig: {
+                responseMimeType: "application/json",
+                temperature: 0.8,
+                topP: 0.9,
+            }
+        });
+        const result = await model.generateContent(prompt);
+        const response = result.response;
+        
+        const jsonStr = response.text().trim().replace(/```json\n?|\n?```/g, '');
+
+        try {
+            const parsedData = JSON.parse(jsonStr);
+            if (Array.isArray(parsedData.headlines) && 
+                typeof parsedData.primary_text === 'string' && 
+                Array.isArray(parsedData.descriptions)) {
+                return parsedData;
+            } else {
+                throw new Error("Invalid JSON structure received from the AI.");
+            }
+        } catch (e: any) {
+            console.error("JSON parsing error:", e.message, "\nRaw AI response:", jsonStr);
+            throw new Error("The AI returned a malformed response. Please try again.");
+        }
+
+    } catch (error: any) {
+        console.error("Ad copy generation error:", error);
+        if (error.message.includes('API key not valid')) {
+             throw new Error("Your API key is invalid. Please check it and try again.");
+        }
+        throw new Error("Failed to communicate with the AI service.");
+    }
+};

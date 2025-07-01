@@ -1,52 +1,79 @@
+
 'use server';
 /**
- * @fileOverview An AI agent that suggests calls to action.
+ * @fileOverview AI flow for suggesting Call-To-Action phrases.
  */
-import { z } from 'zod';
-import { ai } from '@/ai/genkit';
+import { GoogleGenAI } from "@google/genai";
+import { CTABrief, GeneratedCTAs } from '../types';
 
-export const SuggestCTAsInputSchema = z.object({
-  context: z.string().describe('The context of the landing page or ad, e.g., "Landing page for a free webinar on real estate".'),
-  apiKey: z.string().optional().describe('User-provided Google AI API Key.'),
-});
-export type SuggestCTAsInput = z.infer<typeof SuggestCTAsInputSchema>;
+const constructPrompt = (brief: Omit<CTABrief, 'apiKey'>): string => {
+  return `
+    You are a world-class expert in Marketing Strategy and Conversion Rate Optimization.
+    Your task is to suggest 3-5 compelling Call-To-Action (CTA) phrases for the given context.
 
+    **Context:** ${brief.context}
 
-export const SuggestCTAsOutputSchema = z.object({
-    ctas: z.array(z.string()).describe('A list of suggested CTA strings.')
-});
-export type SuggestCTAsOutput = z.infer<typeof SuggestCTAsOutputSchema>;
+    **Instructions:**
+    - The CTAs should be short, punchy, and action-oriented.
+    - Tailor the CTAs to be highly relevant to the provided context.
+    - Focus on creating a sense of urgency or clear benefit for the user.
 
-const suggestCTAsPrompt = ai.definePrompt({
-    name: 'suggestCTAsPrompt',
-    input: { schema: SuggestCTAsInputSchema },
-    output: { schema: SuggestCTAsOutputSchema },
-    prompt: `You are a world-class expert in Marketing Strategy.
-Suggest 3-5 compelling Call-To-Actions (CTAs) for the given context.
+    **Output Format:**
+    Return your response as a valid JSON object. Do not wrap it in markdown backticks.
+    The JSON object must have a single key: "ctas", which is an array of strings.
 
-**Context:** {{{context}}}`
-});
-
-const suggestCTAsFlow = ai.defineFlow(
-  {
-    name: 'suggestCTAsFlow',
-    inputSchema: SuggestCTAsInputSchema,
-    outputSchema: SuggestCTAsOutputSchema,
-  },
-  async (input) => {
-    const { output } = await suggestCTAsPrompt(input, {
-        model: 'googleai/gemini-2.0-flash',
-        pluginOptions: input.apiKey ? { googleai: { apiKey: input.apiKey } } : undefined,
-    });
-    
-    if (!output) {
-      throw new Error("AI failed to suggest CTAs.");
+    Example JSON output:
+    {
+      "ctas": [
+        "Sign Up Now, It's Free!",
+        "Reserve My Spot",
+        "Get Instant Access"
+      ]
     }
-    return output;
-  }
-);
+  `;
+};
 
+export const suggestCTAs = async (brief: CTABrief): Promise<GeneratedCTAs> => {
+    const { apiKey, ...promptBrief } = brief;
 
-export async function suggestCTAs(input: SuggestCTAsInput): Promise<SuggestCTAsOutput> {
-    return await suggestCTAsFlow(input);
-}
+    if (!apiKey) {
+        throw new Error("API key is required for CTA suggestion.");
+    }
+    
+    const prompt = constructPrompt(promptBrief);
+    const ai = new GoogleGenAI(apiKey);
+
+    try {
+        const model = ai.getGenerativeModel({ 
+            model: "gemini-1.5-flash-preview-0514",
+            generationConfig: {
+                responseMimeType: "application/json",
+                temperature: 0.8,
+                topP: 0.9,
+            }
+        });
+        const result = await model.generateContent(prompt);
+        const response = result.response;
+        
+        const jsonStr = response.text().trim().replace(/```json\n?|\n?```/g, '');
+
+        try {
+            const parsedData = JSON.parse(jsonStr);
+            if (Array.isArray(parsedData.ctas)) {
+                return parsedData;
+            } else {
+                throw new Error("Invalid JSON structure from API.");
+            }
+        } catch (e: any) {
+            console.error("JSON parsing error:", e.message, "\nRaw AI response:", jsonStr);
+            throw new Error("The AI returned a malformed response. Please try again.");
+        }
+
+    } catch (error: any) {
+        console.error("CTA suggestion error:", error);
+        if (error.message.includes('API key not valid')) {
+             throw new Error("Your API key is invalid. Please check it and try again.");
+        }
+        throw new Error("Failed to communicate with the AI service.");
+    }
+};

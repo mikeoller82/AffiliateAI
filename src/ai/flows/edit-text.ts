@@ -1,64 +1,52 @@
 'use server';
 /**
- * @fileOverview An AI agent that edits text based on instructions.
+ * @fileOverview AI flow for editing a piece of text based on an instruction.
  */
+import { GoogleGenAI } from "@google/genai";
+import { EditTextInput, EditTextOutput } from '../types';
 
-import { z } from 'zod';
-import { ai } from '@/ai/genkit';
+const constructPrompt = (input: Omit<EditTextInput, 'apiKey'>): string => {
+  return `
+    You are an expert editor. Your task is to modify the following text based on the user's instruction.
+    The output should be only the modified text, without any preamble or explanation.
 
-export const EditTextInputSchema = z.object({
-  text: z.string().min(1).describe('The original text to be edited.'),
-  instruction: z.string().min(1).describe('The instruction for how to edit the text (e.g., "summarize", "fix grammar", "make it more punchy").'),
-  apiKey: z.string().optional().describe('User-provided Google AI API Key.'),
-});
-export type EditTextInput = z.infer<typeof EditTextInputSchema>;
+    **Original Text:**
+    ---
+    ${input.text}
+    ---
 
-export const EditTextOutputSchema = z.object({
-  editedText: z.string().describe('The resulting edited text.'),
-});
-export type EditTextOutput = z.infer<typeof EditTextOutputSchema>;
+    **Instruction:**
+    ${input.instruction}
+  `;
+};
 
-
-const editTextPrompt = ai.definePrompt(
-    {
-        name: 'editTextPrompt',
-        input: { schema: EditTextInputSchema },
-        output: { schema: EditTextOutputSchema },
-        prompt: `You are an expert copy editor. Your task is to edit the provided text based on the given instruction.
-
-Instruction: {{{instruction}}}
-
-Original Text:
----
-{{{text}}}
----
-
-Please edit the text according to the instruction.`,
+export const editText = async (input: EditTextInput): Promise<EditTextOutput> => {
+    const { apiKey, ...promptInput } = input;
+    
+    if (!apiKey) {
+        throw new Error("API key is required for editing text.");
     }
-);
+    
+    const prompt = constructPrompt(promptInput);
+    const ai = new GoogleGenAI(apiKey);
 
-const editTextFlow = ai.defineFlow(
-    {
-        name: 'editTextFlow',
-        inputSchema: EditTextInputSchema,
-        outputSchema: EditTextOutputSchema,
-    },
-    async (input) => {
-        const { output } = await editTextPrompt(input, {
-            model: 'googleai/gemini-2.0-flash',
-            pluginOptions: input.apiKey ? { googleai: { apiKey: input.apiKey } } : undefined,
-             config: {
-                temperature: 0.5,
-             },
+    try {
+        const model = ai.getGenerativeModel({ 
+            model: "gemini-1.5-flash-preview-0514",
+            generationConfig: {
+                temperature: 0.7,
+            }
         });
+        const result = await model.generateContent(prompt);
+        const response = result.response;
+        
+        return { editedText: response.text().trim() };
 
-        if (!output) {
-            throw new Error('AI failed to generate a response for text editing.');
+    } catch (error: any) {
+        console.error("Text editing error:", error);
+        if (error.message.includes('API key not valid')) {
+             throw new Error("Your API key is invalid. Please check it and try again.");
         }
-        return output;
+        throw new Error("Failed to communicate with the AI service for text editing.");
     }
-);
-
-export async function editText(input: EditTextInput): Promise<EditTextOutput> {
-  return await editTextFlow(input);
-}
+};

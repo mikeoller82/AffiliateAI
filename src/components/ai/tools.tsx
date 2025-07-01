@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Loader2, Wand2, Copy, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
@@ -20,7 +20,7 @@ type GenerateAdCopyOutput = { headlines: string[]; primary_text: string; descrip
 type SuggestCTAsOutput = string[];
 type GenerateProductReviewOutput = { review: string };
 type GenerateProductHookOutput = { hooks: string[] };
-type GenerateEmailContentOutput = { subjectLines: string[]; body: string };
+type GenerateEmailContentOutput = { subject: string; body: string };
 type GenerateImageOutput = { imageDataUri: string };
 
 function LoadingSpinner() {
@@ -412,13 +412,14 @@ export function ProductHookGenerator() {
 }
 
 const emailFormSchema = z.object({
-  objective: z.string().min(10, 'Objective must be at least 10 characters.'),
+  goal: z.string().min(10, 'Objective must be at least 10 characters.'),
   tone: z.string().min(1, 'Tone is required.'),
-  productDetails: z.string().min(10, 'Product details must be at least 10 characters.'),
+  product: z.string().min(10, 'Product details must be at least 10 characters.'),
+  audience: z.string().min(3, 'Target audience is required.'),
 });
 
 interface EmailGeneratorProps {
-  defaultValues?: z.infer<typeof emailFormSchema>;
+  defaultValues?: Partial<z.infer<typeof emailFormSchema>>;
 }
 
 export function EmailGenerator({ defaultValues }: EmailGeneratorProps) {
@@ -429,7 +430,7 @@ export function EmailGenerator({ defaultValues }: EmailGeneratorProps) {
 
   const form = useForm<z.infer<typeof emailFormSchema>>({
     resolver: zodResolver(emailFormSchema),
-    defaultValues: defaultValues || { objective: "", tone: "Professional", productDetails: "" },
+    defaultValues: { goal: "", tone: "Professional", product: "", audience: "", ...defaultValues },
   });
 
   async function onSubmit(values: z.infer<typeof emailFormSchema>) {
@@ -475,14 +476,21 @@ export function EmailGenerator({ defaultValues }: EmailGeneratorProps) {
     <div className="space-y-6">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <FormField control={form.control} name="objective" render={({ field }) => (
+          <FormField control={form.control} name="goal" render={({ field }) => (
             <FormItem>
               <FormLabel>Email Objective</FormLabel>
               <FormControl><Input placeholder="e.g., Promote new summer collection" {...field} /></FormControl>
               <FormMessage />
             </FormItem>
           )} />
-           <FormField control={form.control} name="productDetails" render={({ field }) => (
+          <FormField control={form.control} name="audience" render={({ field }) => (
+            <FormItem>
+              <FormLabel>Target Audience</FormLabel>
+              <FormControl><Input placeholder="e.g., Existing customers" {...field} /></FormControl>
+              <FormMessage />
+            </FormItem>
+          )} />
+           <FormField control={form.control} name="product" render={({ field }) => (
             <FormItem>
               <FormLabel>Product / Offer Details</FormLabel>
               <FormControl><Textarea placeholder="Describe the product, offer, or message you want to convey." {...field} /></FormControl>
@@ -521,16 +529,11 @@ export function EmailGenerator({ defaultValues }: EmailGeneratorProps) {
           </CardHeader>
           <CardContent className="space-y-6">
             <div>
-              <h4 className="font-semibold text-lg mb-2">Subject Lines</h4>
-              <div className="space-y-2">
-                {result.subjectLines.map((subject, i) => (
-                  <div key={i} className="flex items-center gap-2 p-2 rounded-md bg-background border">
-                    <p className="flex-1">{subject}</p>
-                    <Button variant="ghost" size="icon" onClick={() => handleCopy(subject)}>
-                      <Copy className="h-4 w-4"/>
-                    </Button>
-                  </div>
-                ))}
+              <div className="flex items-center gap-2 p-2 rounded-md bg-background border">
+                <p className="flex-1 font-semibold">{result.subject}</p>
+                <Button variant="ghost" size="icon" onClick={() => handleCopy(result.subject)}>
+                  <Copy className="h-4 w-4"/>
+                </Button>
               </div>
             </div>
             
@@ -542,9 +545,7 @@ export function EmailGenerator({ defaultValues }: EmailGeneratorProps) {
                         Copy Body
                     </Button>
                 </div>
-                 <div className="p-4 rounded-md bg-background border">
-                     <p className="whitespace-pre-wrap">{result.body}</p>
-                 </div>
+                 <div className="p-4 rounded-md bg-background border" dangerouslySetInnerHTML={{ __html: result.body }} />
             </div>
           </CardContent>
         </Card>

@@ -1,7 +1,8 @@
-import type {Metadata} from 'next';
+import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from '@/contexts/auth-context';
+import { AIKeyProvider } from '@/contexts/ai-key-context';
 import { cn } from '@/lib/utils';
 
 export const metadata: Metadata = {
@@ -19,7 +20,9 @@ export default function RootLayout({
       <head />
       <body className={cn("font-sans antialiased bg-background text-foreground")}>
         <AuthProvider>
-          {children}
+          <AIKeyProvider>
+            {children}
+          </AIKeyProvider>
         </AuthProvider>
         <Toaster />
       </body>

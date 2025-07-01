@@ -1,19 +1,22 @@
 
 import { NextRequest, NextResponse } from 'next/server';
-import { generateProductHook, GenerateProductHookInputSchema } from '@/ai/flows/generate-product-hook';
+import { generateProductHook, ProductHookBrief } from '@/ai/flows/generate-product-hook';
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const validatedBody = GenerateProductHookInputSchema.safeParse(body);
-    if (!validatedBody.success) {
-      return NextResponse.json({ error: 'Invalid input', details: validatedBody.error.format() }, { status: 400 });
+    
+    const { productDescription, emotion, apiKey } = body;
+    if (typeof productDescription !== 'string' || typeof emotion !== 'string') {
+        return NextResponse.json({ error: 'Invalid input', details: 'Missing or invalid product hook brief fields.' }, { status: 400 });
     }
     
-    const result = await generateProductHook(validatedBody.data);
+    const brief: ProductHookBrief = { productDescription, emotion, apiKey };
+
+    const result = await generateProductHook(brief);
     return NextResponse.json(result);
   } catch (error: any) {
-    console.error('Error running generateProductHook flow:', error);
+    console.error('Error in generateProductHook API route:', error);
     return NextResponse.json(
       { error: 'An error occurred while generating product hooks.', details: error.message },
       { status: 500 }

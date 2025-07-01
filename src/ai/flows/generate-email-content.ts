@@ -1,60 +1,81 @@
+
 'use server';
 /**
- * @fileOverview An AI agent that generates email content.
+ * @fileOverview AI flow for generating marketing email content.
  */
+import { GoogleGenAI } from "@google/genai";
+import { CampaignBrief, GeneratedEmail } from '../types';
 
-import { z } from 'zod';
-import { ai } from '@/ai/genkit';
+const constructPrompt = (brief: Omit<CampaignBrief, 'apiKey'>): string => {
+  return `
+    You are an expert marketing copywriter and CRM specialist. Your task is to generate a compelling marketing email based on the following brief.
 
-export const GenerateEmailContentInputSchema = z.object({
-  objective: z
-    .string()
-    .describe('The objective of the email, e.g., Promote new product X'),
-  tone: z.string().describe('The tone of the email, e.g., enthusiastic'),
-  productDetails: z.string().describe('Details about the product or service.'),
-  apiKey: z.string().optional().describe('User-provided Google AI API Key.'),
-});
-export type GenerateEmailContentInput = z.infer<typeof GenerateEmailContentInputSchema>;
+    **Campaign Brief:**
+    - **Target Audience:** ${brief.audience}
+    - **Product/Service:** ${brief.product}
+    - **Key Goal:** ${brief.goal}
+    - **Desired Tone:** ${brief.tone}
 
+    **Instructions:**
+    1.  Create a compelling, attention-grabbing subject line.
+    2.  Write a persuasive email body. The body should be in simple HTML format (using tags like <p>, <strong>, <em>, <ul>, <li>, <a>).
+    3.  Address the target audience directly.
+    4.  Clearly explain the value proposition of the product/service.
+    5.  Include a strong call to action related to the campaign goal.
+    6.  Ensure the tone of the email matches the desired tone from the brief.
 
-export const GenerateEmailContentOutputSchema = z.object({
-  subjectLines: z.array(z.string()).describe('Generated subject lines.'),
-  body: z.string().describe('Generated email body.'),
-});
-export type GenerateEmailContentOutput = z.infer<typeof GenerateEmailContentOutputSchema>;
+    **Output Format:**
+    Return your response as a valid JSON object. Do not wrap it in markdown backticks. The JSON object must have two string keys: "subject" and "body".
 
-
-const emailContentPrompt = ai.definePrompt({
-    name: 'emailContentPrompt',
-    input: { schema: GenerateEmailContentInputSchema },
-    output: { schema: GenerateEmailContentOutputSchema },
-    prompt: `You are a world-class expert in Email Copywriting.
-Generate email subject lines and body copy based on the provided information.
-
-**Objective:** {{{objective}}}
-**Tone:** {{{tone}}}
-**Product Details:** {{{productDetails}}}`
-});
-
-const generateEmailContentFlow = ai.defineFlow(
-  {
-    name: 'generateEmailContentFlow',
-    inputSchema: GenerateEmailContentInputSchema,
-    outputSchema: GenerateEmailContentOutputSchema,
-  },
-  async (input) => {
-    const { output } = await emailContentPrompt(input, {
-        model: 'googleai/gemini-2.0-flash',
-        pluginOptions: input.apiKey ? { googleai: { apiKey: input.apiKey } } : undefined,
-    });
-    
-    if (!output) {
-      throw new Error("AI failed to generate email content.");
+    Example JSON output:
+    {
+      "subject": "This is a great subject line.",
+      "body": "<p>Hello there,</p><p>This is the email body with <strong>HTML</strong> content.</p><p>Regards,<br>The Team</p>"
     }
-    return output;
-  }
-);
+  `;
+};
 
-export async function generateEmailContent(input: GenerateEmailContentInput): Promise<GenerateEmailContentOutput> {
-    return await generateEmailContentFlow(input);
-}
+export const generateEmailCampaign = async (brief: CampaignBrief): Promise<GeneratedEmail> => {
+    const { apiKey, ...promptBrief } = brief;
+    
+    if (!apiKey) {
+        throw new Error("API key is required for email generation.");
+    }
+
+    const prompt = constructPrompt(promptBrief);
+    const ai = new GoogleGenAI(apiKey);
+
+    try {
+        const model = ai.getGenerativeModel({ 
+            model: "gemini-1.5-flash-preview-0514",
+            generationConfig: {
+                responseMimeType: "application/json",
+                temperature: 0.7,
+                topP: 0.95,
+            }
+        });
+        const result = await model.generateContent(prompt);
+        const response = result.response;
+        
+        const jsonStr = response.text().trim().replace(/```json\n?|\n?```/g, '');
+
+        try {
+            const parsedData = JSON.parse(jsonStr);
+            if (typeof parsedData.subject === 'string' && typeof parsedData.body === 'string') {
+                return parsedData;
+            } else {
+                throw new Error("Invalid JSON structure from API.");
+            }
+        } catch (e: any) {
+            console.error("JSON parsing error:", e.message, "\nRaw AI response:", jsonStr);
+            throw new Error("The AI returned a malformed response. Please try again.");
+        }
+
+    } catch (error: any) {
+        console.error("Email generation error:", error);
+        if (error.message.includes('API key not valid')) {
+             throw new Error("Your API key is invalid. Please check it and try again.");
+        }
+        throw new Error("Failed to communicate with the AI service.");
+    }
+};

@@ -14,7 +14,7 @@ import { PlusCircle, Move, Trash2, PanelTop, PanelBottom, ImageIcon, VideoIcon, 
 import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
-import { generateFunnelCopy, type GenerateFunnelCopyInput } from '@/ai/flows/generate-funnel-copy';
+import { generateFunnelCopy, type FunnelCopyBrief } from '@/ai/flows/generate-funnel-copy';
 import { useToast } from '@/hooks/use-toast';
 import { getBlogTemplateById } from '@/lib/blog-templates';
 import { defaultContent } from '@/lib/default-content';
@@ -291,7 +291,7 @@ export default function BlogEditorPage() {
     setAiIsLoading(true);
     setAiResult('');
     try {
-      const input: GenerateFunnelCopyInput = {
+      const input: FunnelCopyBrief = {
         productDescription: blogContext,
         copyType: aiTargetField.label,
         userPrompt: aiPrompt || `Generate a standard ${aiTargetField.label}`,

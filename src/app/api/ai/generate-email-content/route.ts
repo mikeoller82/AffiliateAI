@@ -1,21 +1,25 @@
 
 import { NextRequest, NextResponse } from 'next/server';
-import { generateEmailContent, GenerateEmailContentInputSchema } from '@/ai/flows/generate-email-content';
+import { generateEmailCampaign, CampaignBrief } from '@/ai/flows/generate-email-content';
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const validatedBody = GenerateEmailContentInputSchema.safeParse(body);
-    if (!validatedBody.success) {
-      return NextResponse.json({ error: 'Invalid input', details: validatedBody.error.format() }, { status: 400 });
+
+    // Basic validation, since we're not using Zod in the new implementation
+    const { audience, product, goal, tone, apiKey } = body;
+    if (typeof audience !== 'string' || typeof product !== 'string' || typeof goal !== 'string' || typeof tone !== 'string') {
+        return NextResponse.json({ error: 'Invalid input', details: 'Missing or invalid campaign brief fields.' }, { status: 400 });
     }
     
-    const result = await generateEmailContent(validatedBody.data);
+    const brief: CampaignBrief = { audience, product, goal, tone, apiKey };
+    
+    const result = await generateEmailCampaign(brief);
     return NextResponse.json(result);
   } catch (error: any) {
-    console.error('Error running generateEmailContent flow:', error);
+    console.error('Error in generateEmailCampaign API route:', error);
     return NextResponse.json(
-      { error: 'An error occurred while generating email content.', details: error.message },
+      { error: 'An error occurred while generating the email campaign.', details: error.message },
       { status: 500 }
     );
   }

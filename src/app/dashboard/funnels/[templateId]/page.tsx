@@ -15,7 +15,7 @@ import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Slider } from '@/components/ui/slider';
-import { generateFunnelCopy, type GenerateFunnelCopyInput } from '@/ai/flows/generate-funnel-copy';
+import { generateFunnelCopy, type FunnelCopyBrief } from '@/ai/flows/generate-funnel-copy';
 import { useToast } from '@/hooks/use-toast';
 import { getFunnelComponentsById } from '@/lib/funnel-templates';
 import { defaultContent } from '@/lib/default-content';
@@ -318,7 +318,7 @@ export default function FunnelEditorPage() {
     setAiIsLoading(true);
     setAiResult('');
     try {
-      const input: GenerateFunnelCopyInput = {
+      const input: FunnelCopyBrief = {
         productDescription: funnelProductInfo,
         copyType: aiTargetField.label,
         userPrompt: aiPrompt || `Generate a standard ${aiTargetField.label}`,
@@ -331,7 +331,7 @@ export default function FunnelEditorPage() {
       toast({
         variant: 'destructive',
         title: 'AI Generation Failed',
-        description: 'An error occurred while generating content. Please try again.',
+        description: error.message || 'An error occurred while generating content. Please try again.',
       });
     } finally {
       setAiIsLoading(false);
