@@ -382,8 +382,15 @@ export default function NewsletterEditorPage() {
                                 <Button variant="ghost" size="icon" onClick={() => handleContentChange('links', currentContent.links.filter((_: any, i: number) => i !== index))}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                              </div>
                          ))}
-                         <Button variant="outline" className="w-full" onClick={() => handleContentChange('links', [...(currentContent.links || []), { platform: 'Twitter', url: '' }])}><PlusCircle className="mr-2 h-4 w-4" /> Add Link</Button>
+                         <Button variant="outline" className="w-full" onClick={() => handleContentChange('links', [...(currentContent.links || []), { platform: 'Twitter', url: '#' }])}><PlusCircle className="mr-2 h-4 w-4" /> Add Link</Button>
                      </div>
+                 )}
+                 {editingComponent?.type === 'optinForm' && (
+                    <div className="space-y-4">
+                        <div className="space-y-2"><Label>Title</Label><Input value={currentContent.title || ''} onChange={(e) => handleContentChange('title', e.target.value)} /></div>
+                        <div className="space-y-2"><Label>Description</Label><Input value={currentContent.description || ''} onChange={(e) => handleContentChange('description', e.target.value)} /></div>
+                        <div className="space-y-2"><Label>Button Text</Label><Input value={currentContent.cta || ''} onChange={(e) => handleContentChange('cta', e.target.value)} /></div>
+                    </div>
                  )}
               </div>
               <DialogFooter className="mt-4">
@@ -395,5 +402,3 @@ export default function NewsletterEditorPage() {
     </>
   );
 }
-
-    
