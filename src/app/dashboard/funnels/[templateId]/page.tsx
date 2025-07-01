@@ -22,6 +22,7 @@ import { defaultContent } from '@/lib/default-content';
 import type { Component, ComponentType } from '@/lib/builder-types';
 import { useAIKey } from '@/contexts/ai-key-context';
 import { useAuth } from '@/contexts/auth-context';
+import { StripeCheckoutButton } from '@/components/stripe/checkout-button';
 
 
 // Placeholder components for the canvas
@@ -138,18 +139,31 @@ const TextPreview = ({ content, styles }: { content: any, styles: any }) => (
 
 const ButtonPreview = ({ content, styles, buttonStyles }: { content: any, styles: any, buttonStyles: any }) => (
     <div className="p-4 text-center">
-        <Button
-            asChild
-            variant={content.variant}
-            style={{
-                backgroundColor: styles.primaryColor,
-                color: styles.primaryColorForeground,
-                borderRadius: `${buttonStyles.borderRadius}px`,
-                boxShadow: buttonStyles.shadow,
-            }}
-        >
-            <a href={content.href}>{content.text}</a>
-        </Button>
+        {content.priceId ? (
+            <StripeCheckoutButton 
+                priceId={content.priceId} 
+                buttonText={content.text} 
+                buttonStyles={buttonStyles}
+                variant={content.variant}
+                style={{
+                    backgroundColor: styles.primaryColor,
+                    color: styles.primaryColorForeground,
+                }}
+            />
+        ) : (
+            <Button
+                asChild
+                variant={content.variant}
+                style={{
+                    backgroundColor: styles.primaryColor,
+                    color: styles.primaryColorForeground,
+                    borderRadius: `${buttonStyles.borderRadius}px`,
+                    boxShadow: buttonStyles.shadow,
+                }}
+            >
+                <a href={content.href}>{content.text}</a>
+            </Button>
+        )}
     </div>
 );
 
@@ -310,9 +324,9 @@ export default function FunnelEditorPage() {
         userPrompt: aiPrompt || `Generate a standard ${aiTargetField.label}`,
         apiKey,
       };
-      const result = await generateFunnelCopy(input);
-      setAiResult(result.generatedCopy);
-    } catch (error) {
+      const { generatedCopy } = await generateFunnelCopy(input);
+      setAiResult(generatedCopy);
+    } catch (error: any) {
       console.error(error);
       toast({
         variant: 'destructive',
@@ -575,7 +589,19 @@ export default function FunnelEditorPage() {
                                     value={currentContent.href || ''}
                                     onChange={(e) => handleContentChange('href', e.target.value)}
                                     placeholder="https://example.com"
+                                    disabled={!!currentContent.priceId}
                                 />
+                                <p className="text-xs text-muted-foreground">This is disabled if a Stripe Price ID is set.</p>
+                            </div>
+                             <div className="space-y-2">
+                                <Label htmlFor="button-price-id">Stripe Price ID (Optional)</Label>
+                                <Input
+                                    id="button-price-id"
+                                    value={currentContent.priceId || ''}
+                                    onChange={(e) => handleContentChange('priceId', e.target.value)}
+                                    placeholder="price_123abc..."
+                                />
+                                <p className="text-xs text-muted-foreground">Entering a Price ID will turn this into a payment button.</p>
                             </div>
                         </div>
                     )}

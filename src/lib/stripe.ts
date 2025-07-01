@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -87,3 +88,37 @@ export const onCurrentUserSubscriptionUpdate = (
         return () => {};
     }
 }
+
+export const handleStripeOneTimeCheckout = async (priceId: string) => {
+  if (!priceId) {
+    alert('Error: No price ID was provided.');
+    return;
+  }
+  
+  try {
+    const response = await fetch('/api/stripe/checkout-session', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ priceId }),
+    });
+
+    const { sessionId, error } = await response.json();
+    if (error) {
+        throw new Error(error.message);
+    }
+    
+    if (sessionId) {
+        const stripe = await loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
+        if (stripe) {
+            await stripe.redirectToCheckout({ sessionId });
+        } else {
+            throw new Error('Stripe.js has not loaded yet.');
+        }
+    }
+  } catch (error) {
+     console.error('Error redirecting to checkout:', error);
+     alert(`Error: Could not redirect to checkout. ${error instanceof Error ? error.message : ''}`);
+  }
+};

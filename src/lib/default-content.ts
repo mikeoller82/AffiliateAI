@@ -67,6 +67,7 @@ export const defaultContent = {
         text: 'Click Here',
         href: '#',
         variant: 'default',
+        priceId: '',
     },
     customHtml: {
         html: `<div style="padding: 2rem; margin: 1rem; border: 2px dashed #374151; border-radius: 0.5rem; text-align: center; color: #F9FAFB">
