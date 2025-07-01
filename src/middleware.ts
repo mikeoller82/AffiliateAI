@@ -35,6 +35,5 @@ export const config = {
      * - render/ (publicly rendered sites)
      */
     '/((?!api|_next/static|_next/image|favicon.ico|go|sites|render).*)',
-    '/dashboard',
   ],
 };

@@ -19,8 +19,6 @@ import { Loader2, AlertTriangle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Logo } from '@/components/icons/logo';
 
-export const dynamic = 'force-dynamic';
-
 const signupFormSchema = z.object({
     email: z.string().email({ message: 'Please enter a valid email address.' }),
     password: z.string().min(6, { message: 'Password must be at least 6 characters.' }),
