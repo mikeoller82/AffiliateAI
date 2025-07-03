@@ -2,6 +2,7 @@
 'use server';
 /**
  * @fileOverview AI flow for generating a product review.
+ * This file has been corrected to use the standard Google AI SDK pattern.
  */
 import { GoogleGenerativeAI } from "@google/genai";
 import { ProductReviewBrief, GeneratedProductReview } from '../types';
@@ -39,18 +40,18 @@ export const generateProductReview = async (brief: ProductReviewBrief): Promise<
         throw new Error("API key is required for product review generation.");
     }
     
-    const prompt = constructPrompt(promptBrief);
     const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ 
+        model: "gemini-1.5-flash",
+        generationConfig: {
+            responseMimeType: "application/json",
+            temperature: 0.7,
+        }
+    });
+    
+    const prompt = constructPrompt(promptBrief);
 
     try {
-        const model = genAI.getGenerativeModel({ 
-            model: "gemini-1.5-flash",
-            generationConfig: {
-                responseMimeType: "application/json",
-                temperature: 0.7,
-                topP: 0.95,
-            }
-        });
         const result = await model.generateContent(prompt);
         const response = result.response;
         

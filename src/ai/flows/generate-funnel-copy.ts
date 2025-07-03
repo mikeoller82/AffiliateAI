@@ -2,6 +2,7 @@
 'use server';
 /**
  * @fileOverview AI flow for generating copy for a landing page funnel.
+ * This file has been corrected to use the standard Google AI SDK pattern.
  */
 import { GoogleGenerativeAI } from "@google/genai";
 import { FunnelCopyBrief, GeneratedFunnelCopy } from '../types';
@@ -34,18 +35,18 @@ export const generateFunnelCopy = async (brief: FunnelCopyBrief): Promise<Genera
         throw new Error("API key is required for funnel copy generation.");
     }
     
-    const prompt = constructPrompt(promptBrief);
     const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ 
+        model: "gemini-1.5-flash",
+        generationConfig: {
+            responseMimeType: "application/json",
+            temperature: 0.7,
+        }
+    });
+    
+    const prompt = constructPrompt(promptBrief);
 
     try {
-        const model = genAI.getGenerativeModel({ 
-            model: "gemini-1.5-flash",
-            generationConfig: {
-                responseMimeType: "application/json",
-                temperature: 0.7,
-                topP: 0.9,
-            }
-        });
         const result = await model.generateContent(prompt);
         const response = result.response;
         

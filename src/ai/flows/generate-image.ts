@@ -1,10 +1,10 @@
+
 'use server';
 /**
  * @fileOverview AI flow for generating an image from a prompt.
- * This has been updated to use the Imagen 4 model and the dedicated
- * `generateImages` API endpoint for more reliable results.
+ * This file has been corrected to use the standard Google AI SDK pattern for image generation.
  */
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/genai";
 import { ImageGenerationBrief, GeneratedImage } from '../types';
 
 export const generateImage = async (brief: ImageGenerationBrief): Promise<GeneratedImage> => {
@@ -14,45 +14,35 @@ export const generateImage = async (brief: ImageGenerationBrief): Promise<Genera
         throw new Error("API key is required for image generation.");
     }
     
-    // The Imagen model is sophisticated; combining prompt and style often works best.
     const fullPrompt = `${prompt}, in the style of ${style || 'photorealism'}`;
-    const genAI = new GoogleGenAI(apiKey);
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' }); // Use a multimodal model
 
     try {
-        // --- THIS IS THE NEW, CORRECT PATTERN ---
-        // We use the dedicated `generateImages` method and the 'imagen' model.
-        const result = await genAI.models.generateImages({
-            model: 'imagen-4.0-generate-preview-06-06', // Use the powerful Imagen 4 model
-            prompt: fullPrompt,
-            config: {
-                // Since our function returns one image, we explicitly request one.
-                numberOfImages: 1,
-            },
-        });
+        const result = await model.generateContent([
+            fullPrompt,
+            { text: ' (Do not include any text in the image itself)' }
+        ]);
 
-        // The response structure is an array of generated images.
-        // We must check if the array exists and is not empty.
-        if (result.generatedImages && result.generatedImages.length > 0) {
-            // Get the first (and only) image we requested.
-            const image = result.generatedImages[0];
-            const base64Data = image.image.imageBytes;
+        const response = result.response;
+        const imagePart = response.candidates?.[0].content.parts.find(part => part.inlineData);
 
-            // The API returns raw base64 data. We create a data URI for the browser.
-            // Imagen models typically produce PNG images.
-            const imageDataUri = `data:image/png;base64,${base64Data}`;
-            
+        if (imagePart && imagePart.inlineData) {
+            const { mimeType, data } = imagePart.inlineData;
+            const imageDataUri = `data:${mimeType};base64,${data}`;
             return { imageDataUri };
         }
         
-        // If the generatedImages array is empty, the prompt was likely blocked.
-        throw new Error('No image was generated. The prompt may have been blocked by safety filters or policy violations.');
+        throw new Error('No image was generated. The model may not have produced an image for this prompt.');
 
     } catch (error: any) {
         console.error("Image generation error:", error);
         if (error.message.includes('API key not valid')) {
              throw new Error("Your API key is invalid. Please check it and try again.");
         }
-        // Propagate other errors, including the "blocked prompt" error from our check above.
+        if (error.message.includes('400 Bad Request')) {
+             throw new Error("The AI service rejected the request. Your API key might be invalid or restricted.");
+        }
         throw new Error(error.message || `Failed to communicate with the AI service.`);
     }
 };

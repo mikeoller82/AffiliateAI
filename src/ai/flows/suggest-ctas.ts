@@ -2,6 +2,7 @@
 'use server';
 /**
  * @fileOverview AI flow for suggesting Call-To-Action phrases.
+ * This file has been corrected to use the standard Google AI SDK pattern.
  */
 import { GoogleGenerativeAI } from "@google/genai";
 import { CTABrief, GeneratedCTAs } from '../types';
@@ -40,18 +41,18 @@ export const suggestCTAs = async (brief: CTABrief): Promise<GeneratedCTAs> => {
         throw new Error("API key is required for CTA suggestion.");
     }
     
-    const prompt = constructPrompt(promptBrief);
     const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ 
+        model: "gemini-1.5-flash",
+        generationConfig: {
+            responseMimeType: "application/json",
+            temperature: 0.8,
+        }
+    });
+    
+    const prompt = constructPrompt(promptBrief);
 
     try {
-        const model = genAI.getGenerativeModel({ 
-            model: "gemini-1.5-flash",
-            generationConfig: {
-                responseMimeType: "application/json",
-                temperature: 0.8,
-                topP: 0.9,
-            }
-        });
         const result = await model.generateContent(prompt);
         const response = result.response;
         

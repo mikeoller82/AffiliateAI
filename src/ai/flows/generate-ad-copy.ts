@@ -1,15 +1,13 @@
+
 'use server';
 /**
  * @fileOverview AI flow for generating ad copy.
- * This has been corrected to strictly follow the required server-side pattern,
- * using environment variables for auth and a single prompt object.
+ * This file has been corrected to use the standard Google AI SDK pattern.
  */
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/genai";
 import { AdCopyBrief, GeneratedAdCopy } from '../types';
 
-// This helper function correctly combines all instructions into a single
-// prompt string, matching the pattern's use of a single `contents` field.
-const constructPrompt = (brief: AdCopyBrief): string => {
+const constructPrompt = (brief: Omit<AdCopyBrief, 'apiKey'>): string => {
   return `
     You are a world-class expert in Direct-Response Copywriting.
     Your task is to generate compelling ad copy based on the following brief.
@@ -35,36 +33,35 @@ const constructPrompt = (brief: AdCopyBrief): string => {
 };
 
 export const generateAdCopy = async (brief: AdCopyBrief): Promise<GeneratedAdCopy> => {
-    // Correct initialization. This relies on your GOOGLE_API_KEY environment variable.
-    const genAI = new GoogleGenAI({});
+    const { apiKey, ...promptBrief } = brief;
     
-    // Construct the full prompt string from the user's brief.
-    const prompt = constructPrompt(brief);
+    if (!apiKey) {
+        throw new Error("API key is required for ad copy generation.");
+    }
+
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ 
+        model: "gemini-1.5-flash",
+        generationConfig: {
+            responseMimeType: "application/json",
+            temperature: 0.8,
+        }
+    });
+    
+    const prompt = constructPrompt(promptBrief);
 
     try {
-        // This is the modern, direct API call pattern you specified.
-        const result = await genAI.models.generateContent({ 
-            model: "gemini-1.5-flash", // Use 1.5-flash for its strong JSON capabilities
-            contents: prompt,
-            generationConfig: {
-                responseMimeType: "application/json",
-                temperature: 0.8,
-            }
-        });
-        
+        const result = await model.generateContent(prompt);
         const response = result.response;
         
-        // This check is what's correctly throwing your "empty or blocked" error.
         if (!response || !response.candidates || response.candidates.length === 0) {
-            // Check for specific feedback from the API if available.
             if (response?.promptFeedback?.blockReason) {
-                const reason = response.promptFeedback.blockReason;
-                throw new Error(`Request was blocked by safety filters. Reason: ${reason}.`);
+                throw new Error(`Request was blocked by safety filters. Reason: ${response.promptFeedback.blockReason}.`);
             }
             throw new Error("The AI returned an empty or blocked response.");
         }
 
-        const jsonStr = response.text();
+        const jsonStr = response.text().trim().replace(/```json\n?|\n?```/g, '');
         try {
             const parsedData = JSON.parse(jsonStr);
             if (Array.isArray(parsedData.headlines) && 
@@ -81,6 +78,12 @@ export const generateAdCopy = async (brief: AdCopyBrief): Promise<GeneratedAdCop
 
     } catch (error: any) {
         console.error("Ad copy generation error:", error);
-        throw new Error(error.message || "Failed to communicate with the AI service.");
+         if (error.message.includes('API key not valid')) {
+             throw new Error("Your API key is invalid. Please check it and try again.");
+        }
+         if (error.message.includes('400 Bad Request')) {
+             throw new Error("The AI service rejected the request. Your API key might be invalid or restricted.");
+        }
+        throw new Error("Failed to communicate with the AI service.");
     }
 };
