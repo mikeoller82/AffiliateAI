@@ -4,7 +4,7 @@
  * @fileOverview AI flow for generating an image from a prompt.
  * This file has been corrected to use the standard Google AI SDK pattern for image generation.
  */
-import { GoogleGenerativeAI } from "@google/genai";
+import * as genAI from "@google/genai";
 import { ImageGenerationBrief, GeneratedImage } from '../types';
 
 export const generateImage = async (brief: ImageGenerationBrief): Promise<GeneratedImage> => {
@@ -15,20 +15,19 @@ export const generateImage = async (brief: ImageGenerationBrief): Promise<Genera
     }
     
     const fullPrompt = `${prompt}, in the style of ${style || 'photorealism'}`;
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' }); // Use a multimodal model
+    const genAIApi = new genAI.GoogleGenerativeAI(apiKey);
+    const model = genAIApi.getGenerativeModel({ model: 'gemini-1.5-flash-latest' }); 
 
     try {
-        const result = await model.generateContent([
-            fullPrompt,
-            { text: ' (Do not include any text in the image itself)' }
-        ]);
-
+        const result = await model.generateContent(fullPrompt);
         const response = result.response;
-        const imagePart = response.candidates?.[0].content.parts.find(part => part.inlineData);
 
-        if (imagePart && imagePart.inlineData) {
-            const { mimeType, data } = imagePart.inlineData;
+        const imageParts = response.candidates?.[0]?.content?.parts?.filter(
+            (part) => !!part.inlineData
+        );
+
+        if (imageParts && imageParts.length > 0 && imageParts[0].inlineData) {
+            const { mimeType, data } = imageParts[0].inlineData;
             const imageDataUri = `data:${mimeType};base64,${data}`;
             return { imageDataUri };
         }

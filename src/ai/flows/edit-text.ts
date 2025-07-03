@@ -4,7 +4,7 @@
  * @fileOverview AI flow for editing a piece of text based on an instruction.
  * This file has been corrected to use the standard Google AI SDK pattern.
  */
-import { GoogleGenerativeAI } from "@google/genai";
+import * as genAI from "@google/genai";
 import { EditTextInput, EditTextOutput } from '../types';
 
 export const editText = async (input: EditTextInput): Promise<EditTextOutput> => {
@@ -14,8 +14,8 @@ export const editText = async (input: EditTextInput): Promise<EditTextOutput> =>
         throw new Error("API key is required for text editing.");
     }
 
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const genAIApi = new genAI.GoogleGenerativeAI(apiKey);
+    const model = genAIApi.getGenerativeModel({ model: "gemini-1.5-flash" });
     
     const systemInstruction = `You are an expert editor. Your task is to modify the provided text based on the user's instruction. You must output ONLY the modified text, without any preamble, explanation, or markdown formatting.`;
     

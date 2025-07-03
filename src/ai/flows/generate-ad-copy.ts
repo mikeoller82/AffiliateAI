@@ -4,7 +4,7 @@
  * @fileOverview AI flow for generating ad copy.
  * This file has been corrected to use the standard Google AI SDK pattern.
  */
-import { GoogleGenerativeAI } from "@google/genai";
+import * as genAI from "@google/genai";
 import { AdCopyBrief, GeneratedAdCopy } from '../types';
 
 const constructPrompt = (brief: Omit<AdCopyBrief, 'apiKey'>): string => {
@@ -39,8 +39,8 @@ export const generateAdCopy = async (brief: AdCopyBrief): Promise<GeneratedAdCop
         throw new Error("API key is required for ad copy generation.");
     }
 
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ 
+    const genAIApi = new genAI.GoogleGenerativeAI(apiKey);
+    const model = genAIApi.getGenerativeModel({ 
         model: "gemini-1.5-flash",
         generationConfig: {
             responseMimeType: "application/json",

@@ -4,7 +4,7 @@
  * @fileOverview AI flow for generating dashboard insights.
  * This file has been corrected to use the standard Google AI SDK pattern.
  */
-import { GoogleGenerativeAI } from "@google/genai";
+import * as genAI from "@google/genai";
 import { DashboardData, GeneratedInsights } from '../types';
 
 const constructPrompt = (data: Omit<DashboardData, 'apiKey'>): string => {
@@ -67,8 +67,8 @@ export const generateDashboardInsights = async (data: DashboardData): Promise<Ge
         throw new Error("API key is required for generating dashboard insights.");
     }
     
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ 
+    const genAIApi = new genAI.GoogleGenerativeAI(apiKey);
+    const model = genAIApi.getGenerativeModel({ 
         model: "gemini-1.5-flash",
         generationConfig: {
             responseMimeType: "application/json",
