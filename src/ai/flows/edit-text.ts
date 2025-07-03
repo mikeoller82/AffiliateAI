@@ -4,7 +4,7 @@
  * @fileOverview AI flow for editing a piece of text based on an instruction.
  * This file has been corrected to use the Genkit library pattern.
  */
-import { genkit } from 'genkit';
+import { genkit } from '@genkit-ai/core';
 import { googleAI } from '@genkit-ai/googleai';
 import { z } from 'zod';
 import type { EditTextInput, EditTextOutput } from '../types';

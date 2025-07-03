@@ -4,7 +4,7 @@
  * @fileOverview AI flow for generating an image from a prompt.
  * This file has been corrected to use the Genkit library pattern for image generation.
  */
-import { genkit } from 'genkit';
+import { genkit } from '@genkit-ai/core';
 import { googleAI } from '@genkit-ai/googleai';
 import type { ImageGenerationBrief, GeneratedImage } from '../types';
 

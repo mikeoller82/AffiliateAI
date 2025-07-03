@@ -4,7 +4,7 @@
  * @fileOverview AI flow for generating copy for a landing page funnel.
  * This file has been corrected to use the Genkit library pattern.
  */
-import { genkit } from 'genkit';
+import { genkit } from '@genkit-ai/core';
 import { googleAI } from '@genkit-ai/googleai';
 import { z } from 'zod';
 import type { FunnelCopyBrief, GeneratedFunnelCopy } from '../types';

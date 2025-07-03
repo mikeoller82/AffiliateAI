@@ -4,7 +4,7 @@
  * @fileOverview AI flow for suggesting Call-To-Action phrases.
  * This file has been corrected to use the Genkit library pattern.
  */
-import { genkit } from 'genkit';
+import { genkit } from '@genkit-ai/core';
 import { googleAI } from '@genkit-ai/googleai';
 import { z } from 'zod';
 import type { CTABrief, GeneratedCTAs } from '../types';
