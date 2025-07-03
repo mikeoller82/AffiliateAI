@@ -2,10 +2,16 @@
 'use server';
 /**
  * @fileOverview AI flow for suggesting Call-To-Action phrases.
- * This file has been corrected to use the standard Google AI SDK pattern.
+ * This file has been corrected to use the Genkit library pattern.
  */
-import * as genAI from "@google/genai";
-import { CTABrief, GeneratedCTAs } from '../types';
+import { genkit } from 'genkit';
+import { googleAI } from '@genkit-ai/googleai';
+import { z } from 'zod';
+import type { CTABrief, GeneratedCTAs } from '../types';
+
+const GeneratedCTAsSchema = z.object({
+  ctas: z.array(z.string()),
+});
 
 const constructPrompt = (brief: Omit<CTABrief, 'apiKey'>): string => {
   return `
@@ -18,19 +24,8 @@ const constructPrompt = (brief: Omit<CTABrief, 'apiKey'>): string => {
     - The CTAs should be short, punchy, and action-oriented.
     - Tailor the CTAs to be highly relevant to the provided context.
     - Focus on creating a sense of urgency or clear benefit for the user.
-
-    **Output Format:**
-    Return your response as a valid JSON object. Do not wrap it in markdown backticks.
-    The JSON object must have a single key: "ctas", which is an array of strings.
-
-    Example JSON output:
-    {
-      "ctas": [
-        "Sign Up Now, It's Free!",
-        "Reserve My Spot",
-        "Get Instant Access"
-      ]
-    }
+    
+    Output structured data that adheres to the provided JSON schema.
   `;
 };
 
@@ -41,34 +36,29 @@ export const suggestCTAs = async (brief: CTABrief): Promise<GeneratedCTAs> => {
         throw new Error("API key is required for CTA suggestion.");
     }
     
-    const genAIApi = new genAI.GoogleGenerativeAI(apiKey);
-    const model = genAIApi.getGenerativeModel({ 
-        model: "gemini-1.5-flash",
-        generationConfig: {
-            responseMimeType: "application/json",
-            temperature: 0.8,
-        }
+    const userAi = genkit({
+        plugins: [googleAI({ apiKey })],
     });
     
     const prompt = constructPrompt(promptBrief);
 
     try {
-        const result = await model.generateContent(prompt);
-        const response = result.response;
-        
-        const jsonStr = response.text().trim().replace(/```json\n?|\n?```/g, '');
-
-        try {
-            const parsedData = JSON.parse(jsonStr);
-            if (Array.isArray(parsedData.ctas)) {
-                return { ctas: parsedData.ctas };
-            } else {
-                throw new Error("Invalid JSON structure from API.");
+        const { output } = await userAi.generate({
+            model: 'googleai/gemini-1.5-flash',
+            prompt,
+            config: {
+                temperature: 0.8,
+            },
+            output: {
+                schema: GeneratedCTAsSchema
             }
-        } catch (e: any) {
-            console.error("JSON parsing error:", e.message, "\nRaw AI response:", jsonStr);
-            throw new Error("The AI returned a malformed response. Please try again.");
+        });
+        
+        if (!output) {
+            throw new Error("The AI returned an empty or blocked response.");
         }
+        
+        return output;
 
     } catch (error: any) {
         console.error("CTA suggestion error:", error);

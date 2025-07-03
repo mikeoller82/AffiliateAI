@@ -2,10 +2,16 @@
 'use server';
 /**
  * @fileOverview AI flow for generating copy for a landing page funnel.
- * This file has been corrected to use the standard Google AI SDK pattern.
+ * This file has been corrected to use the Genkit library pattern.
  */
-import * as genAI from "@google/genai";
-import { FunnelCopyBrief, GeneratedFunnelCopy } from '../types';
+import { genkit } from 'genkit';
+import { googleAI } from '@genkit-ai/googleai';
+import { z } from 'zod';
+import type { FunnelCopyBrief, GeneratedFunnelCopy } from '../types';
+
+const GeneratedFunnelCopySchema = z.object({
+    generatedCopy: z.string(),
+});
 
 const constructPrompt = (brief: Omit<FunnelCopyBrief, 'apiKey'>): string => {
   return `
@@ -17,14 +23,7 @@ const constructPrompt = (brief: Omit<FunnelCopyBrief, 'apiKey'>): string => {
 
     Follow this instruction from the user: ${brief.userPrompt}
 
-    **Output Format:**
-    Return your response as a valid JSON object. Do not wrap it in markdown backticks.
-    The JSON object must have a single key: "generatedCopy", which should be a string containing the generated copy.
-
-    Example JSON output:
-    {
-      "generatedCopy": "This is the generated headline or text."
-    }
+    Output structured data that adheres to the provided JSON schema.
   `;
 };
 
@@ -35,34 +34,29 @@ export const generateFunnelCopy = async (brief: FunnelCopyBrief): Promise<Genera
         throw new Error("API key is required for funnel copy generation.");
     }
     
-    const genAIApi = new genAI.GoogleGenerativeAI(apiKey);
-    const model = genAIApi.getGenerativeModel({ 
-        model: "gemini-1.5-flash",
-        generationConfig: {
-            responseMimeType: "application/json",
-            temperature: 0.7,
-        }
+    const userAi = genkit({
+        plugins: [googleAI({ apiKey })],
     });
     
     const prompt = constructPrompt(promptBrief);
 
     try {
-        const result = await model.generateContent(prompt);
-        const response = result.response;
-        
-        const jsonStr = response.text().trim().replace(/```json\n?|\n?```/g, '');
-
-        try {
-            const parsedData = JSON.parse(jsonStr);
-            if (typeof parsedData.generatedCopy === 'string') {
-                return parsedData;
-            } else {
-                throw new Error("Invalid JSON structure from API.");
+        const { output } = await userAi.generate({
+            model: 'googleai/gemini-1.5-flash',
+            prompt,
+            config: {
+                temperature: 0.7,
+            },
+            output: {
+                schema: GeneratedFunnelCopySchema
             }
-        } catch (e: any) {
-            console.error("JSON parsing error:", e.message, "\nRaw AI response:", jsonStr);
-            throw new Error("The AI returned a malformed response. Please try again.");
+        });
+        
+        if (!output) {
+            throw new Error("The AI returned an empty or blocked response.");
         }
+        
+        return output;
 
     } catch (error: any) {
         console.error("Funnel copy generation error:", error);

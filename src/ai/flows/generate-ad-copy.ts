@@ -2,10 +2,18 @@
 'use server';
 /**
  * @fileOverview AI flow for generating ad copy.
- * This file has been corrected to use the standard Google AI SDK pattern.
+ * This file has been corrected to use the Genkit library pattern.
  */
-import * as genAI from "@google/genai";
-import { AdCopyBrief, GeneratedAdCopy } from '../types';
+import { genkit } from 'genkit';
+import { googleAI } from '@genkit-ai/googleai';
+import { z } from 'zod';
+import type { AdCopyBrief, GeneratedAdCopy } from '../types';
+
+const GeneratedAdCopySchema = z.object({
+  headlines: z.array(z.string()),
+  primary_text: z.string(),
+  descriptions: z.array(z.string()),
+});
 
 const constructPrompt = (brief: Omit<AdCopyBrief, 'apiKey'>): string => {
   return `
@@ -22,13 +30,8 @@ const constructPrompt = (brief: Omit<AdCopyBrief, 'apiKey'>): string => {
     2.  Write a persuasive primary text for the ad body.
     3.  Create 3-5 concise and relevant descriptions.
     4.  Ensure the tone and style are appropriate for the specified platform.
-
-    **Output Format:**
-    Return your response as a valid JSON object. Do not wrap it in markdown backticks. 
-    The JSON object must have three keys: 
-    - "headlines": an array of strings.
-    - "primary_text": a string.
-    - "descriptions": an array of strings.
+    
+    Output structured data that adheres to the provided JSON schema.
   `;
 };
 
@@ -39,42 +42,29 @@ export const generateAdCopy = async (brief: AdCopyBrief): Promise<GeneratedAdCop
         throw new Error("API key is required for ad copy generation.");
     }
 
-    const genAIApi = new genAI.GoogleGenerativeAI(apiKey);
-    const model = genAIApi.getGenerativeModel({ 
-        model: "gemini-1.5-flash",
-        generationConfig: {
-            responseMimeType: "application/json",
-            temperature: 0.8,
-        }
+    const userAi = genkit({
+        plugins: [googleAI({ apiKey })],
     });
     
     const prompt = constructPrompt(promptBrief);
 
     try {
-        const result = await model.generateContent(prompt);
-        const response = result.response;
-        
-        if (!response || !response.candidates || response.candidates.length === 0) {
-            if (response?.promptFeedback?.blockReason) {
-                throw new Error(`Request was blocked by safety filters. Reason: ${response.promptFeedback.blockReason}.`);
+        const { output } = await userAi.generate({
+            model: 'googleai/gemini-1.5-flash',
+            prompt,
+            config: {
+                temperature: 0.8,
+            },
+            output: {
+                schema: GeneratedAdCopySchema
             }
+        });
+        
+        if (!output) {
             throw new Error("The AI returned an empty or blocked response.");
         }
 
-        const jsonStr = response.text().trim().replace(/```json\n?|\n?```/g, '');
-        try {
-            const parsedData = JSON.parse(jsonStr);
-            if (Array.isArray(parsedData.headlines) && 
-                typeof parsedData.primary_text === 'string' && 
-                Array.isArray(parsedData.descriptions)) {
-                return parsedData;
-            } else {
-                throw new Error("Invalid JSON structure received from the AI.");
-            }
-        } catch (e: any) {
-            console.error("JSON parsing error:", e.message, "\nRaw AI response:", jsonStr);
-            throw new Error("The AI returned a malformed response. Please try again.");
-        }
+        return output;
 
     } catch (error: any) {
         console.error("Ad copy generation error:", error);

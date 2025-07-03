@@ -2,10 +2,17 @@
 'use server';
 /**
  * @fileOverview AI flow for generating marketing email content.
- * This file has been corrected to use the standard Google AI SDK pattern.
+ * This file has been corrected to use the Genkit library pattern.
  */
-import * as genAI from "@google/genai";
-import { CampaignBrief, GeneratedEmail } from '../types';
+import { genkit } from 'genkit';
+import { googleAI } from '@genkit-ai/googleai';
+import { z } from 'zod';
+import type { CampaignBrief, GeneratedEmail } from '../types';
+
+const GeneratedEmailSchema = z.object({
+  subject: z.string(),
+  body: z.string(),
+});
 
 const constructPrompt = (brief: Omit<CampaignBrief, 'apiKey'>): string => {
   return `
@@ -25,14 +32,7 @@ const constructPrompt = (brief: Omit<CampaignBrief, 'apiKey'>): string => {
     5.  Include a strong call to action related to the campaign goal.
     6.  Ensure the tone of the email matches the desired tone from the brief.
 
-    **Output Format:**
-    Return your response as a valid JSON object. Do not wrap it in markdown backticks. The JSON object must have two string keys: "subject" and "body".
-
-    Example JSON output:
-    {
-      "subject": "This is a great subject line.",
-      "body": "<p>Hello there,</p><p>This is the email body with <strong>HTML</strong> content.</p><p>Regards,<br>The Team</p>"
-    }
+    Output structured data that adheres to the provided JSON schema.
   `;
 };
 
@@ -43,34 +43,29 @@ export const generateEmailCampaign = async (brief: CampaignBrief): Promise<Gener
         throw new Error("API key is required for email generation.");
     }
 
-    const genAIApi = new genAI.GoogleGenerativeAI(apiKey);
-    const model = genAIApi.getGenerativeModel({ 
-        model: "gemini-1.5-flash",
-        generationConfig: {
-            responseMimeType: "application/json",
-            temperature: 0.7,
-        }
+    const userAi = genkit({
+        plugins: [googleAI({ apiKey })],
     });
 
     const prompt = constructPrompt(promptBrief);
 
     try {
-        const result = await model.generateContent(prompt);
-        const response = result.response;
-        
-        const jsonStr = response.text().trim().replace(/```json\n?|\n?```/g, '');
-
-        try {
-            const parsedData = JSON.parse(jsonStr);
-            if (typeof parsedData.subject === 'string' && typeof parsedData.body === 'string') {
-                return parsedData;
-            } else {
-                throw new Error("Invalid JSON structure from API.");
+        const { output } = await userAi.generate({
+            model: 'googleai/gemini-1.5-flash',
+            prompt,
+            config: {
+                temperature: 0.7,
+            },
+            output: {
+                schema: GeneratedEmailSchema
             }
-        } catch (e: any) {
-            console.error("JSON parsing error:", e.message, "\nRaw AI response:", jsonStr);
-            throw new Error("The AI returned a malformed response. Please try again.");
+        });
+        
+        if (!output) {
+            throw new Error("The AI returned an empty or blocked response.");
         }
+
+        return output;
 
     } catch (error: any) {
         console.error("Email generation error:", error);

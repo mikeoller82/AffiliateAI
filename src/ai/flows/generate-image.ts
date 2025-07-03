@@ -2,10 +2,11 @@
 'use server';
 /**
  * @fileOverview AI flow for generating an image from a prompt.
- * This file has been corrected to use the standard Google AI SDK pattern for image generation.
+ * This file has been corrected to use the Genkit library pattern for image generation.
  */
-import * as genAI from "@google/genai";
-import { ImageGenerationBrief, GeneratedImage } from '../types';
+import { genkit } from 'genkit';
+import { googleAI } from '@genkit-ai/googleai';
+import type { ImageGenerationBrief, GeneratedImage } from '../types';
 
 export const generateImage = async (brief: ImageGenerationBrief): Promise<GeneratedImage> => {
     const { prompt, style, apiKey } = brief;
@@ -15,24 +16,25 @@ export const generateImage = async (brief: ImageGenerationBrief): Promise<Genera
     }
     
     const fullPrompt = `${prompt}, in the style of ${style || 'photorealism'}`;
-    const genAIApi = new genAI.GoogleGenerativeAI(apiKey);
-    const model = genAIApi.getGenerativeModel({ model: 'gemini-1.5-flash-latest' }); 
+    
+    const userAi = genkit({
+        plugins: [googleAI({ apiKey })],
+    });
 
     try {
-        const result = await model.generateContent(fullPrompt);
-        const response = result.response;
+        const { media } = await userAi.generate({
+            model: 'googleai/gemini-2.0-flash-preview-image-generation',
+            prompt: fullPrompt,
+            config: {
+                responseModalities: ['TEXT', 'IMAGE'],
+            },
+        });
 
-        const imageParts = response.candidates?.[0]?.content?.parts?.filter(
-            (part) => !!part.inlineData
-        );
-
-        if (imageParts && imageParts.length > 0 && imageParts[0].inlineData) {
-            const { mimeType, data } = imageParts[0].inlineData;
-            const imageDataUri = `data:${mimeType};base64,${data}`;
-            return { imageDataUri };
+        if (!media?.url) {
+            throw new Error('No image was generated. The model may not have produced an image for this prompt.');
         }
-        
-        throw new Error('No image was generated. The model may not have produced an image for this prompt.');
+
+        return { imageDataUri: media.url };
 
     } catch (error: any) {
         console.error("Image generation error:", error);

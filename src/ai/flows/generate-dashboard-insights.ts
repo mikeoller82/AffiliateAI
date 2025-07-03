@@ -2,10 +2,26 @@
 'use server';
 /**
  * @fileOverview AI flow for generating dashboard insights.
- * This file has been corrected to use the standard Google AI SDK pattern.
+ * This file has been corrected to use the Genkit library pattern.
  */
-import * as genAI from "@google/genai";
-import { DashboardData, GeneratedInsights } from '../types';
+import { genkit } from 'genkit';
+import { googleAI } from '@genkit-ai/googleai';
+import { z } from 'zod';
+import type { DashboardData, GeneratedInsights } from '../types';
+
+const RecommendationSchema = z.object({
+  title: z.string(),
+  description: z.string(),
+  icon: z.string(),
+  ctaText: z.string(),
+  ctaLink: z.string(),
+});
+
+const GeneratedInsightsSchema = z.object({
+  insights: z.array(z.string()),
+  recommendations: z.array(RecommendationSchema),
+});
+
 
 const constructPrompt = (data: Omit<DashboardData, 'apiKey'>): string => {
   const funnelData = data.funnels.map(f => `
@@ -30,33 +46,7 @@ const constructPrompt = (data: Omit<DashboardData, 'apiKey'>): string => {
     2.  Generate a list of 3 actionable recommendations for the "recommendations" field. Each recommendation should be practical and aimed at improving the user's marketing performance.
     3.  For each recommendation, provide a title, a brief description, a relevant Lucide icon name (e.g., 'Target', 'DollarSign', 'LineChart'), a call-to-action text, and a relevant relative URL.
 
-    **Output Format:**
-    Return your response as a valid JSON object. Do not wrap it in markdown backticks.
-    The JSON object must have two keys: "insights" (an array of strings) and "recommendations" (an array of objects with the specified structure).
-
-    Example JSON output:
-    {
-      "insights": [
-        "Insight number one based on the data.",
-        "Insight number two, highlighting a key trend."
-      ],
-      "recommendations": [
-        {
-          "title": "Optimize Funnel 'A'",
-          "description": "The CTR for Funnel 'A' is underperforming. Consider testing new ad creatives or landing page headlines.",
-          "icon": "Target",
-          "ctaText": "View Funnel",
-          "ctaLink": "/dashboard/funnels/a"
-        },
-        {
-          "title": "Boost Conversions",
-          "description": "Your overall conversion rate could be improved. Try creating a special offer for your best-selling product.",
-          "icon": "DollarSign",
-          "ctaText": "Create Offer",
-          "ctaLink": "/dashboard/offers/new"
-        }
-      ]
-    }
+    Output structured data that adheres to the provided JSON schema.
   `;
 };
 
@@ -67,42 +57,29 @@ export const generateDashboardInsights = async (data: DashboardData): Promise<Ge
         throw new Error("API key is required for generating dashboard insights.");
     }
     
-    const genAIApi = new genAI.GoogleGenerativeAI(apiKey);
-    const model = genAIApi.getGenerativeModel({ 
-        model: "gemini-1.5-flash",
-        generationConfig: {
-            responseMimeType: "application/json",
-            temperature: 0.6,
-        }
+    const userAi = genkit({
+        plugins: [googleAI({ apiKey })],
     });
 
     const prompt = constructPrompt(promptData);
 
     try {
-        const result = await model.generateContent(prompt);
-        const response = result.response;
-        
-        const jsonStr = response.text().trim().replace(/```json\n?|\n?```/g, '');
-
-        try {
-            const parsedData = JSON.parse(jsonStr);
-            if (Array.isArray(parsedData.insights) && Array.isArray(parsedData.recommendations)) {
-                const isValid = parsedData.recommendations.every((rec: any) => 
-                    typeof rec.title === 'string' &&
-                    typeof rec.description === 'string' &&
-                    typeof rec.icon === 'string' &&
-                    typeof rec.ctaText === 'string' &&
-                    typeof rec.ctaLink === 'string'
-                );
-                if (isValid) {
-                    return parsedData;
-                }
+        const { output } = await userAi.generate({
+            model: 'googleai/gemini-1.5-flash',
+            prompt,
+            config: {
+                temperature: 0.6,
+            },
+            output: {
+                schema: GeneratedInsightsSchema
             }
-            throw new Error("Invalid JSON structure from API.");
-        } catch (e: any) {
-            console.error("JSON parsing error:", e.message, "\nRaw AI response:", jsonStr);
-            throw new Error("The AI returned a malformed response. Please try again.");
+        });
+        
+        if (!output) {
+             throw new Error("The AI returned an empty or blocked response.");
         }
+
+        return output;
 
     } catch (error: any) {
         console.error("Dashboard insights generation error:", error);

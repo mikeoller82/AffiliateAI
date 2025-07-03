@@ -2,10 +2,16 @@
 'use server';
 /**
  * @fileOverview AI flow for editing a piece of text based on an instruction.
- * This file has been corrected to use the standard Google AI SDK pattern.
+ * This file has been corrected to use the Genkit library pattern.
  */
-import * as genAI from "@google/genai";
-import { EditTextInput, EditTextOutput } from '../types';
+import { genkit } from 'genkit';
+import { googleAI } from '@genkit-ai/googleai';
+import { z } from 'zod';
+import type { EditTextInput, EditTextOutput } from '../types';
+
+const EditTextOutputSchema = z.object({
+  editedText: z.string(),
+});
 
 export const editText = async (input: EditTextInput): Promise<EditTextOutput> => {
     const { text, instruction, apiKey } = input;
@@ -14,9 +20,10 @@ export const editText = async (input: EditTextInput): Promise<EditTextOutput> =>
         throw new Error("API key is required for text editing.");
     }
 
-    const genAIApi = new genAI.GoogleGenerativeAI(apiKey);
-    const model = genAIApi.getGenerativeModel({ model: "gemini-1.5-flash" });
-    
+    const userAi = genkit({
+        plugins: [googleAI({ apiKey })],
+    });
+
     const systemInstruction = `You are an expert editor. Your task is to modify the provided text based on the user's instruction. You must output ONLY the modified text, without any preamble, explanation, or markdown formatting.`;
     
     const userPrompt = `
@@ -30,17 +37,19 @@ export const editText = async (input: EditTextInput): Promise<EditTextOutput> =>
     `;
     
     try {
-        const result = await model.generateContent([systemInstruction, userPrompt]);
-        const response = result.response;
-        
-        if (!response || !response.candidates || response.candidates.length === 0) {
-            if (response?.promptFeedback?.blockReason) {
-                throw new Error(`Text generation was blocked. Reason: ${response.promptFeedback.blockReason}.`);
+        const { output } = await userAi.generate({
+            model: 'googleai/gemini-1.5-flash',
+            prompt: `${systemInstruction}\n\n${userPrompt}`,
+            output: {
+                schema: EditTextOutputSchema
             }
+        });
+        
+        if (!output) {
             throw new Error("The AI returned an empty or blocked response.");
         }
         
-        return { editedText: response.text().trim() };
+        return output;
 
     } catch (error: any) {
         console.error("Text editing error:", error);

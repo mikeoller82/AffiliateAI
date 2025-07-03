@@ -2,10 +2,16 @@
 'use server';
 /**
  * @fileOverview AI flow for generating a product review.
- * This file has been corrected to use the standard Google AI SDK pattern.
+ * This file has been corrected to use the Genkit library pattern.
  */
-import * as genAI from "@google/genai";
-import { ProductReviewBrief, GeneratedProductReview } from '../types';
+import { genkit } from 'genkit';
+import { googleAI } from '@genkit-ai/googleai';
+import { z } from 'zod';
+import type { ProductReviewBrief, GeneratedProductReview } from '../types';
+
+const GeneratedProductReviewSchema = z.object({
+  review: z.string(),
+});
 
 const constructPrompt = (brief: Omit<ProductReviewBrief, 'apiKey'>): string => {
   return `
@@ -22,14 +28,7 @@ const constructPrompt = (brief: Omit<ProductReviewBrief, 'apiKey'>): string => {
     - Provide a concluding summary that helps the reader make a decision.
     - The entire output should be a single string in Markdown format.
 
-    **Output Format:**
-    Return your response as a valid JSON object. Do not wrap it in markdown backticks.
-    The JSON object must have a single key: "review", which is a string containing the full review in Markdown.
-
-    Example JSON output:
-    {
-      "review": "### Awesome Product Review\\n\\nThis is a great product...\\n\\n**Pros:**\\n- It's fast\\n- It's easy to use\\n\\n**Cons:**\\n- It's a bit expensive\\n\\nOverall, a solid choice."
-    }
+    Output structured data that adheres to the provided JSON schema.
   `;
 };
 
@@ -40,34 +39,29 @@ export const generateProductReview = async (brief: ProductReviewBrief): Promise<
         throw new Error("API key is required for product review generation.");
     }
     
-    const genAIApi = new genAI.GoogleGenerativeAI(apiKey);
-    const model = genAIApi.getGenerativeModel({ 
-        model: "gemini-1.5-flash",
-        generationConfig: {
-            responseMimeType: "application/json",
-            temperature: 0.7,
-        }
+    const userAi = genkit({
+        plugins: [googleAI({ apiKey })],
     });
     
     const prompt = constructPrompt(promptBrief);
 
     try {
-        const result = await model.generateContent(prompt);
-        const response = result.response;
-        
-        const jsonStr = response.text().trim().replace(/```json\n?|\n?```/g, '');
-
-        try {
-            const parsedData = JSON.parse(jsonStr);
-            if (typeof parsedData.review === 'string') {
-                return parsedData;
-            } else {
-                throw new Error("Invalid JSON structure from API.");
+         const { output } = await userAi.generate({
+            model: 'googleai/gemini-1.5-flash',
+            prompt,
+            config: {
+                temperature: 0.7,
+            },
+            output: {
+                schema: GeneratedProductReviewSchema
             }
-        } catch (e: any) {
-            console.error("JSON parsing error:", e.message, "\nRaw AI response:", jsonStr);
-            throw new Error("The AI returned a malformed response. Please try again.");
+        });
+        
+        if (!output) {
+            throw new Error("The AI returned an empty or blocked response.");
         }
+
+        return output;
 
     } catch (error: any) {
         console.error("Product review generation error:", error);
