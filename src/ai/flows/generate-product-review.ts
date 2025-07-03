@@ -3,7 +3,7 @@ import { genkit, z } from 'genkit';
 import { googleAI } from '@genkit-ai/googleai';
 import { ai } from 'node_modules/@genkit-ai/core/lib/action-B0Us3bBw';
 
-export const generateProductReviewFlow = ai.defineFlow(
+export const generateProductReviewFlow = genkit.defineFlow(
   {
     name: 'generateProductReviewFlow',
     inputSchema: z.object({

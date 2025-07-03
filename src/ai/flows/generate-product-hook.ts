@@ -2,7 +2,7 @@
 import { genkit, z } from 'genkit';
 import { googleAI } from '@genkit-ai/googleai';
 
-export const generateProductHookFlow = ai.defineFlow(
+export const generateProductHookFlow = genkit.defineFlow(
   {
     name: 'generateProductHookFlow',
     inputSchema: z.object({

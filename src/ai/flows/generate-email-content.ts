@@ -2,7 +2,7 @@
 import { genkit, z } from 'genkit';
 import { googleAI } from '@genkit-ai/googleai';
 
-export const generateEmailContentFlow = ai.defineFlow(
+export const generateEmailContentFlow = genkit.defineFlow(
   {
     name: 'generateEmailContentFlow',
     inputSchema: z.object({

@@ -2,7 +2,7 @@
 import { genkit, z } from 'genkit';
 import { googleAI } from '@genkit-ai/googleai';
 
-export const generateFunnelCopyFlow = ai.defineFlow(
+export const generateFunnelCopyFlow = genkit.defineFlow(
   {
     name: 'generateFunnelCopyFlow',
     inputSchema: z.object({

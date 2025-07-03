@@ -2,7 +2,7 @@
 import { genkit, z } from 'genkit';
 import { googleAI } from '@genkit-ai/googleai';
 
-export const generateImageFlow = ai.defineFlow(
+export const generateImageFlow = genkit.defineFlow(
   {
     name: 'generateImageFlow',
     inputSchema: z.object({

@@ -2,7 +2,7 @@
 import { genkit, z } from 'genkit';
 import { googleAI } from '@genkit-ai/googleai';
 
-export const generateDashboardInsightsFlow = ai.defineFlow(
+export const generateDashboardInsightsFlow = genkit.defineFlow(
   {
     name: 'generateDashboardInsightsFlow',
     inputSchema: z.object({

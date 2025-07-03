@@ -2,7 +2,7 @@
 import { genkit, z } from 'genkit';
 import { googleAI } from '@genkit-ai/googleai';
 
-export const generateAdCopyFlow = ai.defineFlow(
+export const generateAdCopyFlow = genkit.defineFlow(
   {
     name: 'generateAdCopyFlow',
     inputSchema: z.object({

@@ -2,7 +2,7 @@
 import { genkit, z } from 'genkit';
 import { googleAI } from '@genkit-ai/googleai';
 
-export const suggestCtasFlow = ai.defineFlow(
+export const suggestCtasFlow = genkit.defineFlow(
   {
     name: 'suggestCtasFlow',
     inputSchema: z.object({
