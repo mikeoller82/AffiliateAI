@@ -1,30 +1,30 @@
 
+import { generateDashboardInsightsFlow } from '@/ai/flows/generate-dashboard-insights';
 import { NextRequest, NextResponse } from 'next/server';
-import { generateDashboardInsights, DashboardData } from '@/ai/flows/generate-dashboard-insights';
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
+    const { metrics, funnels } = await req.json();
 
-    // Basic validation for the incoming data
-    const { metrics, funnels, apiKey } = body;
-    if (!metrics || !funnels || !Array.isArray(funnels)) {
-        return NextResponse.json({ error: 'Invalid input data', details: 'Missing or invalid "metrics" or "funnels" fields.' }, { status: 400 });
+    if (!metrics || !funnels) {
+      return NextResponse.json(
+        { error: 'Missing metrics or funnels' },
+        { status: 400 }
+      );
     }
-    
-    // You could add more specific validation here if needed
-    
-    const data: DashboardData = { metrics, funnels, apiKey };
-    
-    const result = await generateDashboardInsights(data);
 
-    return NextResponse.json(result);
+    const insights = await generateDashboardInsightsFlow.run({
+      metrics,
+      funnels,
+    });
+
+    return NextResponse.json(insights);
   } catch (error: any) {
     console.error('Error in generateDashboardInsights API route:', error);
     return NextResponse.json(
-      { 
-        error: 'An error occurred while generating insights.', 
-        details: process.env.NODE_ENV === 'development' ? error.message : undefined 
+      {
+        error: 'An error occurred while generating dashboard insights.',
+        details: error.message,
       },
       { status: 500 }
     );

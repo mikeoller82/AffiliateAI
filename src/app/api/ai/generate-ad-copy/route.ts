@@ -1,24 +1,32 @@
 
+import { generateAdCopyFlow } from '@/ai/flows/generate-ad-copy';
 import { NextRequest, NextResponse } from 'next/server';
-import { generateAdCopy, AdCopyBrief } from '@/ai/flows/generate-ad-copy';
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    
-    const { product, audience, platform, apiKey } = body;
-    if (typeof product !== 'string' || typeof audience !== 'string' || typeof platform !== 'string') {
-        return NextResponse.json({ error: 'Invalid input', details: 'Missing or invalid ad copy brief fields.' }, { status: 400 });
+    const { product, audience, platform } = await req.json();
+
+    if (!product || !audience || !platform) {
+      return NextResponse.json(
+        { error: 'Missing product, audience, or platform' },
+        { status: 400 }
+      );
     }
 
-    const brief: AdCopyBrief = { product, audience, platform, apiKey };
-    
-    const result = await generateAdCopy(brief);
-    return NextResponse.json(result);
+    const adCopy = await generateAdCopyFlow.run({
+      product,
+      audience,
+      platform,
+    });
+
+    return NextResponse.json(adCopy);
   } catch (error: any) {
     console.error('Error in generateAdCopy API route:', error);
     return NextResponse.json(
-      { error: 'An error occurred while generating ad copy.', details: error.message },
+      {
+        error: 'An error occurred while generating ad copy.',
+        details: error.message,
+      },
       { status: 500 }
     );
   }
