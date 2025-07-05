@@ -3,7 +3,7 @@
 > **The all-in-one AI CRM and marketing automation platform designed to empower digital entrepreneurs, creators, and affiliate marketers. Launch, automate, and scale your monetized campaigns with powerful AI tools, visual funnel builders, email marketing automation, and more.**
 
 [![Website](https://img.shields.io/badge/Website-highlaunchpad.com-blue?style=for-the-badge)](https://highlaunchpad.com)
-[![Contact](https://img.shields.io/badge/Contact-mike@highlaunchpad.com-green?style=for-the-badge)](mailto:mike@highlaunchpad.com)
+[![Contact](https://img.shields.io/badge/Contact-mike@highlaunchpad.com-green?style=for-the-badge)](mailto:admin@highlaunchpad.com)
 
 ---
 
