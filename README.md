@@ -80,7 +80,7 @@ Ready to transform your creator business with AI-powered automation?
 
 ### 📅 **Schedule a Demo**
 Book a personalized demo to see how HighLaunchPad can transform your business:
-**[Schedule Demo](https://calendly.com/mike-highlaunchpad/demo)**
+**[Schedule Demo]([https://calendly.com/mike-highlaunchpad/demo])**
 
 ---
 
@@ -136,9 +136,10 @@ Interested in contributing to HighLaunchPad? We're always looking for passionate
 ## 🔗 **Connect With Us**
 
 - 🌐 **Website**: [highlaunchpad.com](https://highlaunchpad.com)
-- 📧 **Email**: [mike@highlaunchpad.com](mailto:mike@highlaunchpad.com)
-- 💼 **LinkedIn**: [Connect with Mike](https://linkedin.com/in/mikeoller)
-- 🐦 **Twitter**: [@HighLaunchPad](https://twitter.com/highlaunchpad)
+- 📧 **Email**: [admin@highlaunchpad.com](mailto:admin@highlaunchpad.com)
+- 💼 **LinkedIn**: [Connect with HighLaunchPad]([https://www.linkedin.com/company/highlaunchpad])
+- ![image](https://github.com/user-attachments/assets/b15af72e-0bfa-43c9-8fe4-90919b2c00f0)
+ **X**: [@HighLaunchPad](https://x.com/highlaunchpad)
 
 ---
 
@@ -155,6 +156,6 @@ This repository contains public documentation and community resources. The HighL
 **Ready to launch your creator business to the next level?**
 
 [![Get Started](https://img.shields.io/badge/Get%20Started-highlaunchpad.com-blue?style=for-the-badge&logo=rocket)](https://highlaunchpad.com)
-[![Contact Us](https://img.shields.io/badge/Contact%20Us-mike@highlaunchpad.com-green?style=for-the-badge&logo=mail)](mailto:mike@highlaunchpad.com)
+[![Contact Us](https://img.shields.io/badge/Contact%20Us-mike@highlaunchpad.com-green?style=for-the-badge&logo=mail)](mailto:admin@highlaunchpad.com)
 
 </div>
