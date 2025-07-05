@@ -137,7 +137,7 @@ Interested in contributing to HighLaunchPad? We're always looking for passionate
 
 - 🌐 **Website**: [highlaunchpad.com](https://highlaunchpad.com)
 - 📧 **Email**: [admin@highlaunchpad.com](mailto:admin@highlaunchpad.com)
-- 💼 **LinkedIn**: [Connect with HighLaunchPad]([https://www.linkedin.com/company/highlaunchpad])
+- 💼 **LinkedIn**: [Connect with HighLaunchPad](https://www.linkedin.com/company/highlaunchpad)
 - **X**: [@HighLaunchPad](https://x.com/highlaunchpad)
 
 ---
