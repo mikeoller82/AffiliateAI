@@ -80,7 +80,7 @@ Ready to transform your creator business with AI-powered automation?
 
 ### 📅 **Schedule a Demo**
 Book a personalized demo to see how HighLaunchPad can transform your business:
-**[Schedule Demo]([https://calendly.com/mike-highlaunchpad/demo])**
+**[Schedule Demo](https://calendly.com/mike-highlaunchpad/demo)**
 
 ---
 
