@@ -103,7 +103,7 @@ While HighLaunchPad is a proprietary platform, we welcome contributions from tal
 ### 👨‍💻 **For Developers**
 Interested in contributing to HighLaunchPad? We're always looking for passionate developers to join our mission.
 
-**Contact**: [mike@highlaunchpad.com](mailto:mike@highlaunchpad.com)
+**Contact**: [admin@highlaunchpad.com](mailto:admin@highlaunchpad.com)
 
 **What we're looking for:**
 - Full-stack developers (Next.js, React, TypeScript)
