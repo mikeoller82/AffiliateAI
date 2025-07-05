@@ -155,6 +155,6 @@ This repository contains public documentation and community resources. The HighL
 **Ready to launch your creator business to the next level?**
 
 [![Get Started](https://img.shields.io/badge/Get%20Started-highlaunchpad.com-blue?style=for-the-badge&logo=rocket)](https://highlaunchpad.com)
-[![Contact Us](https://img.shields.io/badge/Contact%20Us-mike@highlaunchpad.com-green?style=for-the-badge&logo=mail)](mailto:admin@highlaunchpad.com)
+[![Contact Us](https://img.shields.io/badge/Contact%20Us-admin@highlaunchpad.com-green?style=for-the-badge&logo=mail)](mailto:admin@highlaunchpad.com)
 
 </div>
